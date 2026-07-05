@@ -1,0 +1,30 @@
+# SpartaFlow — local development stack (Vite dev server + HMR).
+#   docker compose up            → app on http://localhost:8080
+# Env comes from ./.env (git-ignored). See .env.example for the keys.
+# For a production-like stack (Node SSR + Nginx) use docker-compose.prod.yml.
+
+name: spartaflow-dev
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: spartaflow-app-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+    ports:
+      - "8080:8080"
+    volumes:
+      # Bind-mount source for hot reload, but keep the image's installed deps.
+      - .:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s

@@ -1,0 +1,82 @@
+# SpartaFlow — production-like stack: Node SSR server behind an Nginx proxy.
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Flow:  client → nginx (:80) → app (:3000, Nitro/Node SSR) → Supabase (managed)
+# In real production this sits behind Cloudflare (TLS/CDN/WAF) — see docs/DOCKER.md
+# and docs/DEPLOYMENT_PLAN.md.
+
+name: spartaflow
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # VITE_* are inlined at build time — sourced from ./.env interpolation.
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
+        VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID}
+    # Local `--build` uses this tag; CI/CD sets SPARTAFLOW_IMAGE to the GHCR ref
+    # it pushed, so `docker compose pull && up` deploys that exact image.
+    image: ${SPARTAFLOW_IMAGE:-spartaflow:latest}
+    container_name: spartaflow-app
+    restart: always
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "3000"
+    expose:
+      - "3000"          # internal only — reached via the nginx service
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - spartaflow
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: spartaflow-nginx
+    restart: always
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      # Enable after mounting an origin cert (see docs/DOCKER.md → TLS):
+      # - "443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # - ./docker/nginx/certs:/etc/nginx/certs:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - spartaflow
+
+networks:
+  spartaflow:
+    driver: bridge

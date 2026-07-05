@@ -1,0 +1,41 @@
+# Lint — ESLint, Prettier, and strict TypeScript.
+# Runs on PRs and branch pushes for fast feedback, and is reusable
+# (workflow_call) so the deploy pipeline can gate on it.
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main] # on main this runs inside the Deploy pipeline instead
+  workflow_call:
+
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: ESLint · Prettier · Types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: ESLint
+        run: bun run lint
+
+      - name: Prettier (check)
+        run: bunx prettier --check .
+
+      - name: TypeScript (typecheck)
+        run: bun run typecheck

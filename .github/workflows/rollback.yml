@@ -1,0 +1,84 @@
+# Rollback — manually redeploy a previous image to an environment.
+# Use when a bad release is live. Deploy also auto-rolls-back on a failed health
+# check; this is the operator-initiated path (e.g. a regression found later).
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to roll back
+        type: choice
+        options: [staging, production]
+        required: true
+      image:
+        description: "Image ref to roll back to (blank = the previous good image on the host)"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment }} # shares the deploy lock
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    name: Rollback → ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Roll back over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            cd "${{ vars.DEPLOY_DIR }}"
+
+            TARGET="${{ github.event.inputs.image }}"
+            if [ -z "$TARGET" ]; then TARGET="$(cat .rollback_image 2>/dev/null || echo '')"; fi
+            if [ -z "$TARGET" ]; then
+              echo "::error::No target image given and no .rollback_image on host."
+              exit 1
+            fi
+            echo "Rolling back to: $TARGET"
+
+            echo "${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}" \
+              | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            # Preserve the currently-deployed image as the next rollback target.
+            cp -f .deployed_image .rollback_image 2>/dev/null || true
+
+            export SPARTAFLOW_IMAGE="$TARGET"
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+
+            ok=0
+            for i in $(seq 1 20); do
+              if curl -fsS http://127.0.0.1/healthz >/dev/null 2>&1; then ok=1; break; fi
+              sleep 3
+            done
+            [ "$ok" -eq 1 ] || { echo "::error::Rollback target is unhealthy."; exit 1; }
+
+            echo "$TARGET" > .deployed_image
+            echo "Rollback healthy: $TARGET"
+
+      - name: Slack notification
+        if: ${{ always() && env.SLACK_WEBHOOK_URL != '' }}
+        env:
+          STATUS: ${{ job.status }}
+        run: |
+          EMOJI=":leftwards_arrow_with_hook:"; [ "$STATUS" != "success" ] && EMOJI=":x:"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          curl -fsS -X POST -H 'Content-type: application/json' "$SLACK_WEBHOOK_URL" -d @- <<JSON
+          {
+            "text": "$EMOJI SpartaFlow *ROLLBACK* on *${{ github.event.inputs.environment }}*: *$STATUS*\n• target: \`${{ github.event.inputs.image || 'previous good' }}\`\n• <$RUN_URL|View run>"
+          }
+          JSON

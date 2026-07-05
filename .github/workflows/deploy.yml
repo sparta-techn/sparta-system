@@ -1,0 +1,134 @@
+# Deploy — gated pipeline: Lint → Test → Build → Deploy (with notifications).
+#
+#   • Push to main            → automatic deploy to the `staging` environment.
+#   • Push a tag `vX.Y.Z`     → deploy to `production` (manual approval via the
+#                               environment's required reviewers).
+#   • Manual (workflow_dispatch) → deploy a chosen image ref to a chosen env.
+#
+# The deploy performs a health check and AUTO-ROLLS-BACK to the previous image
+# if the new release is unhealthy. Manual rollback lives in rollback.yml.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+      image:
+        description: "Image ref to deploy (blank = build from this ref)"
+        required: false
+        default: ""
+
+# One deploy per environment at a time; don't cancel an in-flight release.
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || (github.ref_type == 'tag' && 'production' || 'staging') }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # ---- Quality gates (reusable workflows) --------------------------------
+  lint:
+    uses: ./.github/workflows/lint.yml
+  test:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+  build:
+    needs: [lint, test]
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+
+  # ---- Deploy -------------------------------------------------------------
+  deploy:
+    name: Deploy → ${{ github.event.inputs.environment || (github.ref_type == 'tag' && 'production' || 'staging') }}
+    needs: [lint, test, build]
+    runs-on: ubuntu-latest
+    # Environment drives the manual-approval gate (configure required reviewers
+    # on `production`) and scopes the secrets/vars used below.
+    environment: ${{ github.event.inputs.environment || (github.ref_type == 'tag' && 'production' || 'staging') }}
+    outputs:
+      image: ${{ steps.resolve.outputs.image }}
+    steps:
+      - name: Resolve image ref
+        id: resolve
+        run: |
+          IMAGE="${{ github.event.inputs.image }}"
+          if [ -z "$IMAGE" ]; then IMAGE="${{ needs.build.outputs.image }}"; fi
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "Deploying image: $IMAGE"
+
+      - name: Deploy over SSH (pull, up, health-check, auto-rollback)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            cd "${{ vars.DEPLOY_DIR }}"           # e.g. /opt/spartaflow (holds docker-compose.prod.yml + .env)
+
+            NEW_IMAGE="${{ steps.resolve.outputs.image }}"
+            PREV_IMAGE="$(cat .deployed_image 2>/dev/null || echo '')"
+            echo "Previous: ${PREV_IMAGE:-<none>}  →  New: $NEW_IMAGE"
+
+            echo "${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}" \
+              | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            export SPARTAFLOW_IMAGE="$NEW_IMAGE"
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+
+            # Health check with retries against the Nginx health endpoint.
+            ok=0
+            for i in $(seq 1 20); do
+              if curl -fsS http://127.0.0.1/healthz >/dev/null 2>&1; then ok=1; break; fi
+              sleep 3
+            done
+
+            if [ "$ok" -ne 1 ]; then
+              echo "::error::Health check failed — rolling back."
+              if [ -n "$PREV_IMAGE" ]; then
+                export SPARTAFLOW_IMAGE="$PREV_IMAGE"
+                docker compose -f docker-compose.prod.yml up -d
+                echo "Rolled back to $PREV_IMAGE"
+              fi
+              exit 1
+            fi
+
+            # Record the good release for the next deploy's rollback baseline.
+            echo "$NEW_IMAGE" > .deployed_image
+            docker image prune -f >/dev/null 2>&1 || true
+            echo "Deploy healthy: $NEW_IMAGE"
+
+  # ---- Notify -------------------------------------------------------------
+  notify:
+    name: Notify
+    needs: [deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Slack notification
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+        env:
+          STATUS: ${{ needs.deploy.result }}
+          ENVIRONMENT: ${{ github.event.inputs.environment || (github.ref_type == 'tag' && 'production' || 'staging') }}
+          IMAGE: ${{ needs.deploy.outputs.image }}
+        run: |
+          EMOJI=":white_check_mark:"; [ "$STATUS" != "success" ] && EMOJI=":x:"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          curl -fsS -X POST -H 'Content-type: application/json' "$SLACK_WEBHOOK_URL" -d @- <<JSON
+          {
+            "text": "$EMOJI SpartaFlow deploy to *$ENVIRONMENT*: *$STATUS*\n• ref: \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA:0:7}\`)\n• image: \`${IMAGE}\`\n• <$RUN_URL|View run>"
+          }
+          JSON

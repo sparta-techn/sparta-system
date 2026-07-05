@@ -1,0 +1,36 @@
+/**
+ * TanStack Query option factories for the HR module (Supabase-backed).
+ * Mirrors the `attendance` feature's query pattern: a structured key hierarchy
+ * plus `queryOptions` consumed by `useQuery` in the HR components.
+ */
+import { queryOptions } from "@tanstack/react-query";
+
+import { fetchHrDepartments, fetchHrEmployees, fetchHrTeams } from "./api";
+
+export const hrKeys = {
+  all: ["hr"] as const,
+  employees: () => [...hrKeys.all, "employees"] as const,
+  departments: () => [...hrKeys.all, "departments"] as const,
+  teams: () => [...hrKeys.all, "teams"] as const,
+};
+
+export const hrQueries = {
+  employees: () =>
+    queryOptions({
+      queryKey: hrKeys.employees(),
+      queryFn: fetchHrEmployees,
+      staleTime: 60_000,
+    }),
+  departments: () =>
+    queryOptions({
+      queryKey: hrKeys.departments(),
+      queryFn: fetchHrDepartments,
+      staleTime: 5 * 60_000,
+    }),
+  teams: () =>
+    queryOptions({
+      queryKey: hrKeys.teams(),
+      queryFn: fetchHrTeams,
+      staleTime: 5 * 60_000,
+    }),
+};
