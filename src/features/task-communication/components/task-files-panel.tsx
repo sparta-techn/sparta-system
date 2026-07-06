@@ -11,12 +11,8 @@ import {
   Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PreviewBadge } from "@/components/preview-banner";
 import { EmptyState } from "@/features/hr/components/empty-state";
 import { EmployeeChip } from "@/features/tasks/components/employee-chip";
 import { cn } from "@/lib/utils";
@@ -75,6 +71,9 @@ export function TaskFilesPanel({ taskId }: { taskId: string }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <PreviewBadge />
+      </div>
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -113,9 +112,7 @@ export function TaskFilesPanel({ taskId }: { taskId: string }) {
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">
           Attachments{" "}
-          <span className="text-xs font-normal text-muted-foreground">
-            · {files.length}
-          </span>
+          <span className="text-xs font-normal text-muted-foreground">· {files.length}</span>
         </h3>
       </div>
 
@@ -148,11 +145,7 @@ export function TaskFilesPanel({ taskId }: { taskId: string }) {
                     aria-label={`Preview ${f.fileName}`}
                   >
                     {f.previewUrl ? (
-                      <img
-                        src={f.previewUrl}
-                        alt=""
-                        className="size-full object-cover"
-                      />
+                      <img src={f.previewUrl} alt="" className="size-full object-cover" />
                     ) : (
                       <Icon className="size-5" />
                     )}
@@ -230,12 +223,7 @@ function FilePreview({ file }: { file: TaskFile }) {
           />
         ) : (
           <div className="flex flex-col items-center gap-3 text-center">
-            <div
-              className={cn(
-                "grid size-16 place-items-center rounded-xl",
-                KIND_TINT[file.kind],
-              )}
-            >
+            <div className={cn("grid size-16 place-items-center rounded-xl", KIND_TINT[file.kind])}>
               <Icon className="size-8" />
             </div>
             <div>

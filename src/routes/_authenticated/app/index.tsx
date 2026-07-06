@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
+import { PreviewBanner } from "@/components/preview-banner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-context";
 import { CheckInWidget } from "@/features/checkin/components/check-in-widget";
@@ -56,7 +57,12 @@ function DashboardPage() {
         }
       />
 
-      <section aria-label="Today status" className="mb-6 grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <PreviewBanner description="Some widgets on this dashboard (summary, tasks, team snapshot, and activity) show sample data and aren't live yet. Your check-in, reports, and notifications are real." />
+
+      <section
+        aria-label="Today status"
+        className="mb-6 grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+      >
         <TodayStatusCard />
         <QuickActions />
       </section>

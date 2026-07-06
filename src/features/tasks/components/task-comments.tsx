@@ -3,6 +3,7 @@ import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PreviewBadge } from "@/components/preview-banner";
 import { addComment, useTasksState } from "../store";
 import { employeeById } from "../utils";
 import { EmployeeChip } from "./employee-chip";
@@ -13,6 +14,10 @@ export function TaskComments({ taskId }: { taskId: string }) {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Comments</h3>
+        <PreviewBadge />
+      </div>
       <ScrollArea className="max-h-[360px]">
         <ul className="space-y-3 pr-3">
           {comments.length === 0 ? (

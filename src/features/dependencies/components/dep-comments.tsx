@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AtSign, MessageSquare, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { PreviewBadge } from "@/components/preview-banner";
 import { personById } from "../mock-data";
 import { dependencyStore } from "../store";
 import type { Dependency, DependencyComment } from "../types";
@@ -29,6 +30,7 @@ export function DepComments({ dep }: { dep: Dependency }) {
         <h2 className="text-sm font-semibold text-foreground">
           Comments <span className="text-muted-foreground">({dep.comments.length})</span>
         </h2>
+        <PreviewBadge className="ml-auto" />
       </header>
 
       {roots.length === 0 ? (
@@ -50,7 +52,11 @@ export function DepComments({ dep }: { dep: Dependency }) {
         {replyTo && (
           <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Replying to thread</span>
-            <button type="button" className="hover:text-foreground" onClick={() => setReplyTo(null)}>
+            <button
+              type="button"
+              className="hover:text-foreground"
+              onClick={() => setReplyTo(null)}
+            >
               Cancel
             </button>
           </div>
@@ -67,10 +73,18 @@ export function DepComments({ dep }: { dep: Dependency }) {
         />
         <div className="mt-2 flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <button type="button" className="inline-flex items-center gap-1 text-xs hover:text-foreground" aria-label="Mention">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-xs hover:text-foreground"
+              aria-label="Mention"
+            >
               <AtSign className="size-3.5" /> Mention
             </button>
-            <button type="button" className="inline-flex items-center gap-1 text-xs hover:text-foreground" aria-label="Attach">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-xs hover:text-foreground"
+              aria-label="Attach"
+            >
               <Paperclip className="size-3.5" /> Attach
             </button>
           </div>
