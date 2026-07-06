@@ -76,6 +76,11 @@ export function setCurrentActor(actor: { id: string | null; name: string } | nul
   currentActor = actor ?? { id: null, name: "System" };
 }
 
+/** The current audit actor — the signed-in user, or a "System" fallback. */
+export function getCurrentActor(): { id: string | null; name: string } {
+  return currentActor;
+}
+
 // ---------- helpers ----------
 
 function uid(): string {

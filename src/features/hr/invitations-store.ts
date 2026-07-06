@@ -16,6 +16,7 @@
 import { useSyncExternalStore } from "react";
 
 import { recordAudit } from "@/features/audit/audit-store";
+import { inviteEmployeeFn } from "./invite.functions";
 import {
   invitations as seedInvitations,
   type Department,
@@ -36,9 +37,6 @@ export interface InvitationSettings {
 }
 
 const DEFAULT_SETTINGS: InvitationSettings = { expiryDays: 7 };
-
-/** Actor recorded as the inviter. In a real build this is the signed-in user. */
-const CURRENT_ACTOR = "Amelia Rivera";
 
 interface State {
   invitations: HrInvitation[];
@@ -167,15 +165,19 @@ export interface CreateInvitationInput {
   department: Department;
   /** Invitee's name, captured with the employee record. */
   name?: string;
+  /** Optional position/job title to attach to the employee record. */
+  positionTitle?: string;
   /** Override the configured default expiry window for this invite. */
   expiryDays?: number;
   invitedBy?: string;
 }
 
 /**
- * Create the employee + send the invitation. In this mock the two are one
- * step; against Supabase this would insert an `employees` row (status
- * `invited`) and an `invitations` row, then trigger the setup email.
+ * Append the local tracking record for an invitation. This owns only the
+ * lifecycle state the UI renders (pending/expired/resent/cancelled + the setup
+ * token); the real auth user, profile and employee row are created server-side
+ * by {@link issueInvitation}. `invitedBy` defaults to "System" but issuance
+ * always passes the real authenticated actor returned by the server.
  */
 export function createInvitation(input: CreateInvitationInput): HrInvitation {
   const now = new Date();
@@ -186,7 +188,7 @@ export function createInvitation(input: CreateInvitationInput): HrInvitation {
     name: input.name?.trim() || undefined,
     role: input.role,
     department: input.department,
-    invitedBy: input.invitedBy ?? CURRENT_ACTOR,
+    invitedBy: input.invitedBy ?? "System",
     invitedAt: now.toISOString(),
     expiresAt: addDays(now, days).toISOString(),
     status: "pending",
@@ -194,6 +196,40 @@ export function createInvitation(input: CreateInvitationInput): HrInvitation {
   };
   state = { ...state, invitations: [invitation, ...state.invitations] };
   emit();
+  return invitation;
+}
+
+/**
+ * Issue a real invitation: create the Supabase auth user + profile + role +
+ * employee row via the server function (`inviteEmployeeFn`), then record the
+ * local tracking invite attributed to the **server-verified** acting user.
+ *
+ * This replaces the former mock issuance (which fabricated the record locally
+ * with a hardcoded inviter). Throws if the caller is unauthenticated,
+ * unauthorized, or the backend provisioning fails — the caller surfaces it.
+ */
+export async function issueInvitation(input: CreateInvitationInput): Promise<HrInvitation> {
+  const result = await inviteEmployeeFn({
+    data: {
+      email: input.email,
+      role: input.role,
+      department: input.department,
+      fullName: input.name,
+      positionTitle: input.positionTitle,
+    },
+  });
+
+  const invitation = createInvitation({ ...input, invitedBy: result.actor.name });
+
+  recordAudit({
+    action: "employee_created",
+    target: invitation.email,
+    targetType: "employee",
+    newValue: `Invited as ${result.appRole}`,
+    actor: result.actor.name,
+    actorId: result.actor.id,
+  });
+
   return invitation;
 }
 

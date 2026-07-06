@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { departments, type Department, type EmployeeRole } from "../mock-data";
-import { createInvitation, EXPIRY_OPTIONS, useInvitationSettings } from "../invitations-store";
+import { issueInvitation, EXPIRY_OPTIONS, useInvitationSettings } from "../invitations-store";
 
 const ROLE_OPTIONS: { value: EmployeeRole; label: string }[] = [
   { value: "employee", label: "Employee" },
@@ -54,19 +54,25 @@ export function InviteEmployeeDialog({
     }
   }, [open, settings.expiryDays]);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!email) return;
     setSubmitting(true);
-    // Simulate the create-employee + send-email round trip.
-    setTimeout(() => {
-      const invitation = createInvitation({ name, email, department, role, expiryDays });
-      setSubmitting(false);
+    try {
+      // Real round trip: creates the auth user + profile + role + employee row
+      // server-side and emails the setup link, then records the local invite.
+      const invitation = await issueInvitation({ name, email, department, role, expiryDays });
       onOpenChange(false);
       toast.success("Invitation sent", {
         description: `${invitation.email} has ${expiryDays} days to accept.`,
       });
-    }, 400);
+    } catch (err) {
+      toast.error("Couldn't send invitation", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (

@@ -15,12 +15,10 @@
  */
 import { useSyncExternalStore } from "react";
 
+import { getCurrentActor } from "@/features/audit/audit-store";
 import type { Department, EmployeeRole, EmploymentStatus, HrEmployee } from "./mock-data";
 
 const KEY = "spartaflow:hr:employee-mgmt:v1";
-
-/** Actor recorded on audit entries. In a live build this is the signed-in user. */
-const CURRENT_ACTOR = "Amelia Rivera";
 
 export type EmployeeAuditAction =
   | "created"
@@ -129,7 +127,8 @@ function logAudit(employeeId: string, action: EmployeeAuditAction, detail?: stri
     id: uid("aud"),
     employeeId,
     at: new Date().toISOString(),
-    actor: CURRENT_ACTOR,
+    // Attribute to the signed-in user (set by the auth layer); "System" pre-auth.
+    actor: getCurrentActor().name,
     action,
     detail,
   };
