@@ -14,8 +14,13 @@ export function useTodaySession(userId: string | null) {
 
   useEffect(() => {
     if (!userId) return;
+    // Unique topic per mount: supabase-js returns the SAME channel object for a
+    // reused topic name, so under React StrictMode's mount→unmount→mount the
+    // second mount would grab the first (already-subscribed) channel whose async
+    // removeChannel hasn't finished, then `.on()` throws "cannot add
+    // postgres_changes callbacks after subscribe()". A per-mount nonce avoids it.
     const channel = supabase
-      .channel(`attendance:self:${userId}`)
+      .channel(`attendance:self:${userId}:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "work_sessions", filter: `user_id=eq.${userId}` },

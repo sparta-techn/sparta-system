@@ -4,23 +4,18 @@
  */
 
 import { tasksService } from "@/services";
+import type { TaskRow } from "@/services/tasks";
 import type { ContextEntity, ContextSource } from "../../types";
 import { clampList, emptyFragment, fragment, hintString } from "./source-utils";
-import type { Task } from "@/features/tasks/types";
 
-function summarize(t: Task): ContextEntity {
-  const due = t.dueDate ? `; due ${t.dueDate}` : "";
+// Reads the durable task row. Rich fields (ref, due date, soft-delete stamp) are
+// overlay-only in features/tasks/store.ts and not reachable from the service.
+function summarize(t: TaskRow): ContextEntity {
   return {
     type: "task",
     id: t.id,
-    ref: t.ref,
-    summary: `${t.title} — ${t.status}/${t.priority}${due}`,
+    summary: `${t.title} — ${t.status}/${t.priority}`,
   };
-}
-
-/** Hide soft-deleted rows defensively (RLS may still return them to owners). */
-function visible(tasks: Task[]): Task[] {
-  return tasks.filter((t) => !t.deletedAt);
 }
 
 export const tasksSource: ContextSource = {
@@ -38,19 +33,18 @@ export const tasksSource: ContextSource = {
     }
 
     const projectId = hintString(hints, "projectId");
-    const rows = projectId
+    const list = projectId
       ? await tasksService.listByProject(projectId, {
           limit: 8,
-          orderBy: "updatedAt",
+          orderBy: "updated_at",
           direction: "desc",
         })
       : await tasksService.listByAssignee(userId, {
           limit: 8,
-          orderBy: "updatedAt",
+          orderBy: "updated_at",
           direction: "desc",
         });
 
-    const list = visible(rows);
     if (list.length === 0) {
       return emptyFragment(
         "tasks",

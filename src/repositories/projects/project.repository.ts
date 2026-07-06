@@ -1,4 +1,3 @@
-import type { Task } from "@/features/tasks/types";
 import type { ListParams } from "@/services/core";
 import {
   ProjectActivityService,
@@ -11,7 +10,7 @@ import {
   type ProjectRow,
   type ProjectStatus,
 } from "@/services/projects";
-import { TasksService, tasksService } from "@/services/tasks";
+import { TasksService, tasksService, type TaskRow } from "@/services/tasks";
 
 /**
  * ProjectRepository — domain operations for the `projects` root entity.
@@ -47,8 +46,8 @@ export class ProjectRepository {
     return this.projects.listByManager(managerId, params);
   }
 
-  /** Tasks within a project — delegated to the existing tasks service. */
-  listTasks(projectId: string, params: ListParams<Task> = {}): Promise<Task[]> {
+  /** Task rows within a project — delegated to the existing tasks service. */
+  listTasks(projectId: string, params: ListParams<TaskRow> = {}): Promise<TaskRow[]> {
     return this.tasks.listByProject(projectId, params);
   }
 

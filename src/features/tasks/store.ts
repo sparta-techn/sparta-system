@@ -1,19 +1,27 @@
 /**
- * Tasks store — localStorage-backed reactive facade.
+ * Tasks store — Supabase-backed CRUD facade with an in-memory cache.
  *
- * Mirrors the future Supabase repository surface. Consumers call these
- * functions; UI subscribes via `useTasksState`. Replace internals with
- * server fns once persistence lands without touching component code.
+ * The public API (synchronous getters + `useTasksState`) is unchanged in shape,
+ * so components (and the Kanban module, which reads task lists through here) are
+ * untouched. Internally the task cache is **hydrated from Supabase** via
+ * {@link taskRepository} and mutations are **written through** it — mirroring
+ * the hydrate-then-optimistic-write pattern in `features/projects/store.ts`.
+ *
+ * What is connected to Supabase: the durable task columns (project, title,
+ * description, status, priority, assignee, parent, sprint).
+ * What stays local-only (no backing column/table): every rich task field
+ * (ref, labels, epic/milestone, watchers, dates, points, checklist, attachments,
+ * relations, completed/archived/deleted stamps) — persisted to localStorage as a
+ * per-task **overlay** and merged on top of each row — plus the auxiliary
+ * catalogs (epics, milestones, comments, activity, saved filters, favorites).
  */
 import { useSyncExternalStore } from "react";
+import { taskRepository } from "@/repositories";
+import type { TaskRow, TaskRowInsert, TaskRowUpdate } from "@/services/tasks";
 import {
-  seedActivity,
-  seedComments,
   seedEpics,
-  seedFavoriteIds,
   seedMilestones,
   seedSavedFilters,
-  seedTasks,
 } from "./mock-data";
 import {
   PRIORITY_WEIGHT,
@@ -24,69 +32,223 @@ import {
   type Task,
   type TaskActivity,
   type TaskActivityKind,
+  type TaskAttachment,
   type TaskComment,
   type TaskFilters,
+  type TaskLabel,
   type TaskMilestone,
+  type TaskRelation,
   type TaskRelationKind,
   type TaskSort,
 } from "./types";
 
-const KEY = "spartaflow:tasks:v1";
+const LOCAL_KEY = "spartaflow:tasks:local:v2";
+
+/** Per-task fields with no backing column — overlaid on top of the DB row. */
+interface TaskOverlay {
+  ref?: string;
+  labels?: TaskLabel[];
+  epicId?: string | null;
+  milestoneId?: string | null;
+  reporterId?: string;
+  watcherIds?: string[];
+  startDate?: string | null;
+  dueDate?: string | null;
+  estimatedHours?: number | null;
+  storyPoints?: number | null;
+  checklist?: ChecklistItem[];
+  attachments?: TaskAttachment[];
+  relatedDependencyIds?: string[];
+  relations?: TaskRelation[];
+  completedAt?: string | null;
+  archivedAt?: string | null;
+  deletedAt?: string | null;
+}
 
 interface State {
   tasks: Task[];
+  // local-only catalogs (no backing table for this slice)
   epics: Epic[];
   milestones: TaskMilestone[];
   comments: TaskComment[];
   activity: TaskActivity[];
   savedFilters: SavedFilter[];
   favoriteIds: string[];
+  overlay: Record<string, TaskOverlay>;
+  hydrated: boolean;
 }
 
-function defaultState(): State {
+interface LocalBlob {
+  epics: Epic[];
+  milestones: TaskMilestone[];
+  comments: TaskComment[];
+  activity: TaskActivity[];
+  savedFilters: SavedFilter[];
+  favoriteIds: string[];
+  overlay: Record<string, TaskOverlay>;
+}
+
+function defaultLocal(): LocalBlob {
   return {
-    tasks: seedTasks,
     epics: seedEpics,
     milestones: seedMilestones,
-    comments: seedComments,
-    activity: seedActivity,
+    comments: [],
+    activity: [],
     savedFilters: seedSavedFilters,
-    favoriteIds: seedFavoriteIds,
+    favoriteIds: [],
+    overlay: {},
   };
 }
 
-function load(): State {
-  if (typeof window === "undefined") return defaultState();
+function loadLocal(): LocalBlob {
+  if (typeof window === "undefined") return defaultLocal();
   try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return defaultState();
-    const parsed = JSON.parse(raw) as Partial<State>;
-    return { ...defaultState(), ...parsed };
+    const raw = window.localStorage.getItem(LOCAL_KEY);
+    if (!raw) return defaultLocal();
+    return { ...defaultLocal(), ...(JSON.parse(raw) as Partial<LocalBlob>) };
   } catch {
-    return defaultState();
+    return defaultLocal();
   }
 }
 
-let state: State = load();
+function defaultState(): State {
+  const local = loadLocal();
+  return {
+    tasks: [],
+    epics: local.epics,
+    milestones: local.milestones,
+    comments: local.comments,
+    activity: local.activity,
+    savedFilters: local.savedFilters,
+    favoriteIds: local.favoriteIds,
+    overlay: local.overlay,
+    hydrated: false,
+  };
+}
+
+let state: State = defaultState();
 const listeners = new Set<() => void>();
 
-function persist() {
+function persistLocal() {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(state));
+    const blob: LocalBlob = {
+      epics: state.epics,
+      milestones: state.milestones,
+      comments: state.comments,
+      activity: state.activity,
+      savedFilters: state.savedFilters,
+      favoriteIds: state.favoriteIds,
+      overlay: state.overlay,
+    };
+    window.localStorage.setItem(LOCAL_KEY, JSON.stringify(blob));
   } catch {
     /* quota — ignore */
   }
 }
 
 function emit() {
-  persist();
+  persistLocal();
   listeners.forEach((l) => l());
 }
 
 function subscribe(l: () => void) {
   listeners.add(l);
   return () => listeners.delete(l);
+}
+
+// ---------- Row ⇄ domain mapping ----------
+
+function rowToTask(row: TaskRow, ov: TaskOverlay = {}): Task {
+  return {
+    id: row.id,
+    ref: ov.ref ?? `TASK-${row.id.slice(0, 4).toUpperCase()}`,
+    title: row.title,
+    description: row.description ?? "",
+    status: row.status,
+    priority: row.priority,
+    labels: ov.labels ?? [],
+    projectId: row.project_id,
+    epicId: ov.epicId ?? null,
+    milestoneId: ov.milestoneId ?? null,
+    sprintId: row.sprint_id,
+    assigneeId: row.assignee_id,
+    reporterId: ov.reporterId ?? row.created_by ?? "",
+    watcherIds: ov.watcherIds ?? [],
+    startDate: ov.startDate ?? null,
+    dueDate: ov.dueDate ?? null,
+    estimatedHours: ov.estimatedHours ?? null,
+    storyPoints: ov.storyPoints ?? null,
+    checklist: ov.checklist ?? [],
+    attachments: ov.attachments ?? [],
+    relatedDependencyIds: ov.relatedDependencyIds ?? [],
+    parentTaskId: row.parent_task_id,
+    relations: ov.relations ?? [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    completedAt: ov.completedAt ?? null,
+    archivedAt: ov.archivedAt ?? null,
+    deletedAt: ov.deletedAt ?? null,
+  };
+}
+
+/** Extract the non-persisted slice of a domain task for the local overlay. */
+function overlayFromTask(t: Task): TaskOverlay {
+  return {
+    ref: t.ref,
+    labels: t.labels,
+    epicId: t.epicId,
+    milestoneId: t.milestoneId,
+    reporterId: t.reporterId,
+    watcherIds: t.watcherIds,
+    startDate: t.startDate,
+    dueDate: t.dueDate,
+    estimatedHours: t.estimatedHours,
+    storyPoints: t.storyPoints,
+    checklist: t.checklist,
+    attachments: t.attachments,
+    relatedDependencyIds: t.relatedDependencyIds,
+    relations: t.relations,
+    completedAt: t.completedAt,
+    archivedAt: t.archivedAt,
+    deletedAt: t.deletedAt,
+  };
+}
+
+function setOverlay(taskId: string, patch: TaskOverlay) {
+  state = { ...state, overlay: { ...state.overlay, [taskId]: { ...(state.overlay[taskId] ?? {}), ...patch } } };
+}
+
+// ---------- Hydration ----------
+
+let hydrating: Promise<void> | null = null;
+
+async function hydrate() {
+  if (hydrating) return hydrating;
+  hydrating = (async () => {
+    try {
+      const rows = await taskRepository.list();
+      state = {
+        ...state,
+        tasks: rows.map((row) => rowToTask(row, state.overlay[row.id])),
+        hydrated: true,
+      };
+      emit();
+    } catch (err) {
+      // Leave the cache empty but mark hydrated so the UI shows empty states
+      // rather than a perpetual blank; the error surfaces in the console.
+      console.error("[tasks] Supabase hydration failed", err);
+      state = { ...state, hydrated: true };
+      emit();
+    } finally {
+      hydrating = null;
+    }
+  })();
+  return hydrating;
+}
+
+if (typeof window !== "undefined") {
+  void hydrate();
 }
 
 export function useTasksState<T>(selector: (s: State) => T): T {
@@ -156,6 +318,60 @@ function logActivity(
   state = { ...state, activity: [event, ...state.activity] };
 }
 
+// ---------- Write-through helpers ----------
+
+function newTaskId(): string {
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** Insert the durable columns of a freshly-created task (id is client-generated). */
+function persistTaskInsert(t: Task) {
+  const payload: TaskRowInsert = {
+    id: t.id,
+    project_id: t.projectId,
+    title: t.title,
+    description: t.description || null,
+    status: t.status,
+    priority: t.priority,
+    assignee_id: t.assigneeId,
+    parent_task_id: t.parentTaskId,
+    sprint_id: t.sprintId,
+    // created_by is left to the DB default (auth.uid()); reporterId is kept in
+    // the overlay so it survives even when it differs from the acting user.
+  };
+  void taskRepository.create(payload).catch((err) => {
+    console.error("[tasks] createTask write-through failed", err);
+  });
+}
+
+/** Write through only the backed columns present in a patch. */
+function persistTaskPatch(id: string, patch: Partial<Task>) {
+  const col: TaskRowUpdate = {};
+  if (patch.title !== undefined) col.title = patch.title;
+  if (patch.description !== undefined) col.description = patch.description || null;
+  if (patch.status !== undefined) col.status = patch.status;
+  if (patch.priority !== undefined) col.priority = patch.priority;
+  if (patch.assigneeId !== undefined) col.assignee_id = patch.assigneeId;
+  if (patch.parentTaskId !== undefined) col.parent_task_id = patch.parentTaskId;
+  if (patch.sprintId !== undefined) col.sprint_id = patch.sprintId;
+  if (Object.keys(col).length === 0) return;
+  void taskRepository.update(id, col).catch((err) => {
+    console.error("[tasks] updateTask write-through failed", err);
+  });
+}
+
+const BACKED_FIELDS: Array<keyof Task> = [
+  "title",
+  "description",
+  "status",
+  "priority",
+  "assigneeId",
+  "parentTaskId",
+  "sprintId",
+];
+
 // ---------- Writes ----------
 
 type CreateTaskInput = Partial<Task> & {
@@ -175,8 +391,10 @@ export function nextRef(projectKey: string) {
 
 export function createTask(input: CreateTaskInput, projectKey: string): Task {
   const nowIso = new Date().toISOString();
+  // Client-generated UUID = the persisted id, so the optimistic row and the DB
+  // row share one stable id (routes the create dialog navigates to stay valid).
   const task: Task = {
-    id: `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+    id: newTaskId(),
     ref: nextRef(projectKey),
     title: input.title,
     description: input.description ?? "",
@@ -206,6 +424,7 @@ export function createTask(input: CreateTaskInput, projectKey: string): Task {
     deletedAt: null,
   };
   state = { ...state, tasks: [task, ...state.tasks] };
+  setOverlay(task.id, overlayFromTask(task));
   logActivity(task.id, task.reporterId, "created", `Created ${task.ref}`);
   if (task.parentTaskId) {
     logActivity(
@@ -216,6 +435,7 @@ export function createTask(input: CreateTaskInput, projectKey: string): Task {
     );
   }
   emit();
+  persistTaskInsert(task);
   return task;
 }
 
@@ -235,6 +455,8 @@ export function updateTask(id: string, patch: Partial<Task>, actorId?: string) {
     completedAt,
   };
   state = { ...state, tasks: state.tasks.map((t) => (t.id === id ? updated : t)) };
+  // Keep the local overlay in sync with the merged task (covers all unbacked fields).
+  setOverlay(id, overlayFromTask(updated));
 
   const actor = actorId ?? current.assigneeId ?? current.reporterId;
   if (patch.status && patch.status !== current.status) {
@@ -250,6 +472,11 @@ export function updateTask(id: string, patch: Partial<Task>, actorId?: string) {
     logActivity(id, actor, "due_date_changed", `Due date updated`);
   }
   emit();
+
+  // Write-through to Supabase only when a backed column actually changed.
+  if (BACKED_FIELDS.some((k) => patch[k] !== undefined)) {
+    persistTaskPatch(id, patch);
+  }
 }
 
 export function duplicateTask(id: string) {

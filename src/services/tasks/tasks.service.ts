@@ -1,65 +1,100 @@
-import type { Task, TaskComment, TaskStatus } from "@/features/tasks/types";
+import type { TaskComment, TaskPriority, TaskStatus } from "@/features/tasks/types";
 import { BaseService } from "../core/base-service";
-import type { ListParams } from "../core/types";
-
-export type TaskInsert = Omit<
-  Task,
-  "id" | "ref" | "createdAt" | "updatedAt" | "completedAt" | "archivedAt" | "deletedAt"
->;
-export type TaskUpdate = Partial<TaskInsert> & {
-  completedAt?: string | null;
-  archivedAt?: string | null;
-  deletedAt?: string | null;
-};
+import type { Identifiable, ListParams } from "../core/types";
 
 /**
- * TasksService — CRUD for tasks/subtasks plus task-scoped reads (comments,
- * children). Maps onto the future `tasks` and `task_comments` tables. Subtasks
- * are ordinary task rows with a non-null `parentTaskId`.
+ * Database row for `public.tasks` — snake_case, minimal columns only.
+ *
+ * This is the durable, relational slice of a task. The rich domain `Task`
+ * (labels, checklist, watchers, relations, dates, story points, ref, …) is
+ * assembled in `features/tasks/store.ts`, which overlays the unbacked fields
+ * from localStorage on top of this row. Keep this shape 1:1 with the migration
+ * `20260705120000_tasks_table.sql`.
  */
-export class TasksService extends BaseService<Task, TaskInsert, TaskUpdate> {
+export interface TaskRow extends Identifiable {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assignee_id: string | null;
+  parent_task_id: string | null;
+  sprint_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Insert payload — server defaults fill id / created_by / timestamps. */
+export interface TaskRowInsert {
+  id?: string;
+  project_id: string;
+  title: string;
+  description?: string | null;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assignee_id?: string | null;
+  parent_task_id?: string | null;
+  sprint_id?: string | null;
+  created_by?: string | null;
+}
+
+/** Patch payload — any backed column except the immutable id. */
+export type TaskRowUpdate = Partial<Omit<TaskRowInsert, "id">>;
+
+/**
+ * TasksService — CRUD for the `tasks` table plus a few project/assignee/subtask
+ * reads. Subtasks are ordinary rows with a non-null `parent_task_id`.
+ *
+ * Speaks the DB row shape (snake_case). The camelCase ⇄ snake_case mapping and
+ * all overlay/enrichment of non-persisted fields happen in the tasks store,
+ * exactly as the project-execution services delegate mapping to the projects
+ * store.
+ */
+export class TasksService extends BaseService<TaskRow, TaskRowInsert, TaskRowUpdate> {
   protected readonly table = "tasks";
   protected readonly entity = "Task";
-  protected readonly defaultOrderBy = "updatedAt";
+  protected readonly defaultOrderBy = "updated_at";
 
   /** Tasks within a project. */
-  listByProject(projectId: string, params: ListParams<Task> = {}): Promise<Task[]> {
-    return this.list({ ...params, filters: { ...params.filters, projectId } });
+  listByProject(projectId: string, params: ListParams<TaskRow> = {}): Promise<TaskRow[]> {
+    return this.list({ ...params, filters: { ...params.filters, project_id: projectId } });
   }
 
   /** Tasks assigned to a user. */
-  listByAssignee(assigneeId: string, params: ListParams<Task> = {}): Promise<Task[]> {
-    return this.list({ ...params, filters: { ...params.filters, assigneeId } });
+  listByAssignee(assigneeId: string, params: ListParams<TaskRow> = {}): Promise<TaskRow[]> {
+    return this.list({ ...params, filters: { ...params.filters, assignee_id: assigneeId } });
   }
 
   /** Direct subtasks of a parent task. */
-  listSubtasks(parentTaskId: string): Promise<Task[]> {
-    return this.list({ filters: { parentTaskId } });
+  listSubtasks(parentTaskId: string): Promise<TaskRow[]> {
+    return this.list({ filters: { parent_task_id: parentTaskId } });
   }
 
-  /** Move a task to a new status, stamping `completedAt` when it reaches done. */
-  setStatus(id: string, status: TaskStatus): Promise<Task> {
-    const completedAt = status === "done" ? new Date().toISOString() : null;
-    return this.update(id, { status, completedAt } as TaskUpdate);
+  /** Move a task to a new status. */
+  setStatus(id: string, status: TaskStatus): Promise<TaskRow> {
+    return this.update(id, { status });
   }
 
   /** Reassign a task (or unassign with `null`). */
-  assign(id: string, assigneeId: string | null): Promise<Task> {
-    return this.update(id, { assigneeId } as TaskUpdate);
+  assign(id: string, assigneeId: string | null): Promise<TaskRow> {
+    return this.update(id, { assignee_id: assigneeId });
   }
 
-  /** Soft-delete a task (UI moves it to trash). */
-  softDelete(id: string): Promise<Task> {
-    return this.update(id, { deletedAt: new Date().toISOString() } as TaskUpdate);
-  }
+  // ── Comments ───────────────────────────────────────────────────────────────
+  // NOTE: comments are not yet backed by a `task_comments` table (out of scope
+  // for this migration). The tasks store keeps comments in its local overlay;
+  // these methods target the future table and are retained for the AI comments
+  // source. They will start working once that table lands.
 
   /** Comments on a task, oldest first. */
   async listComments(taskId: string): Promise<TaskComment[]> {
     const { data, error } = await this.client
       .from("task_comments")
       .select("*")
-      .eq("taskId", taskId)
-      .order("createdAt", { ascending: true });
+      .eq("task_id", taskId)
+      .order("created_at", { ascending: true });
     if (error) throw error;
     return (data ?? []) as unknown as TaskComment[];
   }
@@ -68,7 +103,7 @@ export class TasksService extends BaseService<Task, TaskInsert, TaskUpdate> {
   async addComment(taskId: string, authorId: string, body: string): Promise<TaskComment> {
     const { data, error } = await this.client
       .from("task_comments")
-      .insert({ taskId, authorId, body } as never)
+      .insert({ task_id: taskId, author_id: authorId, body } as never)
       .select()
       .single();
     if (error) throw error;

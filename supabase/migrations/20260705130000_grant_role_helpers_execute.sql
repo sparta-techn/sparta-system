@@ -1,0 +1,22 @@
+-- =========================================================================
+-- Fix: restore EXECUTE on the role-check helpers for `authenticated`.
+--
+-- Migration 20260628195306 revoked EXECUTE on has_role() / has_any_role() from
+-- PUBLIC, anon AND authenticated. But RLS policies across the whole schema
+-- (auth, attendance, daily reports, projects, collaboration, bootstrap, tasks…)
+-- call these SECURITY DEFINER helpers DIRECTLY in their USING / WITH CHECK
+-- clauses. PostgreSQL checks EXECUTE on functions referenced by a policy as the
+-- QUERYING role, so with the grant removed every authenticated SELECT/INSERT/
+-- UPDATE against those tables fails with:
+--     ERROR: permission denied for function has_any_role
+-- i.e. no logged-in user can read tasks, projects, their own roles, etc.
+--
+-- Re-granting EXECUTE to authenticated fixes the entire app and is consistent
+-- with the helpers that WERE granted (current_user_roles(), is_project_member(),
+-- can_manage_project()). The functions are STABLE SECURITY DEFINER with
+-- `SET search_path = public` and only read public.user_roles; role membership is
+-- not sensitive, and the exposure matches is_project_member(). anon stays
+-- unprivileged (policies are TO authenticated).
+-- =========================================================================
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role)       TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_any_role(uuid, public.app_role[]) TO authenticated;

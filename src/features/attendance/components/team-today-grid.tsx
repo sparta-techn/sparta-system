@@ -24,8 +24,10 @@ export function TeamTodayGrid() {
 
   // Realtime: any change in today's sessions across the team
   useEffect(() => {
+    // Per-mount nonce so StrictMode's double-mount can't reuse an already-
+    // subscribed channel (see use-today-session.ts for the full explanation).
     const channel = supabase
-      .channel("attendance:team-today")
+      .channel(`attendance:team-today:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "work_sessions" },

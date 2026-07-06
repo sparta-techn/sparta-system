@@ -1,65 +1,72 @@
-import type { Task, TaskComment, TaskStatus } from "@/features/tasks/types";
+import type { TaskComment, TaskStatus } from "@/features/tasks/types";
 import type { ListParams } from "@/services/core";
-import { TasksService, tasksService, type TaskInsert, type TaskUpdate } from "@/services/tasks";
+import {
+  TasksService,
+  tasksService,
+  type TaskRow,
+  type TaskRowInsert,
+  type TaskRowUpdate,
+} from "@/services/tasks";
 
 /**
- * TaskRepository — domain operations for tasks and subtasks. Delegates
- * persistence to {@link TasksService}; subtasks are tasks with a non-null
- * `parentTaskId`.
+ * TaskRepository — domain-facing operations for tasks and subtasks against the
+ * real `tasks` table. Delegates persistence to {@link TasksService}; subtasks
+ * are tasks with a non-null `parent_task_id`.
+ *
+ * Returns raw {@link TaskRow}s (snake_case). Consumers that need the rich domain
+ * `Task` (labels, checklist, dates, …) map + overlay in `features/tasks/store.ts`.
  */
 export class TaskRepository {
   constructor(private readonly service: TasksService = tasksService) {}
 
-  list(params: ListParams<Task> = {}): Promise<Task[]> {
+  // ── Reads ────────────────────────────────────────────────────────────────
+  list(params: ListParams<TaskRow> = {}): Promise<TaskRow[]> {
     return this.service.list(params);
   }
 
-  getById(id: string): Promise<Task | null> {
+  getById(id: string): Promise<TaskRow | null> {
     return this.service.getById(id);
   }
 
-  getByIdOrThrow(id: string): Promise<Task> {
+  getByIdOrThrow(id: string): Promise<TaskRow> {
     return this.service.getByIdOrThrow(id);
   }
 
-  listByProject(projectId: string, params: ListParams<Task> = {}): Promise<Task[]> {
+  listByProject(projectId: string, params: ListParams<TaskRow> = {}): Promise<TaskRow[]> {
     return this.service.listByProject(projectId, params);
   }
 
-  listByAssignee(assigneeId: string, params: ListParams<Task> = {}): Promise<Task[]> {
+  listByAssignee(assigneeId: string, params: ListParams<TaskRow> = {}): Promise<TaskRow[]> {
     return this.service.listByAssignee(assigneeId, params);
   }
 
-  listSubtasks(parentTaskId: string): Promise<Task[]> {
+  listSubtasks(parentTaskId: string): Promise<TaskRow[]> {
     return this.service.listSubtasks(parentTaskId);
   }
 
-  create(input: TaskInsert): Promise<Task> {
+  // ── Writes ───────────────────────────────────────────────────────────────
+  create(input: TaskRowInsert): Promise<TaskRow> {
     return this.service.create(input);
   }
 
-  update(id: string, patch: TaskUpdate): Promise<Task> {
+  update(id: string, patch: TaskRowUpdate): Promise<TaskRow> {
     return this.service.update(id, patch);
   }
 
-  setStatus(id: string, status: TaskStatus): Promise<Task> {
+  setStatus(id: string, status: TaskStatus): Promise<TaskRow> {
     return this.service.setStatus(id, status);
   }
 
-  assign(id: string, assigneeId: string | null): Promise<Task> {
+  assign(id: string, assigneeId: string | null): Promise<TaskRow> {
     return this.service.assign(id, assigneeId);
   }
 
-  /** Soft-delete (move to trash). */
-  softDelete(id: string): Promise<Task> {
-    return this.service.softDelete(id);
-  }
-
-  /** Hard-delete. */
+  /** Hard-delete a task row (subtasks cascade via the FK). */
   remove(id: string): Promise<void> {
     return this.service.remove(id);
   }
 
+  // ── Comments (unbacked until a task_comments table lands) ──────────────────
   listComments(taskId: string): Promise<TaskComment[]> {
     return this.service.listComments(taskId);
   }
