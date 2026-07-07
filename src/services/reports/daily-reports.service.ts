@@ -76,6 +76,19 @@ export class DailyReportsService extends BaseService<
   listByDate(workDate: string, params: ListParams<DailyReportRow> = {}): Promise<DailyReportRow[]> {
     return this.list({ ...params, filters: { ...params.filters, work_date: workDate } });
   }
+
+  /**
+   * Submitted reports across the team, most recent work date first — the manager
+   * review queue. RLS scopes the rows a reviewer may see.
+   */
+  listSubmitted(params: ListParams<DailyReportRow> = {}): Promise<DailyReportRow[]> {
+    return this.list({
+      ...params,
+      filters: { ...params.filters, status: "submitted" },
+      orderBy: params.orderBy ?? "work_date",
+      direction: params.direction ?? "desc",
+    });
+  }
 }
 
 /** Shared singleton — import this, not the class. */

@@ -41,14 +41,9 @@ import {
   assignRole,
   assignTeam,
   changeDepartment,
-  deactivateEmployee,
-  isSoftDeleted,
-  reactivateEmployee,
   resetPassword,
-  restoreEmployee,
-  softDeleteEmployee,
-  suspendEmployee,
 } from "../employees-store";
+import { useEmployeeManagement } from "../use-employee-management";
 import { recordAudit } from "@/features/audit/audit-store";
 import { EmployeeFormDialog } from "./employee-form-dialog";
 import { ROLE_OPTIONS } from "./employee-role-options";
@@ -68,12 +63,14 @@ export function EmployeeActionsMenu({
   employees: HrEmployee[];
   variant?: "icon" | "button";
 }) {
+  const mgmt = useEmployeeManagement();
   const [editOpen, setEditOpen] = useState(false);
   const [assign, setAssign] = useState<AssignKind | null>(null);
   const [assignValue, setAssignValue] = useState<string>("");
   const [confirm, setConfirm] = useState<ConfirmKind | null>(null);
 
-  const isDeleted = isSoftDeleted(employee.id);
+  // Soft-deleted employees carry status 'offboarded' (mock: 'offboarding').
+  const isDeleted = employee.status === "offboarding";
   const managerOptions = useMemo(
     () => employees.filter((e) => e.id !== employee.id),
     [employees, employee.id],
@@ -133,36 +130,55 @@ export function EmployeeActionsMenu({
     setAssign(null);
   }
 
-  function runConfirm() {
-    switch (confirm) {
-      case "reset":
-        resetPassword(employee.id, employee.email);
-        toast.success("Password reset email sent", { description: employee.email });
-        break;
-      case "deactivate":
-        deactivateEmployee(employee.id);
-        toast.message("Employee deactivated", { description: employee.name });
-        break;
-      case "suspend":
-        suspendEmployee(employee.id);
-        toast.message("Account suspended", { description: employee.name });
-        break;
-      case "delete":
-        recordAudit({
-          action: "employee_deleted",
-          target: employee.name,
-          targetType: "employee",
-          oldValue: employee.status,
-        });
-        softDeleteEmployee(employee.id);
-        toast.message("Employee removed", { description: `${employee.name} was soft-deleted` });
-        break;
-      case "restore":
-        restoreEmployee(employee.id);
-        toast.success("Employee restored", { description: employee.name });
-        break;
-    }
+  async function runConfirm() {
+    const kind = confirm;
     setConfirm(null);
+    try {
+      switch (kind) {
+        case "reset":
+          // Password reset stays local for now (no auth admin endpoint wired).
+          resetPassword(employee.id, employee.email);
+          toast.success("Password reset email sent", { description: employee.email });
+          break;
+        case "deactivate":
+          await mgmt.deactivate(employee);
+          toast.message("Employee deactivated", { description: employee.name });
+          break;
+        case "suspend":
+          await mgmt.suspend(employee);
+          toast.message("Account suspended", { description: employee.name });
+          break;
+        case "delete":
+          await mgmt.softDelete(employee);
+          recordAudit({
+            action: "employee_deleted",
+            target: employee.name,
+            targetType: "employee",
+            oldValue: employee.status,
+          });
+          toast.message("Employee removed", { description: `${employee.name} was removed` });
+          break;
+        case "restore":
+          await mgmt.restore(employee);
+          toast.success("Employee restored", { description: employee.name });
+          break;
+      }
+    } catch (err) {
+      toast.error("Action failed", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
+  }
+
+  async function runReactivate() {
+    try {
+      await mgmt.reactivate(employee);
+      toast.success("Employee reactivated", { description: employee.name });
+    } catch (err) {
+      toast.error("Action failed", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   }
 
   const confirmCopy: Record<
@@ -228,9 +244,7 @@ export function EmployeeActionsMenu({
           ) : (
             <>
               {employee.status === "deactivated" || employee.status === "suspended" ? (
-                <DropdownMenuItem onClick={() => reactivateEmployee(employee.id)}>
-                  Reactivate
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void runReactivate()}>Reactivate</DropdownMenuItem>
               ) : (
                 <>
                   <DropdownMenuItem onClick={() => setConfirm("deactivate")}>
@@ -330,7 +344,7 @@ export function EmployeeActionsMenu({
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={runConfirm}
+                  onClick={() => void runConfirm()}
                   className={
                     confirmCopy[confirm].destructive
                       ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"

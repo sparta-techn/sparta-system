@@ -16,6 +16,7 @@
  * catalogs (epics, milestones, comments, activity, saved filters, favorites).
  */
 import { useSyncExternalStore } from "react";
+import { toast } from "sonner";
 import { taskRepository } from "@/repositories";
 import type { TaskRow, TaskRowInsert, TaskRowUpdate } from "@/services/tasks";
 import {
@@ -343,12 +344,24 @@ function persistTaskInsert(t: Task) {
   };
   void taskRepository.create(payload).catch((err) => {
     console.error("[tasks] createTask write-through failed", err);
+    // Insert rejected (FK/RLS/etc.) — roll back the optimistic row so it does not
+    // linger and then silently vanish on the next hydrate.
+    const { [t.id]: _dropped, ...restOverlay } = state.overlay;
+    state = {
+      ...state,
+      tasks: state.tasks.filter((x) => x.id !== t.id),
+      activity: state.activity.filter((a) => a.taskId !== t.id),
+      overlay: restOverlay,
+    };
+    emit();
+    toast.error(`Couldn't create "${t.title}". You may not have access to that project.`);
   });
 }
 
 /** Write through only the backed columns present in a patch. */
-function persistTaskPatch(id: string, patch: Partial<Task>) {
+function persistTaskPatch(id: string, patch: Partial<Task>, restore?: () => void) {
   const col: TaskRowUpdate = {};
+  if (patch.projectId !== undefined) col.project_id = patch.projectId;
   if (patch.title !== undefined) col.title = patch.title;
   if (patch.description !== undefined) col.description = patch.description || null;
   if (patch.status !== undefined) col.status = patch.status;
@@ -359,10 +372,13 @@ function persistTaskPatch(id: string, patch: Partial<Task>) {
   if (Object.keys(col).length === 0) return;
   void taskRepository.update(id, col).catch((err) => {
     console.error("[tasks] updateTask write-through failed", err);
+    restore?.();
+    toast.error("Couldn't save your changes. They were reverted.");
   });
 }
 
 const BACKED_FIELDS: Array<keyof Task> = [
+  "projectId",
   "title",
   "description",
   "status",
@@ -475,7 +491,14 @@ export function updateTask(id: string, patch: Partial<Task>, actorId?: string) {
 
   // Write-through to Supabase only when a backed column actually changed.
   if (BACKED_FIELDS.some((k) => patch[k] !== undefined)) {
-    persistTaskPatch(id, patch);
+    persistTaskPatch(id, patch, () => {
+      // Revert only if no newer edit landed in the meantime.
+      const live = getTask(id);
+      if (!live || live.updatedAt !== updated.updatedAt) return;
+      state = { ...state, tasks: state.tasks.map((t) => (t.id === id ? current : t)) };
+      setOverlay(id, overlayFromTask(current));
+      emit();
+    });
   }
 }
 

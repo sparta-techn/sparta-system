@@ -22,6 +22,10 @@ import type {
 export type DailyReportStatus = "draft" | "submitted" | "reviewed";
 export type StatusUpdateKind = "morning_checkin" | "midday" | "custom";
 
+// ── report_reviews (manager review decision + comment trail) ────────────────
+export type ReportReviewDecision = "approved" | "rejected";
+export type ReportReviewSubject = "daily_report" | "status_update";
+
 export type { DependencyState, DependencyType, DependencyPriority };
 
 // ── daily_reports (end-of-day) ──────────────────────────────────────────────
@@ -91,6 +95,25 @@ export type StatusUpdateInsert = Pick<StatusUpdateRow, "user_id" | "work_date"> 
 export type StatusUpdateUpdate = Partial<
   Omit<StatusUpdateRow, "id" | "user_id" | "work_date" | "kind" | "created_at" | "updated_at">
 >;
+
+// ── report_reviews (append-only manager review trail) ───────────────────────
+
+export interface ReportReviewRow {
+  id: string;
+  subject_type: ReportReviewSubject;
+  subject_id: string;
+  subject_owner: string;
+  reviewer_id: string | null;
+  decision: ReportReviewDecision;
+  comment: string | null;
+  created_at: string;
+}
+
+export type ReportReviewInsert = Pick<
+  ReportReviewRow,
+  "subject_type" | "subject_id" | "subject_owner" | "decision"
+> &
+  Partial<Pick<ReportReviewRow, "reviewer_id" | "comment">>;
 
 // ── dependency_requests (cross-team request / blocker) ──────────────────────
 

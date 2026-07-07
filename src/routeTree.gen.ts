@@ -21,6 +21,7 @@ import { Route as AuthAcceptInvitationRouteImport } from './routes/auth/accept-i
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app/tasks'
 import { Route as AuthenticatedAppSprintsRouteImport } from './routes/_authenticated/app/sprints'
+import { Route as AuthenticatedAppReportReviewRouteImport } from './routes/_authenticated/app/report-review'
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app/projects'
 import { Route as AuthenticatedAppMiddayRouteImport } from './routes/_authenticated/app/midday'
 import { Route as AuthenticatedAppManagerRouteImport } from './routes/_authenticated/app/manager'
@@ -131,6 +132,12 @@ const AuthenticatedAppSprintsRoute = AuthenticatedAppSprintsRouteImport.update({
   path: '/app/sprints',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppReportReviewRoute =
+  AuthenticatedAppReportReviewRouteImport.update({
+    id: '/app/report-review',
+    path: '/app/report-review',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppProjectsRoute =
   AuthenticatedAppProjectsRouteImport.update({
     id: '/app/projects',
@@ -442,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/app/manager': typeof AuthenticatedAppManagerRoute
   '/app/midday': typeof AuthenticatedAppMiddayRoute
   '/app/projects': typeof AuthenticatedAppProjectsRouteWithChildren
+  '/app/report-review': typeof AuthenticatedAppReportReviewRoute
   '/app/sprints': typeof AuthenticatedAppSprintsRouteWithChildren
   '/app/tasks': typeof AuthenticatedAppTasksRouteWithChildren
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -501,6 +509,7 @@ export interface FileRoutesByTo {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/manager': typeof AuthenticatedAppManagerRoute
   '/app/midday': typeof AuthenticatedAppMiddayRoute
+  '/app/report-review': typeof AuthenticatedAppReportReviewRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/analytics/executive': typeof AuthenticatedAppAnalyticsExecutiveRoute
   '/app/analytics/hr': typeof AuthenticatedAppAnalyticsHrRoute
@@ -564,6 +573,7 @@ export interface FileRoutesById {
   '/_authenticated/app/manager': typeof AuthenticatedAppManagerRoute
   '/_authenticated/app/midday': typeof AuthenticatedAppMiddayRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRouteWithChildren
+  '/_authenticated/app/report-review': typeof AuthenticatedAppReportReviewRoute
   '/_authenticated/app/sprints': typeof AuthenticatedAppSprintsRouteWithChildren
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRouteWithChildren
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -629,6 +639,7 @@ export interface FileRouteTypes {
     | '/app/manager'
     | '/app/midday'
     | '/app/projects'
+    | '/app/report-review'
     | '/app/sprints'
     | '/app/tasks'
     | '/app/'
@@ -688,6 +699,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/manager'
     | '/app/midday'
+    | '/app/report-review'
     | '/app'
     | '/app/analytics/executive'
     | '/app/analytics/hr'
@@ -750,6 +762,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/manager'
     | '/_authenticated/app/midday'
     | '/_authenticated/app/projects'
+    | '/_authenticated/app/report-review'
     | '/_authenticated/app/sprints'
     | '/_authenticated/app/tasks'
     | '/_authenticated/app/'
@@ -890,6 +903,13 @@ declare module '@tanstack/react-router' {
       path: '/app/sprints'
       fullPath: '/app/sprints'
       preLoaderRoute: typeof AuthenticatedAppSprintsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/report-review': {
+      id: '/_authenticated/app/report-review'
+      path: '/app/report-review'
+      fullPath: '/app/report-review'
+      preLoaderRoute: typeof AuthenticatedAppReportReviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app/projects': {
@@ -1410,6 +1430,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppManagerRoute: typeof AuthenticatedAppManagerRoute
   AuthenticatedAppMiddayRoute: typeof AuthenticatedAppMiddayRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRouteWithChildren
+  AuthenticatedAppReportReviewRoute: typeof AuthenticatedAppReportReviewRoute
   AuthenticatedAppSprintsRoute: typeof AuthenticatedAppSprintsRouteWithChildren
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRouteWithChildren
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -1434,6 +1455,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppManagerRoute: AuthenticatedAppManagerRoute,
   AuthenticatedAppMiddayRoute: AuthenticatedAppMiddayRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRouteWithChildren,
+  AuthenticatedAppReportReviewRoute: AuthenticatedAppReportReviewRoute,
   AuthenticatedAppSprintsRoute: AuthenticatedAppSprintsRouteWithChildren,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRouteWithChildren,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,

@@ -22,6 +22,9 @@ export type EmployeeRole = "owner" | "super_admin" | "hr" | "manager" | "team_le
 
 export interface HrEmployee {
   id: string;
+  /** Auth/profile id (`profiles.id` = `employees.user_id`). Present on live rows;
+   * used by management writes that target `profiles`. Absent on mock seed data. */
+  userId?: string;
   name: string;
   initials: string;
   email: string;

@@ -69,6 +69,11 @@ export class StatusUpdateRepository {
   listByUser(userId: string, params: ListParams<StatusUpdateRow> = {}): Promise<StatusUpdateRow[]> {
     return this.service.listByUser(userId, params);
   }
+
+  /** Submitted status pulses across the team (manager review queue). */
+  listSubmitted(limit = 100): Promise<StatusUpdateRow[]> {
+    return this.service.listSubmitted(limit);
+  }
 }
 
 /** Shared singleton — import this, not the class. */

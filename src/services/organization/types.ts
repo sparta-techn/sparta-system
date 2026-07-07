@@ -16,6 +16,14 @@ export interface Company {
   slug: string;
   legal_name: string | null;
   timezone: string;
+  /** Logo URL (Storage bucket is out of MVP scope — a plain URL for now). */
+  logo_url: string | null;
+  support_email: string | null;
+  /** Company-local working hours as `'HH:MM'`, or null when unset. */
+  work_start_time: string | null;
+  work_end_time: string | null;
+  /** Working days as short names, e.g. `['Mon','Tue',…]`. */
+  working_days: string[];
   primary_owner_id: string | null;
   is_active: boolean;
   created_by: string | null;
@@ -25,7 +33,20 @@ export interface Company {
 }
 
 export type CompanyInsert = Pick<Company, "name" | "slug"> &
-  Partial<Pick<Company, "legal_name" | "timezone" | "primary_owner_id" | "is_active">>;
+  Partial<
+    Pick<
+      Company,
+      | "legal_name"
+      | "timezone"
+      | "logo_url"
+      | "support_email"
+      | "work_start_time"
+      | "work_end_time"
+      | "working_days"
+      | "primary_owner_id"
+      | "is_active"
+    >
+  >;
 
 export type CompanyUpdate = Partial<CompanyInsert> & {
   updated_by?: string | null;

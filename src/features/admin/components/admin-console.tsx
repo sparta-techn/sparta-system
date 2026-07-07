@@ -4,6 +4,7 @@ import { EmployeeDirectory } from "@/features/hr/components/employee-directory";
 import { InvitationsManager } from "@/features/hr/components/invitations-manager";
 import { AuditLogView } from "@/features/audit/components/audit-log-view";
 import { AdminOverview } from "./admin-overview";
+import { OrganizationSettingsPanel } from "./organization-settings-panel";
 import { RolesPanel } from "./roles-panel";
 import { PermissionsPanel } from "./permissions-panel";
 import { DepartmentsPanel } from "./departments-panel";
@@ -14,6 +15,7 @@ import { MaintenancePanel } from "./maintenance-panel";
 
 type SectionId =
   | "overview"
+  | "organization"
   | "users"
   | "roles"
   | "permissions"
@@ -27,6 +29,7 @@ type SectionId =
 
 const SECTIONS: { id: SectionId; label: string; render: () => React.ReactNode }[] = [
   { id: "overview", label: "Overview", render: () => <AdminOverview /> },
+  { id: "organization", label: "Organization", render: () => <OrganizationSettingsPanel /> },
   { id: "users", label: "Users", render: () => <EmployeeDirectory /> },
   { id: "roles", label: "Roles", render: () => <RolesPanel /> },
   { id: "permissions", label: "Permissions", render: () => <PermissionsPanel /> },

@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { departments, type Department, type EmployeeRole, type HrEmployee } from "../mock-data";
-import { createEmployee, editEmployee } from "../employees-store";
+import { createEmployee } from "../employees-store";
+import { useEmployeeManagement } from "../use-employee-management";
 import { recordAudit } from "@/features/audit/audit-store";
 import { ROLE_OPTIONS } from "./employee-role-options";
 
@@ -56,7 +57,9 @@ export function EmployeeFormDialog({
   employee?: HrEmployee;
 }) {
   const isEdit = !!employee;
+  const mgmt = useEmployeeManagement();
   const [form, setForm] = useState<FormState>(fromEmployee(employee));
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) setForm(fromEmployee(employee));
@@ -66,22 +69,34 @@ export function EmployeeFormDialog({
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim()) return;
     if (isEdit && employee) {
-      editEmployee(employee.id, form);
-      toast.success("Employee updated", { description: form.name });
-    } else {
-      createEmployee(form);
-      recordAudit({
-        action: "employee_created",
-        target: form.name.trim(),
-        targetType: "employee",
-        newValue: `${form.department} · ${form.role}`,
-      });
-      toast.success("Employee created", { description: form.name });
+      setSubmitting(true);
+      try {
+        // Real write-through: name/email/title → profiles, dept/team/mode → employees.
+        await mgmt.edit(employee, form);
+        toast.success("Employee updated", { description: form.name });
+        onOpenChange(false);
+      } catch (err) {
+        toast.error("Couldn't update employee", {
+          description: err instanceof Error ? err.message : "Please try again.",
+        });
+      } finally {
+        setSubmitting(false);
+      }
+      return;
     }
+    // Create stays local for now (a real hire goes through the invitation flow).
+    createEmployee(form);
+    recordAudit({
+      action: "employee_created",
+      target: form.name.trim(),
+      targetType: "employee",
+      newValue: `${form.department} · ${form.role}`,
+    });
+    toast.success("Employee created", { description: form.name });
     onOpenChange(false);
   }
 
@@ -155,21 +170,25 @@ export function EmployeeFormDialog({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="emp-role">Role</Label>
-              <Select value={form.role} onValueChange={(v) => set("role", v as EmployeeRole)}>
-                <SelectTrigger id="emp-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROLE_OPTIONS.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Role is set here only when creating; edits use the dedicated
+                "Assign role" action (it writes to user_roles). */}
+            {!isEdit && (
+              <div className="space-y-1.5">
+                <Label htmlFor="emp-role">Role</Label>
+                <Select value={form.role} onValueChange={(v) => set("role", v as EmployeeRole)}>
+                  <SelectTrigger id="emp-role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLE_OPTIONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="emp-mode">Work mode</Label>
               <Select
@@ -190,7 +209,9 @@ export function EmployeeFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">{isEdit ? "Save changes" : "Create employee"}</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : isEdit ? "Save changes" : "Create employee"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

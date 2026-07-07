@@ -52,6 +52,11 @@ export class DailyReportRepository {
     return this.service.listByDate(workDate, params);
   }
 
+  /** Submitted reports across the team (manager review queue). */
+  listSubmitted(params: ListParams<DailyReportRow> = {}): Promise<DailyReportRow[]> {
+    return this.service.listSubmitted(params);
+  }
+
   remove(id: string): Promise<void> {
     return this.service.remove(id);
   }

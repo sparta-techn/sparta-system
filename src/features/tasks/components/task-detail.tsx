@@ -16,8 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { employees } from "@/features/hr/mock-data";
-import { seedProjects } from "@/features/projects/mock-data";
+import { useProjectsState } from "@/features/projects/store";
 import {
   archiveTask,
   duplicateTask,
@@ -286,6 +285,8 @@ function Description({
 }
 
 function SidePanel({ task }: { task: NonNullable<ReturnType<typeof useTasksStateOptional>> }) {
+  const people = useProjectsState((s) => s.people);
+  const projects = useProjectsState((s) => s.projects);
   return (
     <Card className="space-y-4 p-4">
       <SidebarField label="Status">
@@ -332,9 +333,9 @@ function SidePanel({ task }: { task: NonNullable<ReturnType<typeof useTasksState
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Unassigned</SelectItem>
-            {employees.slice(0, 25).map((e) => (
-              <SelectItem key={e.id} value={e.id}>
-                {e.name}
+            {people.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -349,7 +350,7 @@ function SidePanel({ task }: { task: NonNullable<ReturnType<typeof useTasksState
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {seedProjects.map((p) => (
+            {projects.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.icon} {p.name}
               </SelectItem>
@@ -455,12 +456,11 @@ function SidePanel({ task }: { task: NonNullable<ReturnType<typeof useTasksState
               <SelectValue placeholder="Add watcher…" />
             </SelectTrigger>
             <SelectContent>
-              {employees
-                .filter((e) => !task.watcherIds.includes(e.id))
-                .slice(0, 25)
-                .map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.name}
+              {people
+                .filter((p) => !task.watcherIds.includes(p.id))
+                .map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
                   </SelectItem>
                 ))}
             </SelectContent>

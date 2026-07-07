@@ -14,6 +14,7 @@
  *   Dependency Requests             → {@link DependencyRequestRepository}
  */
 export { DailyReportRepository, dailyReportRepository } from "./daily-report.repository";
+export { ReportReviewRepository, reportReviewRepository } from "./report-review.repository";
 export {
   StatusUpdateRepository,
   statusUpdateRepository,

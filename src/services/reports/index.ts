@@ -6,6 +6,7 @@ export type { EodReportRow, EodReportInsert, EodReportUpdate } from "./reports.s
 // `dependency_requests` tables (migration 20260630130000).
 export { DailyReportsService, dailyReportsService } from "./daily-reports.service";
 export { StatusUpdatesService, statusUpdatesService } from "./status-updates.service";
+export { ReportReviewsService, reportReviewsService } from "./report-reviews.service";
 export {
   DependencyRequestsService,
   dependencyRequestsService,
@@ -20,6 +21,10 @@ export type {
   StatusUpdateInsert,
   StatusUpdateUpdate,
   StatusUpdateKind,
+  ReportReviewRow,
+  ReportReviewInsert,
+  ReportReviewDecision,
+  ReportReviewSubject,
   DependencyRequestRow,
   DependencyRequestInsert,
   DependencyRequestUpdate,

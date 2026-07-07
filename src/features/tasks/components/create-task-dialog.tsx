@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { seedProjects } from "@/features/projects/mock-data";
-import { employees } from "@/features/hr/mock-data";
+import { useProjectsState } from "@/features/projects/store";
+import { useAuth } from "@/features/auth/auth-context";
 import { createTask, useTasksState } from "../store";
 import {
   PRIORITY_LABEL,
@@ -36,9 +36,16 @@ export function CreateTaskDialog({
 }) {
   const epics = useTasksState((s) => s.epics);
   const milestones = useTasksState((s) => s.milestones);
+  const { user } = useAuth();
+  const allProjects = useProjectsState((s) => s.projects);
+  const people = useProjectsState((s) => s.people);
+  // RLS only permits a project member to insert tasks — show only those.
+  const memberProjects = allProjects.filter(
+    (p) => p.members.some((m) => m.employeeId === user?.id) || p.managerId === user?.id,
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [projectId, setProjectId] = useState(defaultProjectId ?? seedProjects[0]?.id ?? "");
+  const [projectId, setProjectId] = useState(defaultProjectId ?? "");
   const [status, setStatus] = useState<TaskStatus>("todo");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [assigneeId, setAssigneeId] = useState<string>("none");
@@ -46,9 +53,16 @@ export function CreateTaskDialog({
   const [milestoneId, setMilestoneId] = useState<string>("none");
   const [dueDate, setDueDate] = useState<string>("");
 
-  const project = seedProjects.find((p) => p.id === projectId);
+  const project = allProjects.find((p) => p.id === projectId);
   const projectEpics = epics.filter((e) => e.projectId === projectId);
   const projectMilestones = milestones.filter((m) => m.projectId === projectId);
+
+  // Projects hydrate asynchronously — pick a sensible default once they arrive.
+  useEffect(() => {
+    if (!projectId && memberProjects.length) {
+      setProjectId(defaultProjectId ?? memberProjects[0].id);
+    }
+  }, [projectId, memberProjects, defaultProjectId]);
 
   function reset() {
     setTitle("");
@@ -62,13 +76,13 @@ export function CreateTaskDialog({
   }
 
   function submit() {
-    if (!title.trim() || !project) return;
+    if (!title.trim() || !project || !user) return;
     createTask(
       {
         title: title.trim(),
         description,
         projectId,
-        reporterId: employees[0]?.id ?? "emp_001",
+        reporterId: user.id,
         assigneeId: assigneeId === "none" ? null : assigneeId,
         epicId: epicId === "none" ? null : epicId,
         milestoneId: milestoneId === "none" ? null : milestoneId,
@@ -115,7 +129,7 @@ export function CreateTaskDialog({
               <Select value={projectId} onValueChange={setProjectId} disabled={!!parentTaskId}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {seedProjects.map((p) => (
+                  {memberProjects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.icon} {p.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -126,8 +140,8 @@ export function CreateTaskDialog({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Unassigned</SelectItem>
-                  {employees.slice(0, 20).map((e) => (
-                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                  {people.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

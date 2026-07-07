@@ -1,31 +1,25 @@
 /**
- * Audit-log store — Supabase-backed, append-only, reactive.
+ * Audit-log store — in-memory, append-only, reactive.
  *
  * The single sink for security/system audit events. Emitters across the app
  * (`auth-service`, employee management, projects, settings) call
  * {@link recordAudit}; the audit viewer subscribes via {@link useAuditLog}.
- * Backed by the append-only Supabase `public.audit_logs` table (migration
- * 20260706120000): writes go through {@link recordAudit}, reads hydrate the
- * in-memory cache from the table.
  *
- * A thin in-memory cache sits in front of the table so the viewer stays
- * synchronous (`useSyncExternalStore`) and new events appear instantly:
- *   - {@link recordAudit} optimistically prepends the event to the cache and
- *     returns it synchronously, then fires a best-effort insert to Supabase.
- *   - {@link useAuditLog} hydrates the cache from the table on first subscribe.
- * Seed events remain the offline/pre-hydration default so the viewer renders
- * before the first fetch resolves.
+ * NOTE (MVP): the durable Supabase `public.audit_logs` table (migration
+ * 20260706120000) is deferred past the MVP and is NOT applied, so this store is
+ * intentionally in-memory only — no Supabase write-through and no hydration.
+ * Every {@link recordAudit} prepends to a bounded in-memory cache and returns
+ * synchronously; nothing touches the network. Seeded events remain the default
+ * so the viewer (when re-enabled) still renders. Re-introduce the best-effort
+ * write-through + hydrate against `audit_logs` when finishing the audit module
+ * post-MVP.
  *
  * Recording is best-effort and MUST NOT throw into the action that triggered it
- * — every write is wrapped so a logging failure (or a dropped network insert)
- * can never break a login, deletion, or settings change.
- *
- * Persistence goes through the relaxed service-layer client ({@link db}); this
- * store is the local stand-in for a future `AuditService` (see types.ts).
+ * — every write is wrapped so a logging failure can never break a login,
+ * deletion, or settings change.
  */
 import { useSyncExternalStore } from "react";
 
-import { db } from "@/services/core/client";
 import {
   ACTION_CATEGORY,
   type AuditAction,
@@ -35,11 +29,8 @@ import {
 } from "./types";
 import { seedAuditEvents } from "./seed";
 
-/** Supabase table this store reads from and writes through to. */
-const TABLE = "audit_logs";
-/** Keep the client-side cache bounded (the server-side table is unbounded). */
+/** Keep the in-memory cache bounded. */
 const MAX_EVENTS = 500;
-const SELECT_COLS = "id, actor_id, action, entity_type, entity_id, metadata, created_at";
 
 interface State {
   events: AuditEvent[];
@@ -56,39 +47,8 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
-// ---------- hydration (reads) ----------
-
-let hydrated = false;
-let hydrating = false;
-
-/**
- * Load the audit trail from Supabase into the in-memory cache, once. Best-effort:
- * on failure the seed/optimistic cache is kept so the viewer still renders.
- */
-async function hydrate(): Promise<void> {
-  if (hydrated || hydrating || typeof window === "undefined") return;
-  hydrating = true;
-  try {
-    const { data, error } = await db
-      .from(TABLE)
-      .select(SELECT_COLS)
-      .order("created_at", { ascending: false })
-      .limit(MAX_EVENTS);
-    if (error) throw error;
-    state = { events: (data ?? []).map(rowToEvent) };
-    hydrated = true;
-    emit();
-  } catch {
-    /* keep the seed/optimistic cache when the log can't be loaded */
-  } finally {
-    hydrating = false;
-  }
-}
-
 function subscribe(l: () => void) {
   listeners.add(l);
-  // Lazily hydrate from the table the first time the viewer mounts.
-  void hydrate();
   return () => listeners.delete(l);
 }
 
@@ -108,7 +68,7 @@ export function getCurrentActor(): { id: string | null; name: string } {
 
 // ---------- helpers ----------
 
-/** A collision-safe uuid so the optimistic id matches the persisted row's id. */
+/** A collision-safe uuid for the event id. */
 function uid(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
@@ -117,64 +77,6 @@ function uid(): string {
     const r = (Math.random() * 16) | 0;
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
-}
-
-/** Row shape of `public.audit_logs` (not yet in the generated Database types). */
-interface AuditRow {
-  id: string;
-  actor_id: string | null;
-  action: AuditAction;
-  entity_type: string | null;
-  entity_id: string | null;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-}
-
-/** Fold an {@link AuditEvent} into an insert row (rich fields spill into metadata). */
-function toRow(e: AuditEvent): AuditRow {
-  return {
-    id: e.id,
-    actor_id: e.actorId,
-    action: e.action,
-    entity_type: e.targetType ?? null,
-    entity_id: e.target,
-    metadata: {
-      actor: e.actor,
-      old_value: e.oldValue ?? null,
-      new_value: e.newValue ?? null,
-      ...(e.ip ? { ip: e.ip } : {}),
-      ...(e.device ? { device: e.device } : {}),
-      ...(e.meta ? { meta: e.meta } : {}),
-    },
-    created_at: e.at,
-  };
-}
-
-/** Reconstruct an {@link AuditEvent} from a table row (category re-derived from action). */
-function rowToEvent(row: AuditRow): AuditEvent {
-  const meta = (row.metadata ?? {}) as {
-    actor?: string;
-    old_value?: string | null;
-    new_value?: string | null;
-    ip?: string | null;
-    device?: string | null;
-    meta?: Record<string, unknown>;
-  };
-  return {
-    id: row.id,
-    at: row.created_at,
-    actorId: row.actor_id,
-    actor: meta.actor ?? "System",
-    action: row.action,
-    category: ACTION_CATEGORY[row.action],
-    target: row.entity_id ?? "",
-    targetType: row.entity_type ?? undefined,
-    oldValue: meta.old_value ?? null,
-    newValue: meta.new_value ?? null,
-    ip: meta.ip ?? null,
-    device: meta.device ?? null,
-    meta: meta.meta,
-  };
 }
 
 // ---------- reads ----------
@@ -211,25 +113,12 @@ export function useAuditLog(): AuditEvent[] {
 // ---------- write ----------
 
 /**
- * Best-effort durable write-through to Supabase. Never throws — a dropped insert
- * leaves the optimistic entry in the cache until the next {@link hydrate}.
- */
-async function persist(event: AuditEvent): Promise<void> {
-  try {
-    const { error } = await db.from(TABLE).insert(toRow(event) as never);
-    if (error) throw error;
-  } catch {
-    /* auditing must never break the action that triggered it */
-  }
-}
-
-/**
  * Append an audit event. Best-effort: never throws. Actor + timestamp default
  * from {@link setCurrentActor} but can be overridden (e.g. failed logins carry
  * the attempted email as the actor and no id).
  *
  * The event is prepended to the local cache and returned synchronously so the
- * viewer updates instantly, while the durable insert runs in the background.
+ * viewer updates instantly. In-memory only for the MVP — see the file header.
  */
 export function recordAudit(input: AuditInput): AuditEvent | null {
   try {
@@ -244,16 +133,14 @@ export function recordAudit(input: AuditInput): AuditEvent | null {
       targetType: input.targetType,
       oldValue: input.oldValue ?? null,
       newValue: input.newValue ?? null,
-      // Reserved — the server-side phase fills these from the request context.
+      // Reserved — a future server-side phase fills these from request context.
       ip: null,
       device: null,
       meta: input.meta,
     };
-    // Optimistic in-memory prepend (keeps the viewer synchronous & instant)…
+    // Optimistic in-memory prepend (keeps the viewer synchronous & instant).
     state = { events: [event, ...state.events].slice(0, MAX_EVENTS) };
     emit();
-    // …then the durable, best-effort write-through to the append-only table.
-    void persist(event);
     return event;
   } catch {
     // Auditing must never break the action that triggered it.
@@ -261,9 +148,8 @@ export function recordAudit(input: AuditInput): AuditEvent | null {
   }
 }
 
-/** Test/support helper — reset the cache to seeds and allow a fresh hydrate. */
+/** Test/support helper — reset the cache to seeds. */
 export function __resetAudit(): void {
   state = defaultState();
-  hydrated = false;
   emit();
 }

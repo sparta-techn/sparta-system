@@ -1,14 +1,13 @@
-import { employees } from "@/features/hr/mock-data";
-import { seedProjects } from "@/features/projects/mock-data";
+import { getProject, personById } from "@/features/projects/store";
 import type { Task } from "./types";
 
 export function employeeById(id: string | null | undefined) {
   if (!id) return null;
-  return employees.find((e) => e.id === id) ?? null;
+  return personById(id); // real Supabase-backed profile directory
 }
 
 export function projectById(id: string) {
-  return seedProjects.find((p) => p.id === id) ?? null;
+  return getProject(id); // real hydrated projects
 }
 
 export function isOverdue(task: Task) {

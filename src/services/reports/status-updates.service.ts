@@ -69,6 +69,26 @@ export class StatusUpdatesService extends BaseService<
   ): Promise<StatusUpdateRow[]> {
     return this.list({ ...params, filters: { ...params.filters, work_date: workDate, kind } });
   }
+
+  /**
+   * Submitted status pulses across the team, most recent first — the manager
+   * review queue. "Submitted" = `submitted_at IS NOT NULL` (there is no status
+   * column on this table). RLS scopes the rows a reviewer may see.
+   */
+  async listSubmitted(limit = 100): Promise<StatusUpdateRow[]> {
+    try {
+      const { data, error } = await this.client
+        .from(this.table)
+        .select("*")
+        .not("submitted_at", "is", null)
+        .order("work_date", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data as unknown as StatusUpdateRow[]) ?? [];
+    } catch (error) {
+      throw toServiceError(error, `Failed to load ${this.entity}`);
+    }
+  }
 }
 
 /** Shared singleton — import this, not the class. */

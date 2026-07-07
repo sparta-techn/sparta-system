@@ -35,35 +35,51 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { FuturePlanBadge } from "@/components/future-plan";
+import { isFeatureInMvp } from "@/config/mvp-scope";
 
-const PRIMARY = [
-  { title: "Dashboard", url: "/app", icon: Home },
-  { title: "Check-in", url: "/app/check-in", icon: Sparkles },
-  { title: "Midday", url: "/app/midday", icon: GaugeCircle },
-  { title: "End-of-day", url: "/app/eod", icon: ClipboardCheck },
-  { title: "Attendance", url: "/app/attendance", icon: Calendar },
-  { title: "Workflow", url: "/app/workflow", icon: ClipboardList },
-  { title: "Dependencies", url: "/app/dependencies", icon: Workflow },
-  { title: "Projects", url: "/app/projects", icon: Briefcase },
-  { title: "Tasks", url: "/app/tasks", icon: CheckSquare },
-  { title: "Sprints", url: "/app/sprints", icon: Target },
-  { title: "Announcements", url: "/app/announcements", icon: Megaphone },
-  { title: "Notifications", url: "/app/notifications", icon: Bell },
+type NavItem = {
+  /** Matches an id in `src/config/mvp-scope.ts` to resolve MVP scope. */
+  id: string;
+  title: string;
+  url: string;
+  icon: typeof Home;
+  /**
+   * How to surface this item when its feature is out of MVP scope.
+   * "hide" (default) drops it; "future" renders it disabled with a badge.
+   */
+  whenOutOfMvp?: "hide" | "future";
+};
+
+const PRIMARY: NavItem[] = [
+  { id: "dashboard", title: "Dashboard", url: "/app", icon: Home },
+  { id: "check-in", title: "Check-in", url: "/app/check-in", icon: Sparkles },
+  { id: "midday", title: "Midday", url: "/app/midday", icon: GaugeCircle },
+  { id: "eod", title: "End-of-day", url: "/app/eod", icon: ClipboardCheck },
+  { id: "attendance", title: "Attendance", url: "/app/attendance", icon: Calendar },
+  { id: "workflow", title: "Workflow", url: "/app/workflow", icon: ClipboardList, whenOutOfMvp: "hide" },
+  { id: "dependencies", title: "Dependencies", url: "/app/dependencies", icon: Workflow, whenOutOfMvp: "future" },
+  { id: "projects", title: "Projects", url: "/app/projects", icon: Briefcase },
+  { id: "tasks", title: "Tasks", url: "/app/tasks", icon: CheckSquare },
+  { id: "sprints", title: "Sprints", url: "/app/sprints", icon: Target, whenOutOfMvp: "future" },
+  { id: "announcements", title: "Announcements", url: "/app/announcements", icon: Megaphone, whenOutOfMvp: "hide" },
+  { id: "notifications", title: "Notifications", url: "/app/notifications", icon: Bell },
 ];
 
-const TEAM = [
-  { title: "Executive", url: "/app/executive", icon: Gauge },
-  { title: "Manager", url: "/app/manager", icon: LayoutDashboard },
-  { title: "HR workspace", url: "/app/hr", icon: HeartHandshake },
-  { title: "Directory", url: "/app/hr/employees", icon: Users },
-  { title: "Analytics", url: "/app/analytics", icon: BarChart3 },
-  { title: "Audit log", url: "/app/audit", icon: ShieldCheck },
-  { title: "Admin Console", url: "/app/admin", icon: ShieldHalf },
+const TEAM: NavItem[] = [
+  { id: "executive", title: "Executive", url: "/app/executive", icon: Gauge, whenOutOfMvp: "future" },
+  { id: "manager", title: "Manager", url: "/app/manager", icon: LayoutDashboard },
+  { id: "report-review", title: "Report reviews", url: "/app/report-review", icon: ClipboardList },
+  { id: "hr", title: "HR workspace", url: "/app/hr", icon: HeartHandshake },
+  { id: "directory", title: "Directory", url: "/app/hr/employees", icon: Users },
+  { id: "analytics", title: "Analytics", url: "/app/analytics", icon: BarChart3, whenOutOfMvp: "future" },
+  { id: "audit", title: "Audit log", url: "/app/audit", icon: ShieldCheck, whenOutOfMvp: "future" },
+  { id: "admin", title: "Admin Console", url: "/app/admin", icon: ShieldHalf },
 ];
 
-const SYSTEM = [
-  { title: "Settings", url: "/settings", icon: Settings },
-  { title: "Help", url: "/help", icon: LifeBuoy },
+const SYSTEM: NavItem[] = [
+  { id: "settings", title: "Settings", url: "/settings", icon: Settings },
+  { id: "help", title: "Help", url: "/help", icon: LifeBuoy },
 ];
 
 function SectionMenu({
@@ -72,21 +88,40 @@ function SectionMenu({
   currentPath,
 }: {
   label: string;
-  items: { title: string; url: string; icon: typeof Home }[];
+  items: NavItem[];
   currentPath: string;
 }) {
+  // Out-of-MVP items are hidden unless they opt into the "future" display.
+  const visible = items.filter(
+    (item) => isFeatureInMvp(item.id) || item.whenOutOfMvp === "future",
+  );
+  if (visible.length === 0) return null;
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => {
+          {visible.map((item) => {
+            // Deferred feature: visibly disabled with a "Future Plan" badge.
+            if (!isFeatureInMvp(item.id)) {
+              return (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton disabled tooltip="Planned for a future release">
+                    <item.icon className="size-4" aria-hidden />
+                    <span>{item.title}</span>
+                    <FuturePlanBadge className="ml-auto" />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            }
+
             const isActive =
               item.url === "/"
                 ? currentPath === "/"
                 : currentPath === item.url || currentPath.startsWith(`${item.url}/`);
             return (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
                   <Link to={item.url as never} className="flex items-center gap-2">
                     <item.icon className="size-4" aria-hidden />

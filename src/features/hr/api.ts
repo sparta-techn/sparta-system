@@ -130,6 +130,7 @@ function mapEmployee(r: EmployeeRow, rolesByUser: Map<string, AppRole[]>): HrEmp
 
   return {
     id: r.id,
+    userId: r.user_id,
     name,
     initials: initialsOf(name),
     email: profile?.email ?? "",
@@ -183,7 +184,10 @@ export async function fetchHrEmployees(): Promise<HrEmployee[]> {
 
   const rows = (data ?? []) as unknown as EmployeeRow[];
   const rolesByUser = await fetchRolesByUser(rows.map((r) => r.user_id));
-  return rows.map((r) => mapEmployee(r, rolesByUser));
+  // Soft-deleted employees carry status 'offboarded' (mock: 'offboarding'). RLS
+  // still returns them to HR/owner/admin, so hide them from the directory here
+  // to preserve the "removed" UX (mirrors the former localStorage soft-delete).
+  return rows.map((r) => mapEmployee(r, rolesByUser)).filter((e) => e.status !== "offboarding");
 }
 
 /** Active department names (used by the directory filter + org structure). */

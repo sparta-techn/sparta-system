@@ -12,6 +12,15 @@
  * (`@/repositories/hr`) — swapping the overlay for real writes (plus
  * `queryClient.invalidateQueries(hrKeys.employees())`) is a per-verb change
  * that leaves the components untouched. See `docs/EMPLOYEE_MANAGEMENT.md`.
+ *
+ * NOTE: **edit / disable / delete are now real Supabase writes** performed by
+ * {@link useEmployeeManagement} (`./use-employee-management`), which invalidates
+ * `hrKeys.employees()` on success and logs to the timeline via
+ * {@link recordEmployeeAudit}. The overlay verbs for those actions remain here
+ * (still exercised by the unit tests and reused by `createEmployee`) but are no
+ * longer called by the directory UI. The remaining overlay verbs — assign
+ * department/team/manager/role, reset password, create — are still
+ * localStorage-only and are the next to migrate.
  */
 import { useSyncExternalStore } from "react";
 
@@ -133,6 +142,21 @@ function logAudit(employeeId: string, action: EmployeeAuditAction, detail?: stri
     detail,
   };
   state = { ...state, audit: [entry, ...state.audit] };
+}
+
+/**
+ * Record a management audit entry from outside the store (e.g. the real
+ * Supabase write path in {@link useEmployeeManagement}), so server-backed
+ * edit/disable/delete actions still appear in the per-employee timeline that
+ * {@link useEmployeeAudit} renders.
+ */
+export function recordEmployeeAudit(
+  employeeId: string,
+  action: EmployeeAuditAction,
+  detail?: string,
+): void {
+  logAudit(employeeId, action, detail);
+  emit();
 }
 
 /** Merge one base record with its override (created records have no base). */

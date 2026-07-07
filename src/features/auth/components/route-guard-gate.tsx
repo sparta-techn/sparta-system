@@ -1,7 +1,9 @@
 import { type ReactNode } from "react";
-import { Navigate, useMatches } from "@tanstack/react-router";
+import { Navigate, useMatches, useRouterState } from "@tanstack/react-router";
 
 import { LoadingState } from "@/components/states";
+import { FuturePlanPlaceholder } from "@/components/future-plan";
+import { isPathInMvp } from "@/config/mvp-scope";
 import { useAuth } from "../auth-context";
 import { evaluateAccess, mergeGuards } from "../route-guard";
 
@@ -22,6 +24,7 @@ import { evaluateAccess, mergeGuards } from "../route-guard";
 export function RouteGuardGate({ children }: { children: ReactNode }) {
   const matches = useMatches();
   const auth = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Wait for identity so we neither flash a page nor a false denial.
   if (!auth.initialized || auth.loading) {
@@ -42,6 +45,14 @@ export function RouteGuardGate({ children }: { children: ReactNode }) {
   }
   if (result === "forbidden") {
     return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Product-scope gate: features deferred past the MVP render a placeholder for
+  // anyone who reaches the URL directly. Evaluated after RBAC so scope never
+  // masks a genuine permission redirect. Underlying feature code is untouched
+  // — see src/config/mvp-scope.ts.
+  if (!isPathInMvp(pathname)) {
+    return <FuturePlanPlaceholder />;
   }
 
   return <>{children}</>;
