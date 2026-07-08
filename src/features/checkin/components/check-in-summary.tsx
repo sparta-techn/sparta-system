@@ -1,7 +1,9 @@
 import { CheckCircle2, Target } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { StatusBadge } from "@/components/status-badge";
-import { MOCK_DEPARTMENTS, MOCK_EMPLOYEES, MOCK_PLANNED_TASKS } from "../mock-data";
+import { hrQueries } from "@/features/hr/queries";
+import { usePlannedTasksByIds } from "../planned-tasks";
 import { EFFORT_META, MOOD_OPTIONS, type CheckInDraft } from "../types";
 
 interface Props {
@@ -10,9 +12,12 @@ interface Props {
 
 export function CheckInSummary({ draft }: Props) {
   const mood = MOOD_OPTIONS.find((m) => m.value === draft.mood);
-  const dept = MOCK_DEPARTMENTS.find((d) => d.id === draft.help.departmentId);
-  const emp = MOCK_EMPLOYEES.find((e) => e.id === draft.help.employeeId);
-  const selectedTasks = MOCK_PLANNED_TASKS.filter((t) => draft.taskIds.includes(t.id));
+  // Live directory + tasks: `departmentId` holds the dept name, `employeeId`
+  // an HR employee id, and `taskIds` real task ids.
+  const { data: employees = [] } = useQuery(hrQueries.employees());
+  const deptName = draft.help.departmentId ?? "";
+  const emp = employees.find((e) => e.id === draft.help.employeeId);
+  const selectedTasks = usePlannedTasksByIds(draft.taskIds);
 
   return (
     <div className="space-y-5">
@@ -104,7 +109,7 @@ export function CheckInSummary({ draft }: Props) {
         ) : (
           <div className="rounded-lg border bg-card p-3 text-sm">
             <p className="font-medium text-foreground">
-              {dept?.name ?? "—"} · {emp?.name ?? "—"}
+              {deptName || "—"} · {emp?.name ?? "—"}
             </p>
             {draft.help.description ? (
               <p className="mt-1 text-muted-foreground">{draft.help.description}</p>

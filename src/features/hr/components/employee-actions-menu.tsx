@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MoreHorizontal, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { departments, type Department, type EmployeeRole, type HrEmployee } from "../mock-data";
+import { type Department, type EmployeeRole, type HrEmployee } from "../mock-data";
 import {
   assignManager,
   assignRole,
@@ -44,6 +45,7 @@ import {
   resetPassword,
 } from "../employees-store";
 import { useEmployeeManagement } from "../use-employee-management";
+import { hrQueries } from "../queries";
 import { recordAudit } from "@/features/audit/audit-store";
 import { EmployeeFormDialog } from "./employee-form-dialog";
 import { ROLE_OPTIONS } from "./employee-role-options";
@@ -64,6 +66,8 @@ export function EmployeeActionsMenu({
   variant?: "icon" | "button";
 }) {
   const mgmt = useEmployeeManagement();
+  // Live, org-specific department list (Supabase-backed) — not a fixed sample.
+  const { data: departments = [] } = useQuery(hrQueries.departments());
   const [editOpen, setEditOpen] = useState(false);
   const [assign, setAssign] = useState<AssignKind | null>(null);
   const [assignValue, setAssignValue] = useState<string>("");
@@ -81,6 +85,14 @@ export function EmployeeActionsMenu({
     if (employee.team && employee.team !== "—") set.add(employee.team);
     return [...set].sort();
   }, [employees, employee.team]);
+  // Keep the employee's current (possibly archived) department selectable.
+  const departmentOptions = useMemo(
+    () =>
+      employee.department && !departments.includes(employee.department)
+        ? [employee.department, ...departments]
+        : departments,
+    [departments, employee.department],
+  );
 
   function openAssign(kind: AssignKind) {
     setAssign(kind);
@@ -293,7 +305,7 @@ export function EmployeeActionsMenu({
               </SelectTrigger>
               <SelectContent>
                 {assign === "department" &&
-                  departments.map((d) => (
+                  departmentOptions.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>

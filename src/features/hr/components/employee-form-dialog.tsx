@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,9 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { departments, type Department, type EmployeeRole, type HrEmployee } from "../mock-data";
+import { type Department, type EmployeeRole, type HrEmployee } from "../mock-data";
 import { createEmployee } from "../employees-store";
 import { useEmployeeManagement } from "../use-employee-management";
+import { hrQueries } from "../queries";
 import { recordAudit } from "@/features/audit/audit-store";
 import { ROLE_OPTIONS } from "./employee-role-options";
 
@@ -39,7 +41,7 @@ function fromEmployee(e?: HrEmployee): FormState {
     name: e?.name ?? "",
     email: e?.email ?? "",
     jobTitle: e?.jobTitle && e.jobTitle !== "—" ? e.jobTitle : "",
-    department: e?.department ?? "Engineering",
+    department: e?.department ?? ("" as Department),
     team: e?.team && e.team !== "—" ? e.team : "",
     role: e?.role ?? "employee",
     workMode: e?.workMode ?? "Remote",
@@ -58,12 +60,31 @@ export function EmployeeFormDialog({
 }) {
   const isEdit = !!employee;
   const mgmt = useEmployeeManagement();
+  // Live, org-specific department list (Supabase-backed) — not a fixed sample.
+  const { data: departments = [] } = useQuery(hrQueries.departments());
   const [form, setForm] = useState<FormState>(fromEmployee(employee));
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) setForm(fromEmployee(employee));
   }, [open, employee]);
+
+  // Default the department to the first live option when creating (no preset).
+  // On edit, an existing department is preserved even if it's since been archived.
+  useEffect(() => {
+    if (open && !form.department && departments.length > 0) {
+      set("department", departments[0] as Department);
+    }
+  }, [open, departments, form.department]);
+
+  // Keep an archived/legacy department selectable on edit so its value shows.
+  const departmentOptions = useMemo(
+    () =>
+      form.department && !departments.includes(form.department)
+        ? [form.department, ...departments]
+        : departments,
+    [departments, form.department],
+  );
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -152,7 +173,7 @@ export function EmployeeFormDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map((d) => (
+                  {departmentOptions.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>

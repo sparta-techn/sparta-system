@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   ArrowLeft,
@@ -36,10 +37,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { getSubmission as getMorningSubmission } from "@/features/checkin/store";
-import { MOCK_DEPARTMENTS, MOCK_EMPLOYEES, MOCK_PLANNED_TASKS } from "@/features/checkin/mock-data";
+import { usePlannedTasks, usePlannedTasksByIds } from "@/features/checkin/planned-tasks";
 import type { PriorityLevel } from "@/features/checkin/types";
 import { useDependencies } from "@/features/dependencies/store";
 import { CURRENT_USER_ID } from "@/features/dependencies/mock-data";
+import { hrQueries } from "@/features/hr/queries";
 
 import { MiddaySummary } from "./midday-summary";
 import {
@@ -404,12 +406,28 @@ function CompletedStep({
   value: TaskProgressEntry[];
   onChange: (v: TaskProgressEntry[]) => void;
 }) {
-  // Pull morning-planned tasks, fall back to default mock list.
+  // Live tasks: the morning selection resolved against the real tasks store,
+  // falling back to the current user's open work when there was no check-in.
   const morning = typeof window === "undefined" ? null : getMorningSubmission();
-  const plannedIds = morning?.taskIds?.length
-    ? morning.taskIds
-    : MOCK_PLANNED_TASKS.map((t) => t.id);
-  const planned = MOCK_PLANNED_TASKS.filter((t) => plannedIds.includes(t.id));
+  const mine = usePlannedTasks();
+  const fromMorning = usePlannedTasksByIds(morning?.taskIds ?? []);
+  const planned = morning?.taskIds?.length ? fromMorning : mine;
+
+  // Ensure every planned task has a progress entry (defaults to not_started),
+  // even before the user touches it — mirrors the former seed, but hydration-safe.
+  useEffect(() => {
+    const missing = planned.filter((p) => !value.some((e) => e.taskId === p.id));
+    if (missing.length === 0) return;
+    onChange([
+      ...value,
+      ...missing.map((p) => ({
+        taskId: p.id,
+        title: p.title,
+        project: p.project,
+        state: "not_started" as TaskProgressState,
+      })),
+    ]);
+  }, [planned, value, onChange]);
 
   function setEntry(taskId: string, patch: Partial<TaskProgressEntry>) {
     const existing = value.find((e) => e.taskId === taskId);
@@ -627,9 +645,12 @@ function HelpStep({
   function patch(p: Partial<typeof value>) {
     onChange({ ...value, ...p });
   }
+  // Live org directory (Supabase-backed). `departmentId` holds the dept name.
+  const { data: departments = [] } = useQuery(hrQueries.departments());
+  const { data: employees = [] } = useQuery(hrQueries.employees());
   const filtered = value.departmentId
-    ? MOCK_EMPLOYEES.filter((e) => e.departmentId === value.departmentId)
-    : MOCK_EMPLOYEES;
+    ? employees.filter((e) => e.department === value.departmentId)
+    : employees;
 
   return (
     <div className="space-y-4">
@@ -659,9 +680,9 @@ function HelpStep({
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_DEPARTMENTS.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.name}
+                {departments.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -676,7 +697,8 @@ function HelpStep({
               <SelectContent>
                 {filtered.map((e) => (
                   <SelectItem key={e.id} value={e.id}>
-                    {e.name} — {e.role}
+                    {e.name}
+                    {e.jobTitle && e.jobTitle !== "—" ? ` — ${e.jobTitle}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -772,19 +794,9 @@ function OutlookStep({
 // ─────────── Helpers ──────────────────────────────────────────────────────
 
 function seedDraftFromMorning(): MiddayDraft {
-  if (typeof window === "undefined") return EMPTY_MIDDAY_DRAFT;
-  const morning = getMorningSubmission();
-  if (!morning) return EMPTY_MIDDAY_DRAFT;
-  const taskProgress: TaskProgressEntry[] = (morning.taskIds ?? [])
-    .map((id) => MOCK_PLANNED_TASKS.find((t) => t.id === id))
-    .filter((t): t is (typeof MOCK_PLANNED_TASKS)[number] => !!t)
-    .map((t) => ({
-      taskId: t.id,
-      title: t.title,
-      project: t.project,
-      state: "not_started" as TaskProgressState,
-    }));
-  return { ...EMPTY_MIDDAY_DRAFT, taskProgress };
+  // Task-progress entries are resolved live from the tasks store in
+  // `CompletedStep` (hydration-safe), so the initial draft starts empty.
+  return { ...EMPTY_MIDDAY_DRAFT };
 }
 
 function AutosaveIndicator({

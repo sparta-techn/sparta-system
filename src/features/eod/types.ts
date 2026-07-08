@@ -37,6 +37,11 @@ export interface OpenDependencyEntry {
 
 // ─── Need from others tomorrow ────────────────────────────────────────────
 
+/**
+ * Legacy fallback labels. The wizard's department picker now reads the live
+ * `departments` table (via `hrQueries.departments()`); this constant is kept
+ * only for reference/back-compat with older persisted reports.
+ */
 export const NEED_DEPARTMENTS = [
   "Backend",
   "Flutter",
@@ -51,7 +56,8 @@ export type NeedDepartment = (typeof NEED_DEPARTMENTS)[number];
 
 export interface NeedFromOthersItem {
   id: string;
-  department: NeedDepartment;
+  /** A live department name (see `hrQueries.departments()`). */
+  department: string;
   description: string;
   priority: PriorityLevel;
   dueDate?: string;
@@ -123,6 +129,26 @@ export const EMPTY_EOD_DRAFT: EodDraft = {
   tomorrow: EMPTY_TOMORROW,
   reflection: {},
 };
+
+// ─── Manager roll-up ──────────────────────────────────────────────────────
+
+/** One row in the manager/HR EOD roll-up (see `useTeamEodOverview`). */
+export interface TeamEodEntry {
+  employeeId: string;
+  name: string;
+  initials: string;
+  department: string;
+  role: string;
+  submitted: boolean;
+  submittedAt?: string;
+  completionPct?: number;
+  completedCount?: number;
+  inProgressCount?: number;
+  openDepsCount?: number;
+  topBlocker?: string;
+  tomorrowRisk?: string;
+  helpRequest?: string;
+}
 
 // ─── Display helpers ──────────────────────────────────────────────────────
 

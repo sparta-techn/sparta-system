@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   ArrowLeft,
@@ -33,10 +34,11 @@ import { cn } from "@/lib/utils";
 
 import { getSubmission as getMorningSubmission } from "@/features/checkin/store";
 import { getMiddaySubmission } from "@/features/midday/store";
-import { MOCK_PLANNED_TASKS } from "@/features/checkin/mock-data";
+import { usePlannedTasks, usePlannedTasksByIds } from "@/features/checkin/planned-tasks";
 import type { PriorityLevel } from "@/features/checkin/types";
 import { useDependencies } from "@/features/dependencies/store";
 import { CURRENT_USER_ID } from "@/features/dependencies/mock-data";
+import { hrQueries } from "@/features/hr/queries";
 import {
   TASK_PROGRESS_META,
   type TaskProgressEntry,
@@ -53,12 +55,10 @@ import {
 } from "../store";
 import {
   EMPTY_EOD_DRAFT,
-  NEED_DEPARTMENTS,
   SUMMARY_MAX_LENGTH,
   type EodDraft,
   type EodSubmission,
   type InProgressItem,
-  type NeedDepartment,
   type NeedFromOthersItem,
   type OpenDependencyEntry,
   type TomorrowPlan,
@@ -405,11 +405,28 @@ function CompletedStep({
   value: TaskProgressEntry[];
   onChange: (v: TaskProgressEntry[]) => void;
 }) {
+  // Live tasks: the morning selection resolved against the real tasks store,
+  // falling back to the current user's open work when there was no check-in.
   const morning = typeof window === "undefined" ? null : getMorningSubmission();
-  const plannedIds = morning?.taskIds?.length
-    ? morning.taskIds
-    : MOCK_PLANNED_TASKS.map((t) => t.id);
-  const planned = MOCK_PLANNED_TASKS.filter((t) => plannedIds.includes(t.id));
+  const mine = usePlannedTasks();
+  const fromMorning = usePlannedTasksByIds(morning?.taskIds ?? []);
+  const planned = morning?.taskIds?.length ? fromMorning : mine;
+
+  // Backfill a progress entry for every planned task (defaults to not_started),
+  // even before the user touches it — mirrors the former seed, but hydration-safe.
+  useEffect(() => {
+    const missing = planned.filter((p) => !value.some((e) => e.taskId === p.id));
+    if (missing.length === 0) return;
+    onChange([
+      ...value,
+      ...missing.map((p) => ({
+        taskId: p.id,
+        title: p.title,
+        project: p.project,
+        state: "not_started" as TaskProgressState,
+      })),
+    ]);
+  }, [planned, value, onChange]);
 
   function setEntry(taskId: string, patch: Partial<TaskProgressEntry>) {
     const existing = value.find((e) => e.taskId === taskId);
@@ -700,12 +717,14 @@ function NeedStep({
   onChange: (v: NeedFromOthersItem[]) => void;
 }) {
   const deps = useDependencies();
+  // Live org departments (Supabase-backed) — not a fixed sample list.
+  const { data: departments = [] } = useQuery(hrQueries.departments());
   function add() {
     onChange([
       ...value,
       {
         id: `need_${Date.now()}`,
-        department: "Backend",
+        department: departments[0] ?? "",
         description: "",
         priority: "medium",
       },
@@ -731,13 +750,13 @@ function NeedStep({
               <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
                 <Select
                   value={item.department}
-                  onValueChange={(v) => patch(item.id, { department: v as NeedDepartment })}
+                  onValueChange={(v) => patch(item.id, { department: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Department" />
                   </SelectTrigger>
                   <SelectContent>
-                    {NEED_DEPARTMENTS.map((d) => (
+                    {departments.map((d) => (
                       <SelectItem key={d} value={d}>
                         {d}
                       </SelectItem>
@@ -994,21 +1013,10 @@ function Field({
 
 function seedDraft(): EodDraft {
   if (typeof window === "undefined") return EMPTY_EOD_DRAFT;
-  const morning = getMorningSubmission();
+  // Prefer the midday progress snapshot; otherwise `CompletedStep` resolves the
+  // morning selection live from the tasks store (hydration-safe), so we start empty.
   const midday = getMiddaySubmission();
-
-  const completed: TaskProgressEntry[] = midday?.taskProgress?.length
-    ? midday.taskProgress
-    : (morning?.taskIds ?? [])
-        .map((id) => MOCK_PLANNED_TASKS.find((t) => t.id === id))
-        .filter((t): t is (typeof MOCK_PLANNED_TASKS)[number] => !!t)
-        .map((t) => ({
-          taskId: t.id,
-          title: t.title,
-          project: t.project,
-          state: "not_started" as TaskProgressState,
-        }));
-
+  const completed: TaskProgressEntry[] = midday?.taskProgress?.length ? midday.taskProgress : [];
   return { ...EMPTY_EOD_DRAFT, completed };
 }
 

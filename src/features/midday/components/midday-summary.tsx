@@ -1,15 +1,18 @@
 import { CheckCircle2, CircleDot, Link2, Target, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { StatusBadge } from "@/components/status-badge";
 import { Progress } from "@/components/ui/progress";
-import { MOCK_DEPARTMENTS, MOCK_EMPLOYEES } from "@/features/checkin/mock-data";
+import { hrQueries } from "@/features/hr/queries";
 
 import { OUTLOOK_META, TASK_PROGRESS_META, type MiddayDraft } from "../types";
 
 export function MiddaySummary({ draft }: { draft: MiddayDraft }) {
   const outlook = draft.outlook ? OUTLOOK_META[draft.outlook] : null;
-  const dept = MOCK_DEPARTMENTS.find((d) => d.id === draft.help.departmentId);
-  const emp = MOCK_EMPLOYEES.find((e) => e.id === draft.help.employeeId);
+  // Live directory: `departmentId` holds the dept name, `employeeId` an HR id.
+  const { data: employees = [] } = useQuery(hrQueries.employees());
+  const deptName = draft.help.departmentId ?? "";
+  const emp = employees.find((e) => e.id === draft.help.employeeId);
   const completed = draft.taskProgress.filter((t) => t.state === "completed");
   const partial = draft.taskProgress.filter((t) => t.state === "partial");
 
@@ -106,7 +109,7 @@ export function MiddaySummary({ draft }: { draft: MiddayDraft }) {
         ) : (
           <div className="rounded-lg border bg-card p-3 text-sm">
             <p className="font-medium text-foreground">
-              {dept?.name ?? "—"} · {emp?.name ?? "—"}
+              {deptName || "—"} · {emp?.name ?? "—"}
             </p>
             {draft.help.description ? (
               <p className="mt-1 text-muted-foreground">{draft.help.description}</p>

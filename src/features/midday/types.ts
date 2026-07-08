@@ -106,3 +106,20 @@ export const EMPTY_MIDDAY_DRAFT: MiddayDraft = {
   help: { enabled: false },
   outlook: null,
 };
+
+/** One row in the manager/HR midday roll-up (see `useTeamMiddayOverview`). */
+export interface TeamMiddayEntry {
+  employeeId: string;
+  name: string;
+  initials: string;
+  department: string;
+  role: string;
+  submitted: boolean;
+  submittedAt?: string;
+  progress?: number;
+  focus?: string;
+  outlook?: EndOfDayOutlook;
+  blockerCount?: number;
+  topBlocker?: string;
+  needsHelp?: boolean;
+}

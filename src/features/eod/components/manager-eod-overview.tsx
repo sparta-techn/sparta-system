@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-import { MOCK_TEAM_EOD } from "../mock-data";
+import { useTeamEodOverview } from "../hooks";
 
 interface Props {
   /** HR view: hide qualitative work info, show only participation. */
@@ -13,10 +13,10 @@ interface Props {
 }
 
 export function ManagerEodOverview({ hrMode = false }: Props) {
-  const team = MOCK_TEAM_EOD;
+  const { entries: team, loading, error } = useTeamEodOverview();
   const submitted = team.filter((t) => t.submitted);
   const missing = team.filter((t) => !t.submitted);
-  const submissionRate = Math.round((submitted.length / team.length) * 100);
+  const submissionRate = team.length === 0 ? 0 : Math.round((submitted.length / team.length) * 100);
 
   const avgCompletion =
     submitted.length === 0
@@ -29,6 +29,17 @@ export function ManagerEodOverview({ hrMode = false }: Props) {
 
   const commonBlockers = aggregate(submitted.map((t) => t.topBlocker).filter(Boolean) as string[]);
   const helpRequests = submitted.filter((t) => !!t.helpRequest);
+
+  if (error) {
+    return (
+      <p className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+        {error}
+      </p>
+    );
+  }
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Loading EOD overview…</p>;
+  }
 
   return (
     <div className="space-y-6">

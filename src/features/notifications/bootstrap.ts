@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { startAutomationEngine } from "./automation-engine";
+import { setPreferencesUser } from "./preferences";
 import { setNotificationUser } from "./store";
 
 let bootstrapped = false;
@@ -21,11 +22,18 @@ export function bootstrapNotifications() {
   bootstrapped = true;
   startAutomationEngine();
 
-  // Bind the notification store to the authenticated user + keep it fresh.
-  void supabase.auth.getUser().then(({ data }) => setNotificationUser(data.user?.id ?? null));
-  supabase.auth.onAuthStateChange((_event, session) =>
-    setNotificationUser(session?.user?.id ?? null),
-  );
+  // Bind the notification store + preferences to the authenticated user and keep
+  // them fresh across sign-in/out.
+  void supabase.auth.getUser().then(({ data }) => {
+    const userId = data.user?.id ?? null;
+    setNotificationUser(userId);
+    setPreferencesUser(userId);
+  });
+  supabase.auth.onAuthStateChange((_event, session) => {
+    const userId = session?.user?.id ?? null;
+    setNotificationUser(userId);
+    setPreferencesUser(userId);
+  });
 }
 
 export function useNotificationBootstrap() {

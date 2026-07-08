@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { departments, type Department, type EmployeeRole } from "../mock-data";
+import { type Department, type EmployeeRole } from "../mock-data";
 import { issueInvitation, EXPIRY_OPTIONS, useInvitationSettings } from "../invitations-store";
+import { hrQueries } from "../queries";
 
 const ROLE_OPTIONS: { value: EmployeeRole; label: string }[] = [
   { value: "employee", label: "Employee" },
@@ -36,9 +38,11 @@ export function InviteEmployeeDialog({
   onOpenChange: (o: boolean) => void;
 }) {
   const settings = useInvitationSettings();
+  // Live, org-specific department list (Supabase-backed) — not a fixed sample.
+  const { data: departments = [] } = useQuery(hrQueries.departments());
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [department, setDepartment] = useState<Department>("Engineering");
+  const [department, setDepartment] = useState<Department>("" as Department);
   const [role, setRole] = useState<EmployeeRole>("employee");
   const [expiryDays, setExpiryDays] = useState<number>(settings.expiryDays);
   const [submitting, setSubmitting] = useState(false);
@@ -48,11 +52,18 @@ export function InviteEmployeeDialog({
     if (open) {
       setName("");
       setEmail("");
-      setDepartment("Engineering");
+      setDepartment("" as Department);
       setRole("employee");
       setExpiryDays(settings.expiryDays);
     }
   }, [open, settings.expiryDays]);
+
+  // Default the department to the first live option once the list is available.
+  useEffect(() => {
+    if (open && departments.length > 0 && !departments.includes(department)) {
+      setDepartment(departments[0] as Department);
+    }
+  }, [open, departments, department]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

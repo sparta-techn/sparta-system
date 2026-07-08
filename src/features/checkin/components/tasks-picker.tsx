@@ -1,7 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/status-badge";
 import { cn } from "@/lib/utils";
-import { MOCK_PLANNED_TASKS } from "../mock-data";
+import { usePlannedTasks } from "../planned-tasks";
 
 interface Props {
   selected: string[];
@@ -16,17 +16,27 @@ const PRIORITY_TONE = {
 } as const;
 
 export function TasksPicker({ selected, onChange }: Props) {
+  const tasks = usePlannedTasks();
+
   function toggle(id: string) {
     onChange(selected.includes(id) ? selected.filter((t) => t !== id) : [...selected, id]);
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+        No open tasks are assigned to you right now.
+      </div>
+    );
   }
 
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">
-        Sourced from ClickUp (mocked). Pick what you intend to work on today.
+        Your open assigned tasks. Pick what you intend to work on today.
       </p>
       <ul className="divide-y rounded-lg border bg-card">
-        {MOCK_PLANNED_TASKS.map((task) => {
+        {tasks.map((task) => {
           const checked = selected.includes(task.id);
           return (
             <li key={task.id}>

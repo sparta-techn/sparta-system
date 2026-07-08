@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Megaphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { announcements, departments } from "../mock-data";
+import { announcements } from "../mock-data";
+import { hrQueries } from "../queries";
 import { EmptyState } from "./empty-state";
 
 export function AnnouncementsManager() {
+  // Live, org-specific department list (Supabase-backed) — not a fixed sample.
+  const { data: departments = [] } = useQuery(hrQueries.departments());
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [audience, setAudience] = useState("everyone");

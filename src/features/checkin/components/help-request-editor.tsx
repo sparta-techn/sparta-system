@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_DEPARTMENTS, MOCK_EMPLOYEES } from "../mock-data";
+import { hrQueries } from "@/features/hr/queries";
 import type { HelpRequest, PriorityLevel } from "../types";
 
 interface Props {
@@ -24,9 +25,13 @@ export function HelpRequestEditor({ value, onChange }: Props) {
     onChange({ ...value, ...p });
   }
 
+  // Live org directory (Supabase-backed) — departments are names, employees the
+  // real HR roster. `departmentId` here holds the selected department name.
+  const { data: departments = [] } = useQuery(hrQueries.departments());
+  const { data: employees = [] } = useQuery(hrQueries.employees());
   const filteredEmployees = value.departmentId
-    ? MOCK_EMPLOYEES.filter((e) => e.departmentId === value.departmentId)
-    : MOCK_EMPLOYEES;
+    ? employees.filter((e) => e.department === value.departmentId)
+    : employees;
 
   return (
     <div className="space-y-4">
@@ -56,9 +61,9 @@ export function HelpRequestEditor({ value, onChange }: Props) {
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_DEPARTMENTS.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.name}
+                {departments.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -74,7 +79,8 @@ export function HelpRequestEditor({ value, onChange }: Props) {
               <SelectContent>
                 {filteredEmployees.map((e) => (
                   <SelectItem key={e.id} value={e.id}>
-                    {e.name} — {e.role}
+                    {e.name}
+                    {e.jobTitle && e.jobTitle !== "—" ? ` — ${e.jobTitle}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
