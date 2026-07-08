@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,11 @@ import { employeeById } from "../utils";
 import { EmployeeChip } from "./employee-chip";
 
 export function TaskComments({ taskId }: { taskId: string }) {
-  const comments = useTasksState((s) => s.comments.filter((c) => c.taskId === taskId));
+  const allComments = useTasksState((s) => s.comments);
+  const comments = useMemo(
+    () => allComments.filter((c) => c.taskId === taskId),
+    [allComments, taskId],
+  );
   const [body, setBody] = useState("");
 
   return (

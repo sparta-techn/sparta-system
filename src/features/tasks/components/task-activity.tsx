@@ -1,9 +1,12 @@
+import { useMemo } from "react";
 import { useTasksState } from "../store";
 import { employeeById } from "../utils";
 
 export function TaskActivityTimeline({ taskId }: { taskId: string }) {
-  const events = useTasksState((s) =>
-    s.activity.filter((a) => a.taskId === taskId).sort((a, b) => (a.at < b.at ? 1 : -1)),
+  const activity = useTasksState((s) => s.activity);
+  const events = useMemo(
+    () => activity.filter((a) => a.taskId === taskId).sort((a, b) => (a.at < b.at ? 1 : -1)),
+    [activity, taskId],
   );
 
   if (!events.length) {

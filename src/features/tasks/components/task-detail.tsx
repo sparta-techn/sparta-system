@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { ArrowLeft, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -485,10 +485,13 @@ function SidebarField({ label, children }: { label: string; children: React.Reac
 }
 
 function Dependencies({ task }: { task: NonNullable<ReturnType<typeof useTasksStateOptional>> }) {
-  const related = useTasksState((s) =>
-    task.relations
-      .map((r) => ({ relation: r, other: s.tasks.find((t) => t.id === r.taskId) }))
-      .filter((r) => r.other),
+  const allTasks = useTasksState((s) => s.tasks);
+  const related = useMemo(
+    () =>
+      task.relations
+        .map((r) => ({ relation: r, other: allTasks.find((t) => t.id === r.taskId) }))
+        .filter((r) => r.other),
+    [allTasks, task.relations],
   );
 
   return (

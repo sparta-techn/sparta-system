@@ -14,13 +14,20 @@ interface Props {
 
 /** Project-level time summary. UI-only aggregation across tasks. */
 export function ProjectTimeSummary({ projectId }: Props) {
-  const projectTaskIds = useTasksState((s) =>
-    s.tasks.filter((t) => t.projectId === projectId).map((t) => t.id),
+  const allTasks = useTasksState((s) => s.tasks);
+  const projectTaskIds = useMemo(
+    () => allTasks.filter((t) => t.projectId === projectId).map((t) => t.id),
+    [allTasks, projectId],
   );
-  const taskMap = useTasksState(
-    (s) => new Map(s.tasks.filter((t) => t.projectId === projectId).map((t) => [t.id, t])),
+  const taskMap = useMemo(
+    () => new Map(allTasks.filter((t) => t.projectId === projectId).map((t) => [t.id, t])),
+    [allTasks, projectId],
   );
-  const logs = useTimeState((s) => s.logs.filter((l) => projectTaskIds.includes(l.taskId)));
+  const allLogs = useTimeState((s) => s.logs);
+  const logs = useMemo(
+    () => allLogs.filter((l) => projectTaskIds.includes(l.taskId)),
+    [allLogs, projectTaskIds],
+  );
   const now = useNow(logs.some((l) => l.endTime === null) ? 1000 : 60_000);
 
   const total = sumMinutes(logs, now);

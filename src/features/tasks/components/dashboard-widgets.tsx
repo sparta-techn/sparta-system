@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -47,7 +48,11 @@ function CompactList({
   sort: TaskSort;
   limit?: number;
 }) {
-  const tasks = useTasksState((s) => applyFilters(s.tasks, filters, sort).slice(0, limit));
+  const allTasks = useTasksState((s) => s.tasks);
+  const tasks = useMemo(
+    () => applyFilters(allTasks, filters, sort).slice(0, limit),
+    [allTasks, filters, sort, limit],
+  );
 
   if (!tasks.length) {
     return (
@@ -120,10 +125,11 @@ export function OverdueTasksWidget() {
 }
 
 export function TodayTasksWidget() {
-  const tasks = useTasksState((s) => {
+  const allTasks = useTasksState((s) => s.tasks);
+  const tasks = useMemo(() => {
     const dayMs = 86_400_000;
     const tomorrow = Date.now() + dayMs;
-    return s.tasks
+    return allTasks
       .filter((t) => {
         if (!t.dueDate || t.deletedAt || t.status === "done" || t.status === "cancelled")
           return false;
@@ -131,7 +137,7 @@ export function TodayTasksWidget() {
         return due >= Date.now() - dayMs && due < tomorrow;
       })
       .slice(0, 6);
-  });
+  }, [allTasks]);
 
   return (
     <WidgetShell title="Today's tasks" href="/app/tasks/all" count={tasks.length}>

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { StatCard } from "@/components/stat-card";
 import { useTasksState, applyFilters } from "@/features/tasks/store";
@@ -15,16 +16,17 @@ export const Route = createFileRoute("/_authenticated/app/tasks/")({
 });
 
 function TasksOverviewPage() {
-  const totals = useTasksState((s) => {
-    const open = applyFilters(s.tasks, {
+  const tasks = useTasksState((s) => s.tasks);
+  const totals = useMemo(() => {
+    const open = applyFilters(tasks, {
       status: ["todo", "in_progress", "review", "qa"],
       topLevelOnly: true,
     }).length;
-    const overdue = applyFilters(s.tasks, { overdueOnly: true, topLevelOnly: true }).length;
-    const done = applyFilters(s.tasks, { status: ["done"], topLevelOnly: true }).length;
-    const blocked = applyFilters(s.tasks, { status: ["blocked"], topLevelOnly: true }).length;
+    const overdue = applyFilters(tasks, { overdueOnly: true, topLevelOnly: true }).length;
+    const done = applyFilters(tasks, { status: ["done"], topLevelOnly: true }).length;
+    const blocked = applyFilters(tasks, { status: ["blocked"], topLevelOnly: true }).length;
     return { open, overdue, done, blocked };
-  });
+  }, [tasks]);
 
   return (
     <div className="space-y-4">

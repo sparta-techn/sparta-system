@@ -140,7 +140,9 @@ export async function getTeamToday(): Promise<TeammateToday[]> {
   const workDate = await getCurrentWorkDate();
   const { data, error } = await supabase
     .from("work_sessions")
-    .select("*, profile:profiles!inner(id, full_name, display_name, avatar_url, job_title)")
+    .select(
+      "*, profile:profiles!work_sessions_user_id_fkey(id, full_name, display_name, avatar_url, job_title)",
+    )
     .eq("work_date", workDate)
     .order("started_at", { ascending: true });
   if (error) throw error;

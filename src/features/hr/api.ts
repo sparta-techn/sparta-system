@@ -173,8 +173,8 @@ async function fetchRolesByUser(userIds: string[]): Promise<Map<string, AppRole[
 export async function fetchHrEmployees(): Promise<HrEmployee[]> {
   const { data, error } = await db.from("employees").select(`
       id, user_id, status, manager_id, hire_date, created_at, work_location, work_mode,
-      department:departments ( name ),
-      team:teams ( name ),
+      department:departments!employees_department_id_fkey ( name ),
+      team:teams!employees_team_id_fkey ( name ),
       position:positions ( title ),
       employment_type:employment_types ( name ),
       profile:profiles ( full_name, display_name, email, avatar_url, job_title, timezone ),

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   CalendarDays,
   CheckCircle2,
@@ -39,8 +40,10 @@ function Metric({
 
 export function SprintOverview({ sprint }: { sprint: Sprint }) {
   const project = useProjectsState((s) => s.projects.find((p) => p.id === sprint.projectId));
-  const tasks = useTasksState((s) =>
-    s.tasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+  const allTasks = useTasksState((s) => s.tasks);
+  const tasks = useMemo(
+    () => allTasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+    [allTasks, sprint.id],
   );
   const stats = sprintStats(tasks);
 

@@ -1,11 +1,14 @@
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { useTasksState } from "@/features/tasks/store";
 import { buildBurndown, sprintStats } from "../utils";
 import type { Sprint } from "../types";
 
 export function BurndownMock({ sprint }: { sprint: Sprint }) {
-  const tasks = useTasksState((s) =>
-    s.tasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+  const allTasks = useTasksState((s) => s.tasks);
+  const tasks = useMemo(
+    () => allTasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+    [allTasks, sprint.id],
   );
   const stats = sprintStats(tasks);
   const series = buildBurndown(sprint, stats);

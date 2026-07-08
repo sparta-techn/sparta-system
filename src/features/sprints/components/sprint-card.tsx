@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, Target } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -10,8 +11,10 @@ import { SprintStatusBadge } from "./sprint-status-badge";
 
 export function SprintCard({ sprint }: { sprint: Sprint }) {
   const project = useProjectsState((s) => s.projects.find((p) => p.id === sprint.projectId));
-  const tasks = useTasksState((s) =>
-    s.tasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+  const allTasks = useTasksState((s) => s.tasks);
+  const tasks = useMemo(
+    () => allTasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+    [allTasks, sprint.id],
   );
   const stats = sprintStats(tasks);
 

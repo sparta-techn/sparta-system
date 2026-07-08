@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useTasksState } from "@/features/tasks/store";
@@ -17,8 +18,10 @@ const STATUS_BUCKETS: Array<{
 ];
 
 export function SprintProgress({ sprint }: { sprint: Sprint }) {
-  const tasks = useTasksState((s) =>
-    s.tasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+  const allTasks = useTasksState((s) => s.tasks);
+  const tasks = useMemo(
+    () => allTasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
+    [allTasks, sprint.id],
   );
   const stats = sprintStats(tasks);
   const denom = Math.max(1, stats.total);
