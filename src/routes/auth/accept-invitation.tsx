@@ -4,6 +4,8 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
+import type { EmailOtpType } from "@supabase/supabase-js";
+
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { PasswordStrength } from "@/features/auth/components/password-strength";
 import { acceptInvitationSchema, type AcceptInvitationInput } from "@/features/auth/validation";
@@ -16,6 +18,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+/**
+ * Credentials an invite link can carry, depending on GoTrue's flow:
+ * - implicit: an `access_token` + `refresh_token` pair in the URL hash
+ * - PKCE/OTP: a single-use `token_hash` in the query string
+ */
+type InviteCredentials =
+  | { kind: "tokens"; accessToken: string; refreshToken: string }
+  | { kind: "otp"; tokenHash: string; type: EmailOtpType };
+
+/**
+ * Read the invite credentials off the current URL. Must run synchronously
+ * before any `await`, because Supabase's `detectSessionInUrl` strips the hash
+ * once it consumes it — we want to win that race and drive the exchange
+ * ourselves so we can sign out the previous session first.
+ */
+function readInviteCredentialsFromUrl(): InviteCredentials | null {
+  if (typeof window === "undefined") return null;
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+
+  const accessToken = hash.get("access_token");
+  const refreshToken = hash.get("refresh_token");
+  if (accessToken && refreshToken) {
+    return { kind: "tokens", accessToken, refreshToken };
+  }
+
+  const tokenHash = query.get("token_hash") ?? hash.get("token_hash");
+  if (tokenHash) {
+    const type = (query.get("type") ?? hash.get("type") ?? "invite") as EmailOtpType;
+    return { kind: "otp", tokenHash, type };
+  }
+
+  return null;
+}
 
 export const Route = createFileRoute("/auth/accept-invitation")({
   ssr: false,
@@ -50,7 +87,47 @@ function AcceptInvitationPage() {
 
   useEffect(() => {
     let cancelled = false;
+    // Grab the invite token from the URL synchronously, before any await, so we
+    // read it before Supabase's detectSessionInUrl consumes and clears it.
+    const inviteCreds = readInviteCredentialsFromUrl();
+
     void (async () => {
+      // If this browser already carries a session (e.g. the admin who sent the
+      // invite is still logged in), it would otherwise win and the invitee would
+      // land on the app as the wrong user. Whenever the link carries an invite
+      // token, drop any existing session first, then establish the invitee's
+      // session from that token so the person clicking the link is always
+      // authenticated as the invited user.
+      if (inviteCreds) {
+        // Local scope only: clear this browser's stored session without
+        // revoking the previous user's sessions on their other devices.
+        await supabase.auth.signOut({ scope: "local" });
+
+        const { error } =
+          inviteCreds.kind === "tokens"
+            ? await supabase.auth.setSession({
+                access_token: inviteCreds.accessToken,
+                refresh_token: inviteCreds.refreshToken,
+              })
+            : await supabase.auth.verifyOtp({
+                token_hash: inviteCreds.tokenHash,
+                type: inviteCreds.type,
+              });
+
+        if (!cancelled && error) {
+          setLinkError(
+            "This invitation link is invalid or has expired. Ask HR or an administrator to resend it.",
+          );
+          setChecking(false);
+          return;
+        }
+
+        // Strip the token from the URL so it can't be reused or leak on refresh.
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
       const { data } = await supabase.auth.getSession();
       if (cancelled) return;
       if (!data.session) {
