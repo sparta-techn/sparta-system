@@ -1,8 +1,8 @@
 /**
  * useEmployeeManagement — real Supabase writes for the Owner/HR management
  * actions the directory UI performs on an employee: **edit**, **disable**
- * (deactivate / suspend / reactivate) and **delete** (soft-delete via
- * `status='offboarded'`, reversible with restore).
+ * (deactivate / suspend / reactivate) and **remove** (a permanent hard delete
+ * of the underlying auth user + cascaded rows — see `remove` below).
  *
  * Follows the repository pattern used elsewhere (components → repositories →
  * services; never Supabase directly) and the `useMutation`-style invalidate the
@@ -28,6 +28,7 @@ import type { EmployeeStatus } from "@/services/hr";
 
 import { hrKeys } from "./queries";
 import { recordEmployeeAudit } from "./employees-store";
+import { deleteEmployeeFn } from "./delete-employee.functions";
 import type { HrEmployee } from "./mock-data";
 
 /** The editable fields the employee form collects (role handled elsewhere). */
@@ -38,10 +39,6 @@ export interface EmployeeEditInput {
   department: string;
   team: string;
   workMode: HrEmployee["workMode"];
-}
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 /** Canonical UUID — the shape of a real Supabase employee id. */
@@ -121,13 +118,15 @@ export function useEmployeeManagement() {
 
   const reactivate = (employee: HrEmployee) => setStatus(employee, "active", "reactivated");
 
-  /** Soft delete — status 'offboarded' hides the row from the directory read. */
-  async function softDelete(employee: HrEmployee): Promise<void> {
+  /**
+   * Hard delete — permanently removes the employee by deleting their underlying
+   * Supabase Auth user on the server, which CASCADE-removes their profile, roles
+   * and employee row. This frees the email so a later invite is genuinely fresh
+   * (see `delete-employee.functions.ts`). Irreversible — there is no restore.
+   */
+  async function remove(employee: HrEmployee): Promise<void> {
     assertRealEmployee(employee);
-    await hrEmployeeRepository.update(employee.id, {
-      status: "offboarded",
-      end_date: todayIso(),
-    });
+    await deleteEmployeeFn({ data: { employeeId: employee.id } });
     recordEmployeeAudit(employee.id, "soft_deleted");
     await invalidate();
   }
@@ -139,5 +138,5 @@ export function useEmployeeManagement() {
     await invalidate();
   }
 
-  return { edit, deactivate, suspend, reactivate, softDelete, restore };
+  return { edit, deactivate, suspend, reactivate, remove, restore };
 }

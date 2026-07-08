@@ -11,6 +11,37 @@ import {
 } from "@/lib/errors";
 
 /**
+ * Fix B — recover invites emailed *before* invite links were targeted at the
+ * set-password page. Such links land on the project's Site URL (typically `/`
+ * or `/app`) carrying the token in the hash (`#access_token=…&type=invite`).
+ * Nothing on the root/dashboard flow routes that token to the set-password
+ * screen, so the invitee bounces to sign-in and never sets a password.
+ *
+ * Runs synchronously at client-entry module load — BEFORE the Supabase client
+ * is first accessed and its `detectSessionInUrl` consumes and strips the hash —
+ * and forwards the whole token-bearing hash to `/auth/accept-invitation`, where
+ * the (guard-less) accept flow exchanges it. New invites land there directly
+ * (Fix A) and short-circuit on the `pathname` check below.
+ */
+function forwardInviteTokenLanding(): void {
+  if (typeof window === "undefined") return;
+  const { hash, pathname } = window.location;
+  if (!hash || hash.length < 2) return;
+
+  const params = new URLSearchParams(hash.slice(1));
+  // Implicit-flow auth landings carry the token in the hash; anchor links don't.
+  if (!params.get("access_token") || params.get("type") !== "invite") return;
+
+  const target = "/auth/accept-invitation";
+  if (pathname === target) return; // already there — let the page handle it
+
+  // Preserve the token-bearing hash across the hop.
+  window.location.replace(`${target}${hash}`);
+}
+
+forwardInviteTokenLanding();
+
+/**
  * Route to the session-expired screen exactly once when a request fails auth.
  * A module-level flag prevents a redirect storm when several in-flight queries
  * all 401 at the same moment. Skipped on the server and on the auth pages

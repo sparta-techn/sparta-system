@@ -161,14 +161,16 @@ export function EmployeeActionsMenu({
           toast.message("Account suspended", { description: employee.name });
           break;
         case "delete":
-          await mgmt.softDelete(employee);
+          await mgmt.remove(employee);
           recordAudit({
             action: "employee_deleted",
             target: employee.name,
             targetType: "employee",
             oldValue: employee.status,
           });
-          toast.message("Employee removed", { description: `${employee.name} was removed` });
+          toast.message("Employee removed", {
+            description: `${employee.name} was permanently removed`,
+          });
           break;
         case "restore":
           await mgmt.restore(employee);
@@ -216,7 +218,7 @@ export function EmployeeActionsMenu({
     },
     delete: {
       title: "Delete employee?",
-      body: `${employee.name} will be removed from the directory. This is a soft delete — the record is retained and can be restored.`,
+      body: `${employee.name} and their account will be permanently deleted, freeing their email to be invited again. This cannot be undone.`,
       action: "Delete",
       destructive: true,
     },
