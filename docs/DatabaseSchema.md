@@ -15,7 +15,7 @@ Production PostgreSQL schema for Supabase. All tables live in `public` unless no
 - **Timezones**: all timestamps `timestamptz`, stored UTC.
 - **Enums**: defined once in SQL; never hardcoded strings in app code.
 - **Foreign keys**: `on delete` chosen explicitly (cascade for dependents, set null for actors, restrict for reference data).
-- **Naming**: snake_case tables and columns; tables plural; junction tables `<a>_<b>`.
+- **Naming**: snake*case tables and columns; tables plural; junction tables `<a>*<b>`.
 
 ## Enums
 
@@ -38,6 +38,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 ## 1. Identity & Org
 
 ### profiles (1:1 with auth.users)
+
 - `id uuid pk references auth.users(id) on delete cascade`
 - `display_name text not null`
 - `full_name text`
@@ -55,6 +56,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(department_id)`, `(manager_id)`, `(status) where deleted_at is null`, unique `(lower(display_name))`.
 
 ### employee_profiles (HR-private extension)
+
 - `user_id uuid pk references profiles(id) on delete cascade`
 - `employee_code text unique not null`
 - `employment_type text` — full_time | part_time | contractor
@@ -66,6 +68,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - RLS: HR / Owner / self read minimal; HR write.
 
 ### departments
+
 - `id uuid pk`
 - `name text not null unique`
 - `slug text not null unique`
@@ -75,6 +78,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - audit + `deleted_at`
 
 ### teams
+
 - `id uuid pk`
 - `name text not null`
 - `slug text not null`
@@ -85,6 +89,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(department_id, slug)`.
 
 ### team_members
+
 - composite pk `(team_id, user_id)`
 - `team_id uuid references teams(id) on delete cascade`
 - `user_id uuid references profiles(id) on delete cascade`
@@ -93,20 +98,24 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Index `(user_id)`.
 
 ### roles (reference, seeded)
+
 - `id app_role pk` — uses the enum
 - `description text not null`
 
 ### permissions (reference, seeded)
+
 - `code text pk` — e.g. `attendance.read.team`
 - `description text not null`
 - `category text not null`
 
 ### role_permissions
+
 - composite pk `(role, permission_code)`
 - `role app_role references roles(id) on delete cascade`
 - `permission_code text references permissions(code) on delete cascade`
 
 ### user_roles (NEVER store role on profiles)
+
 - `id uuid pk`
 - `user_id uuid not null references auth.users(id) on delete cascade`
 - `role app_role not null`
@@ -119,6 +128,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(user_id) where revoked_at is null`, `(role, scope_type, scope_id)`.
 
 ### projects
+
 - `id uuid pk`
 - `name text not null`
 - `code text unique not null`
@@ -131,6 +141,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - audit + `deleted_at`
 
 ### project_members
+
 - composite pk `(project_id, user_id)`
 - `project_id uuid references projects(id) on delete cascade`
 - `user_id uuid references profiles(id) on delete cascade`
@@ -142,6 +153,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 ## 2. Attendance & Workflow
 
 ### attendance
+
 - `id uuid pk`
 - `user_id uuid not null references profiles(id) on delete cascade`
 - `work_date date not null`
@@ -159,6 +171,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(work_date)`, `(user_id, work_date desc)`, `(status, work_date)`.
 
 ### breaks
+
 - `id uuid pk`
 - `attendance_id uuid not null references attendance(id) on delete cascade`
 - `user_id uuid not null references profiles(id) on delete cascade`
@@ -170,6 +183,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Index `(attendance_id)`, partial unique "one open break per attendance" `(attendance_id) where ended_at is null`.
 
 ### morning_checkins
+
 - `id uuid pk`
 - `user_id uuid not null references profiles(id) on delete cascade`
 - `work_date date not null`
@@ -182,6 +196,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(user_id, work_date)`.
 
 ### midday_reports
+
 - `id uuid pk`
 - `user_id uuid not null references profiles(id) on delete cascade`
 - `work_date date not null`
@@ -192,6 +207,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(user_id, work_date)`.
 
 ### end_day_reports
+
 - `id uuid pk`
 - `user_id uuid not null references profiles(id) on delete cascade`
 - `work_date date not null`
@@ -205,6 +221,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(user_id, work_date)`.
 
 ### holidays
+
 - `id uuid pk`
 - `date date not null`
 - `name text not null`
@@ -214,6 +231,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(date, coalesce(department_id,'00000000-0000-0000-0000-000000000000'))`.
 
 ### leave_requests
+
 - `id uuid pk`
 - `user_id uuid not null references profiles(id) on delete cascade`
 - `type leave_type not null`
@@ -228,6 +246,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(user_id, start_date)`, `(status)`, `(approver_id) where status='pending'`.
 
 ### working_rules
+
 - `id uuid pk`
 - `scope_type scope_type not null` — global | department
 - `scope_id uuid`
@@ -244,6 +263,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 ## 3. Collaboration
 
 ### dependencies
+
 - `id uuid pk`
 - `title text not null`
 - `description text`
@@ -266,6 +286,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(assignee_user_id, status)`, `(assignee_team_id, status)`, `(requested_by)`, `(status, opened_at desc)`, `(due_at) where status not in ('resolved','cancelled')`.
 
 ### dependency_comments
+
 - `id uuid pk`
 - `dependency_id uuid not null references dependencies(id) on delete cascade`
 - `author_id uuid not null references profiles(id) on delete set null`
@@ -275,6 +296,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Index `(dependency_id, created_at)`.
 
 ### announcements
+
 - `id uuid pk`
 - `author_id uuid not null references profiles(id) on delete set null`
 - `title text not null`
@@ -288,6 +310,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(published_at desc) where deleted_at is null`, GIN `(audience_ids)`.
 
 ### announcement_reads
+
 - composite pk `(announcement_id, user_id)`
 - `announcement_id uuid references announcements(id) on delete cascade`
 - `user_id uuid references profiles(id) on delete cascade`
@@ -298,6 +321,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 ## 4. Notifications
 
 ### notifications
+
 - `id uuid pk`
 - `user_id uuid not null references profiles(id) on delete cascade`
 - `event_type text not null`
@@ -312,6 +336,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(user_id, read_at) where archived_at is null`, `(user_id, created_at desc)`.
 
 ### notification_preferences
+
 - composite pk `(user_id, event_type)`
 - `user_id uuid references profiles(id) on delete cascade`
 - `event_type text`
@@ -321,6 +346,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - `updated_at timestamptz`
 
 ### notification_deliveries
+
 - `id uuid pk`
 - `notification_id uuid references notifications(id) on delete cascade`
 - `channel text not null` — in_app | email | slack
@@ -333,6 +359,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 ## 5. Audit & System
 
 ### audit_logs (insert-only)
+
 - `id bigint generated always as identity pk`
 - `actor_id uuid references auth.users(id) on delete set null`
 - `action audit_action not null`
@@ -349,6 +376,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Update/delete grants revoked.
 
 ### activity_logs (lightweight per-user daily activity)
+
 - `id bigint generated always as identity pk`
 - `user_id uuid not null references profiles(id) on delete cascade`
 - `work_date date not null`
@@ -358,6 +386,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Indexes: `(user_id, work_date)`, `(work_date)`.
 
 ### settings
+
 - `key text pk`
 - `value jsonb not null`
 - `scope_type scope_type not null default 'global'`
@@ -366,6 +395,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - audit
 
 ### integration_accounts
+
 - `id uuid pk`
 - `provider integration_provider not null`
 - `scope_type scope_type not null default 'global'`
@@ -378,6 +408,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(provider, scope_type, scope_id)`.
 
 ### integration_links
+
 - `id uuid pk`
 - `account_id uuid references integration_accounts(id) on delete cascade`
 - `local_entity text not null`, `local_id uuid not null`
@@ -386,6 +417,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(account_id, local_entity, local_id)`.
 
 ### integration_events (raw inbound)
+
 - `id bigint generated always as identity pk`
 - `account_id uuid references integration_accounts(id) on delete cascade`
 - `event_type text not null`
@@ -396,6 +428,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - `received_at timestamptz not null default now()`
 
 ### attachments
+
 - `id uuid pk`
 - `bucket text not null`
 - `object_path text not null`
@@ -408,6 +441,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - Unique `(bucket, object_path)`.
 
 ### sessions (UI metadata; Supabase manages refresh tokens)
+
 - `id uuid pk`
 - `user_id uuid references auth.users(id) on delete cascade`
 - `ip inet`, `user_agent text`, `device_label text`
@@ -415,6 +449,7 @@ audit_action      : insert | update | delete | login | logout | role_grant | rol
 - `revoked_at timestamptz`
 
 ### domain_event_outbox
+
 - `id bigint generated always as identity pk`
 - `aggregate text not null`, `aggregate_id uuid not null`
 - `event_type text not null`

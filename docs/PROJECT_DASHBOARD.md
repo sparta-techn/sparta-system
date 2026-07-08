@@ -20,12 +20,12 @@
 The dashboard is a **composition layer**. Every analytical figure comes from the
 already-built modules:
 
-| Source module | Reused for |
-| --- | --- |
-| `@/features/project-analytics/utils` | `snapshotTasks` (blocked/overdue/completed), `sprintProgressList`, `projectTimeLogs` + `totalHours`, `unifiedActivity`, `filterProjectTasks`, `employeeName` |
-| `@/features/project-analytics/insights` | `calcProjectHealth` (score + level + factors) |
-| `@/features/projects/store` | `project.progress` (milestone-derived), `members`, `milestonesFor`, `risksFor` |
-| `@/services/projects/rules` | `highestOpenRiskSeverity` (Risk Level) |
+| Source module                           | Reused for                                                                                                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@/features/project-analytics/utils`    | `snapshotTasks` (blocked/overdue/completed), `sprintProgressList`, `projectTimeLogs` + `totalHours`, `unifiedActivity`, `filterProjectTasks`, `employeeName` |
+| `@/features/project-analytics/insights` | `calcProjectHealth` (score + level + factors)                                                                                                                |
+| `@/features/projects/store`             | `project.progress` (milestone-derived), `members`, `milestonesFor`, `risksFor`                                                                               |
+| `@/services/projects/rules`             | `highestOpenRiskSeverity` (Risk Level)                                                                                                                       |
 
 No new chart math, health formula, or task aggregation is written — the widgets
 call the same functions the Analytics tab uses, so the two stay consistent by
@@ -33,18 +33,18 @@ construction.
 
 ## 3. Widgets → data source
 
-| Widget | Source |
-| --- | --- |
-| **Project Progress** | `project.progress` (R7: completed milestones, from the store) + `snapshotTasks` mini-stats |
-| **Team Members** | `project.members` resolved via `personById` (Supabase `profiles`) |
-| **Sprint Progress** | `sprintProgressList(projectId)` (Analytics) |
-| **Milestones** | `milestonesFor(projectId)` (store → `milestones` table) |
-| **Upcoming Deadlines** | open milestones sorted by `dueDate`, with days-remaining / overdue |
-| **Blocked Tasks** | `snapshotTasks().blocked` + the `status === "blocked"` task list (Analytics) |
-| **Recent Activity** | `unifiedActivity(projectId, 6)` (Analytics — tasks/comments/files/sprints) |
-| **Time Logged** | `totalHours(projectTimeLogs(projectId))` + tracked-task count (Analytics) |
-| **Risk Level** | `highestOpenRiskSeverity(risksFor(projectId))` over the live `project_risks` register |
-| **Project Health** | `calcProjectHealth(projectId)` score + level + weighted factors (Analytics) |
+| Widget                 | Source                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| **Project Progress**   | `project.progress` (R7: completed milestones, from the store) + `snapshotTasks` mini-stats |
+| **Team Members**       | `project.members` resolved via `personById` (Supabase `profiles`)                          |
+| **Sprint Progress**    | `sprintProgressList(projectId)` (Analytics)                                                |
+| **Milestones**         | `milestonesFor(projectId)` (store → `milestones` table)                                    |
+| **Upcoming Deadlines** | open milestones sorted by `dueDate`, with days-remaining / overdue                         |
+| **Blocked Tasks**      | `snapshotTasks().blocked` + the `status === "blocked"` task list (Analytics)               |
+| **Recent Activity**    | `unifiedActivity(projectId, 6)` (Analytics — tasks/comments/files/sprints)                 |
+| **Time Logged**        | `totalHours(projectTimeLogs(projectId))` + tracked-task count (Analytics)                  |
+| **Risk Level**         | `highestOpenRiskSeverity(risksFor(projectId))` over the live `project_risks` register      |
+| **Project Health**     | `calcProjectHealth(projectId)` score + level + weighted factors (Analytics)                |
 
 ## 4. Real data wiring
 
@@ -59,6 +59,7 @@ construction.
   `useSprintsState`, `useTimeState` so widgets refresh live.
 
 ### Data origin today
+
 - Projects / members / milestones / activity / risks → **Supabase**
   (project-execution tables, via the projects store).
 - Tasks / sprints / time logs → the **existing Analytics module's** stores

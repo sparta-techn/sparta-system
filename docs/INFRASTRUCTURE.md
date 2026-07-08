@@ -22,14 +22,14 @@ generic six-method `Integration` lifecycle **plus** a capability port.
 
 ## Supported checks
 
-| Check | Where it lives |
-|---|---|
-| **Health Check** | The inherited `Integration.healthCheck` lifecycle method (→ each adapter's `probe`). Not repeated on the port. |
-| **Deployment Status** | `InfrastructurePort.getDeploymentStatus` → `DeploymentStatus` (phase, version, url). |
-| **Storage Status** | `InfrastructurePort.getStorageStatus` → `StorageStatus` (bytes used/limit, buckets). |
-| **DNS Status** | `InfrastructurePort.getDnsStatus` → `DnsStatus` (zone, records, propagation). |
-| **SSL Status** | `InfrastructurePort.getSslStatus` → `SslStatus` (issuer, expiry, auto-renew). |
-| **Server Information** | `InfrastructurePort.getServerInfo` → `ServerInfo` (region, CPU, RAM, disk, uptime). |
+| Check                  | Where it lives                                                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Health Check**       | The inherited `Integration.healthCheck` lifecycle method (→ each adapter's `probe`). Not repeated on the port. |
+| **Deployment Status**  | `InfrastructurePort.getDeploymentStatus` → `DeploymentStatus` (phase, version, url).                           |
+| **Storage Status**     | `InfrastructurePort.getStorageStatus` → `StorageStatus` (bytes used/limit, buckets).                           |
+| **DNS Status**         | `InfrastructurePort.getDnsStatus` → `DnsStatus` (zone, records, propagation).                                  |
+| **SSL Status**         | `InfrastructurePort.getSslStatus` → `SslStatus` (issuer, expiry, auto-renew).                                  |
+| **Server Information** | `InfrastructurePort.getServerInfo` → `ServerInfo` (region, CPU, RAM, disk, uptime).                            |
 
 Health Check is the platform's existing liveness lifecycle method, so it isn't
 duplicated on the port — the same treatment the notification/automation batches
@@ -46,7 +46,7 @@ three providers. Each status DTO shares an `InfraStatusBase`
 
 ```ts
 interface InfrastructurePort {
-  readonly supportedChecks: readonly InfrastructureCheck[];   // which of the 5 this provider serves
+  readonly supportedChecks: readonly InfrastructureCheck[]; // which of the 5 this provider serves
   supports(check: InfrastructureCheck): boolean;
   getDeploymentStatus(accountId): Promise<DeploymentStatus>;
   getStorageStatus(accountId): Promise<StorageStatus>;
@@ -63,7 +63,7 @@ import { getIntegrationRegistry, isInfrastructurePort } from "@/integrations";
 
 const provider = getIntegrationRegistry().get("hostinger");
 if (isInfrastructurePort(provider)) {
-  const server = await provider.getServerInfo(accountId);   // { state, region, cpuCores, uptimeSeconds, … }
+  const server = await provider.getServerInfo(accountId); // { state, region, cpuCores, uptimeSeconds, … }
 }
 ```
 
@@ -78,13 +78,13 @@ check a provider doesn't serve returns a `not_supported` status **with no client
 call** — surfaced honestly rather than faked or thrown (the same
 `supports()`-guard pattern the Notifier/Calendar batch used for notification kinds).
 
-| Check | Supabase | Cloudflare | Hostinger VPS |
-|---|:---:|:---:|:---:|
-| Deployment | ✅ | ✅ | ✅ |
-| Storage | ✅ | ✅ (R2) | ✅ (disk) |
-| DNS | — | ✅ | ✅ |
-| SSL | ✅ | ✅ (edge) | ✅ |
-| Server info | ✅ (compute) | — (edge) | ✅ |
+| Check       |   Supabase   | Cloudflare | Hostinger VPS |
+| ----------- | :----------: | :--------: | :-----------: |
+| Deployment  |      ✅      |     ✅     |      ✅       |
+| Storage     |      ✅      |  ✅ (R2)   |   ✅ (disk)   |
+| DNS         |      —       |     ✅     |      ✅       |
+| SSL         |      ✅      | ✅ (edge)  |      ✅       |
+| Server info | ✅ (compute) |  — (edge)  |      ✅       |
 
 Supabase doesn't manage DNS; Cloudflare is an edge platform with no server — those
 cells return `not_supported`.
@@ -133,6 +133,7 @@ all inherited from `BaseIntegration`.
 ## The three providers
 
 ### Supabase — `src/integrations/supabase-platform/`
+
 - Monitors SpartaFlow's own Supabase project via the **Management API** (personal
   access token). The project **service-role key is never used** (CLAUDE.md
   Security). `category: "other"`, `scope: "org"`, `auth: "api_token"`.
@@ -142,6 +143,7 @@ all inherited from `BaseIntegration`.
   which is the app's runtime DB/auth client (a different concern).
 
 ### Cloudflare — `src/integrations/cloudflare/`
+
 - Monitors DNS zones/records, edge SSL certificate packs, Pages/Workers
   deployments and R2 storage. `category: "other"`, `scope: "org"`,
   `auth: "api_token"` (scoped token).
@@ -149,6 +151,7 @@ all inherited from `BaseIntegration`.
 - Settings: `zoneId` (DNS/SSL), `accountIdentifier` (Pages/Workers/R2).
 
 ### Hostinger VPS — `src/integrations/hostinger/`
+
 - Monitors a VPS: server specs/region/uptime, hosted SSL, disk storage, app
   deployment and managed DNS. `category: "other"`, `scope: "org"`,
   `auth: "api_token"`.

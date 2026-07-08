@@ -14,7 +14,13 @@ const TONE: Record<SprintStatus, string> = {
   completed: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
 };
 
-export function SprintStatusBadge({ status, className }: { status: SprintStatus; className?: string }) {
+export function SprintStatusBadge({
+  status,
+  className,
+}: {
+  status: SprintStatus;
+  className?: string;
+}) {
   return (
     <Badge variant="outline" className={cn("font-medium", TONE[status], className)}>
       {LABEL[status]}

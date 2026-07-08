@@ -35,7 +35,11 @@ export function formatRelative(value?: string | null) {
 export function checklistProgress(task: Task) {
   if (!task.checklist.length) return null;
   const done = task.checklist.filter((c) => c.done).length;
-  return { done, total: task.checklist.length, pct: Math.round((done / task.checklist.length) * 100) };
+  return {
+    done,
+    total: task.checklist.length,
+    pct: Math.round((done / task.checklist.length) * 100),
+  };
 }
 
 export function initials(name: string) {

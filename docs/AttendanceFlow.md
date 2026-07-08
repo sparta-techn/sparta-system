@@ -38,15 +38,15 @@ won't re-fire fired reminders, and tomorrow they reset automatically.
 
 ## Error responses surfaced as toasts
 
-| RPC exception | Toast text |
-|---|---|
-| Unique violation on start | "Work session already started today" |
-| Start break with no session | "No active work session" |
-| Start break while finished | "Work already finished" |
-| Start break while already on break | "Already on break" |
-| Resume when not on break | "Not currently on break" |
-| Finish a never-started session | "Cannot finish a session that never started" |
-| Finish a finished session | "Work already finished" |
+| RPC exception                      | Toast text                                   |
+| ---------------------------------- | -------------------------------------------- |
+| Unique violation on start          | "Work session already started today"         |
+| Start break with no session        | "No active work session"                     |
+| Start break while finished         | "Work already finished"                      |
+| Start break while already on break | "Already on break"                           |
+| Resume when not on break           | "Not currently on break"                     |
+| Finish a never-started session     | "Cannot finish a session that never started" |
+| Finish a finished session          | "Work already finished"                      |
 
 The TodayStatusCard surfaces these via `sonner` and the cached session
 re-reads from realtime, so the UI immediately reflects the actual
@@ -69,15 +69,15 @@ Realtime channel "attendance:team-today" subscribed
 
 ## Integration points for future phases
 
-| Phase | Integration |
-|---|---|
-| Morning Check-in | Reads `useTodaySession()` to require a started session before allowing submit; writes a `check_ins` row keyed by `session_id`. |
-| Midday Report | Reads `useTodaySession()` for `working_seconds`/`break_seconds` mid-day; writes a `midday_reports` row. |
-| End-of-Day Report | Triggered from FinishSummaryDialog or 17:30 reminder; writes a `eod_reports` row keyed by `session_id`. |
-| HR analytics | Aggregates `work_sessions` by `work_date`, `user_id`, joined to `departments`/`teams`. |
-| Payroll export | Sum of `working_seconds`, `overtime_seconds` per user per month. |
-| Leave management | When a leave is approved for a date, a `work_sessions` row is created with `attendance_status='leave'` and zero seconds, blocking double check-in. |
-| Holidays | A row in `holidays` for that date → background job pre-creates `work_sessions` rows with `attendance_status='holiday'`. |
+| Phase             | Integration                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Morning Check-in  | Reads `useTodaySession()` to require a started session before allowing submit; writes a `check_ins` row keyed by `session_id`.                     |
+| Midday Report     | Reads `useTodaySession()` for `working_seconds`/`break_seconds` mid-day; writes a `midday_reports` row.                                            |
+| End-of-Day Report | Triggered from FinishSummaryDialog or 17:30 reminder; writes a `eod_reports` row keyed by `session_id`.                                            |
+| HR analytics      | Aggregates `work_sessions` by `work_date`, `user_id`, joined to `departments`/`teams`.                                                             |
+| Payroll export    | Sum of `working_seconds`, `overtime_seconds` per user per month.                                                                                   |
+| Leave management  | When a leave is approved for a date, a `work_sessions` row is created with `attendance_status='leave'` and zero seconds, blocking double check-in. |
+| Holidays          | A row in `holidays` for that date → background job pre-creates `work_sessions` rows with `attendance_status='holiday'`.                            |
 
 ## Invariants
 

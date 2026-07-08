@@ -61,7 +61,9 @@ export function SavedReportsList() {
         <section>
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Pinned</h3>
           <div className="grid gap-3 lg:grid-cols-2">
-            {pinned.map((r) => <ReportRow key={r.id} report={r} onPin={togglePin} onRemove={remove} />)}
+            {pinned.map((r) => (
+              <ReportRow key={r.id} report={r} onPin={togglePin} onRemove={remove} />
+            ))}
           </div>
         </section>
       )}
@@ -69,10 +71,15 @@ export function SavedReportsList() {
       <section>
         <h3 className="mb-2 text-sm font-semibold text-muted-foreground">All saved reports</h3>
         {reports.length === 0 ? (
-          <EmptyState title="No saved reports" description="Create one above to pin a dashboard or schedule exports." />
+          <EmptyState
+            title="No saved reports"
+            description="Create one above to pin a dashboard or schedule exports."
+          />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
-            {others.map((r) => <ReportRow key={r.id} report={r} onPin={togglePin} onRemove={remove} />)}
+            {others.map((r) => (
+              <ReportRow key={r.id} report={r} onPin={togglePin} onRemove={remove} />
+            ))}
           </div>
         )}
       </section>
@@ -81,7 +88,9 @@ export function SavedReportsList() {
 }
 
 function ReportRow({
-  report, onPin, onRemove,
+  report,
+  onPin,
+  onRemove,
 }: {
   report: SavedReport;
   onPin: (id: string) => void;
@@ -93,7 +102,9 @@ function ReportRow({
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-sm font-semibold text-foreground">{report.name}</p>
-            <Badge variant="outline" className="capitalize">{report.scope}</Badge>
+            <Badge variant="outline" className="capitalize">
+              {report.scope}
+            </Badge>
             {report.schedule ? (
               <Badge variant="secondary">
                 <CalendarClock className="mr-1 size-3" aria-hidden /> {report.schedule}
@@ -109,10 +120,20 @@ function ReportRow({
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => onPin(report.id)} aria-label={report.pinned ? "Unpin" : "Pin"}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onPin(report.id)}
+            aria-label={report.pinned ? "Unpin" : "Pin"}
+          >
             {report.pinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onRemove(report.id)} aria-label="Delete">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onRemove(report.id)}
+            aria-label="Delete"
+          >
             <Trash2 className="size-4" />
           </Button>
         </div>

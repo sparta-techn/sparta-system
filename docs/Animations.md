@@ -11,13 +11,13 @@ Motion is functional, not decorative. It explains state changes; it never blocks
 
 ## 2. Duration Scale
 
-| Token | Duration | Use |
-|---|---|---|
-| `duration-100` | 100 ms | hover background tint, badge tone change |
-| `duration-150` | 150 ms | button press, focus ring, switch thumb |
-| `duration-200` | 200 ms | tabs underline, popover open |
-| `duration-300` | 300 ms | dialog, drawer, sheet |
-| `duration-500` | 500 ms | success confirmation pulse |
+| Token          | Duration | Use                                      |
+| -------------- | -------- | ---------------------------------------- |
+| `duration-100` | 100 ms   | hover background tint, badge tone change |
+| `duration-150` | 150 ms   | button press, focus ring, switch thumb   |
+| `duration-200` | 200 ms   | tabs underline, popover open             |
+| `duration-300` | 300 ms   | dialog, drawer, sheet                    |
+| `duration-500` | 500 ms   | success confirmation pulse               |
 
 ## 3. Easing
 
@@ -50,7 +50,9 @@ The base layer should include (added at the bottom of `styles.css` when needed):
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

@@ -11,15 +11,15 @@
 
 ## 1. Summary
 
-| Area | Verdict |
-| --- | --- |
-| Architecture | Solid — clean service → repository → store → UI layering, conventions consistent with HR/Attendance. |
-| Performance | Acceptable for current scale; one N+1 hydration pattern + unmemoized dashboard worth addressing before large datasets. |
-| Supabase queries | Correct & parameterized via `BaseService`; RLS-safe. N+1 fan-out noted. |
-| Repositories | Clean, thin, singletons, dependency-injected; reuse Tasks. |
-| Permissions | RLS ↔ `rules.ts` ↔ UI consistent (archive = managers, delete = owners). |
-| TypeScript | Strict, no `any` in module logic; row/domain split explicit. |
-| Reusable components | Good — dashboard composes the existing Analytics module; UI primitives reused. |
+| Area                | Verdict                                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Architecture        | Solid — clean service → repository → store → UI layering, conventions consistent with HR/Attendance.                   |
+| Performance         | Acceptable for current scale; one N+1 hydration pattern + unmemoized dashboard worth addressing before large datasets. |
+| Supabase queries    | Correct & parameterized via `BaseService`; RLS-safe. N+1 fan-out noted.                                                |
+| Repositories        | Clean, thin, singletons, dependency-injected; reuse Tasks.                                                             |
+| Permissions         | RLS ↔ `rules.ts` ↔ UI consistent (archive = managers, delete = owners).                                                |
+| TypeScript          | Strict, no `any` in module logic; row/domain split explicit.                                                           |
+| Reusable components | Good — dashboard composes the existing Analytics module; UI primitives reused.                                         |
 
 **2 critical issues found and fixed** (Section 2). Remaining items are
 non-critical recommendations (Section 9), intentionally **not** changed under the
@@ -30,9 +30,10 @@ non-critical recommendations (Section 9), intentionally **not** changed under th
 ## 2. Critical issues — FIXED
 
 ### C1. Member changes never persisted (silent data loss)
+
 `features/projects/store.ts` — `updateProject` applied the optimistic state
 update **before** calling `reconcileMembers`, which then read the "previous"
-members via `getProject(projectId)?.members` — i.e. the *already-overwritten*
+members via `getProject(projectId)?.members` — i.e. the _already-overwritten_
 list. The diff (`prev` vs `next`) was therefore always empty, so **adding,
 removing, or re-roling a member updated the cache but issued no Supabase write**;
 the change vanished on reload.
@@ -44,6 +45,7 @@ the change vanished on reload.
   the true prior state, so add/remove/role-change persist.
 
 ### C2. Just-created project lands on a dead "Project not found" page
+
 `createProject` returned an optimistic row with a temp id (`proj-…`), the create
 dialog navigated to `/app/projects/{tempId}`, and the async write-through then
 **swapped the project's id** to the DB-generated UUID. The route param stayed on
@@ -54,7 +56,7 @@ the temp id, so a few hundred ms after creation the detail page flipped to
   store tick the page shows "Project not found".
 - **Fix:** generate the id **client-side** (`crypto.randomUUID()`) and pass it as
   `projects.id` on insert (`ProjectInsert.id` is now optional). The optimistic id
-  *is* the persisted id — no swap, the route stays valid, and the per-project
+  _is_ the persisted id — no swap, the route stays valid, and the per-project
   overlay (favorite/env/client/template) survives reload because it's keyed by
   the same stable id. The obsolete `id.startsWith("proj-")` write-through guard
   was removed.
@@ -73,7 +75,7 @@ Both fixes are localized to `store.ts` + a one-line type widening in
 - **Snake-case row types vs camelCase domain** are bridged in one place
   (`features/projects/mappers.ts`), keeping the impedance boundary explicit.
 - **Append-only `project_activity`** is enforced at the service (`update`/`upsert`/
-  `remove` reject) *and* the grant level (SELECT/INSERT only) — good defense in depth.
+  `remove` reject) _and_ the grant level (SELECT/INSERT only) — good defense in depth.
 - **Reuse over duplication:** `ProjectRepository.listTasks` delegates to the
   existing `TasksService`; the dashboard composes `project-analytics` utils +
   `insights` rather than recomputing analytics. Aligns with CLAUDE.md.
@@ -89,12 +91,12 @@ nothing imports them, to avoid confusion.
 
 ## 4. Performance
 
-| Item | Severity | Notes |
-| --- | --- | --- |
-| **N+1 hydration fan-out** | Medium | `store.ts` `hydrate()` issues 4 base queries + **4 queries per project** (members, milestones, activity, risks) via `Promise.all` over `projectRows`. Fine for a handful of projects; at scale prefer batched `…listByProjectIds(ids)` using PostgREST `.in("project_id", ids)` (one query per child table). |
-| **Unmemoized dashboard** | Low–Med | `project-dashboard.tsx` calls `filterProjectTasks` / `snapshotTasks` / `calcProjectHealth` / `unifiedActivity` on **every render** (no `useMemo`, unlike `ProjectAnalyticsDashboard`). Cheap on mock data; wrap in `useMemo` keyed by `projectId` + store slices when task volume grows. |
-| **O(n) cache lookups** | Low | `personById`, `getProject`, `risksFor`, etc. are linear `find`/`filter`. `personById` runs per member per render. Acceptable now; index `people`/`projects` into a `Map` if directories get large. |
-| Hydration on module import | Low | `hydrate()` fires on first import of the store; the store is only imported by lazy-loaded project routes, so it's effectively route-scoped. Fine. |
+| Item                       | Severity | Notes                                                                                                                                                                                                                                                                                                        |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **N+1 hydration fan-out**  | Medium   | `store.ts` `hydrate()` issues 4 base queries + **4 queries per project** (members, milestones, activity, risks) via `Promise.all` over `projectRows`. Fine for a handful of projects; at scale prefer batched `…listByProjectIds(ids)` using PostgREST `.in("project_id", ids)` (one query per child table). |
+| **Unmemoized dashboard**   | Low–Med  | `project-dashboard.tsx` calls `filterProjectTasks` / `snapshotTasks` / `calcProjectHealth` / `unifiedActivity` on **every render** (no `useMemo`, unlike `ProjectAnalyticsDashboard`). Cheap on mock data; wrap in `useMemo` keyed by `projectId` + store slices when task volume grows.                     |
+| **O(n) cache lookups**     | Low      | `personById`, `getProject`, `risksFor`, etc. are linear `find`/`filter`. `personById` runs per member per render. Acceptable now; index `people`/`projects` into a `Map` if directories get large.                                                                                                           |
+| Hydration on module import | Low      | `hydrate()` fires on first import of the store; the store is only imported by lazy-loaded project routes, so it's effectively route-scoped. Fine.                                                                                                                                                            |
 
 None are correctness bugs; deferred per the "critical only" rule.
 
@@ -179,4 +181,5 @@ src/features/projects/store.ts        # C1: capture prevMembers before optimisti
                                        # C2: client-generated UUID id (no swap); drop temp-id guard
 src/services/projects/types.ts        # C2: ProjectInsert.id optional
 ```
+
 No UI markup, styling, or layout changed. Tests, type-check, and lint pass clean.

@@ -11,13 +11,18 @@ export function WorkloadDistribution() {
   }));
   const sorted = [...enriched].sort((a, b) => b.load - a.load);
   const top = sorted.slice(0, 3);
-  const bottom = sorted.filter((e) => e.status === "working").slice(-3).reverse();
+  const bottom = sorted
+    .filter((e) => e.status === "working")
+    .slice(-3)
+    .reverse();
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Workload distribution</CardTitle>
-        <CardDescription>Open vs completed work by department, and people to rebalance.</CardDescription>
+        <CardDescription>
+          Open vs completed work by department, and people to rebalance.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-2.5">
@@ -30,7 +35,8 @@ export function WorkloadDistribution() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-medium text-foreground">{d.dept}</span>
                   <span className="tabular-nums text-muted-foreground">
-                    <span className="text-warning">{d.open} open</span> · <span className="text-success">{d.completed} done</span> · {total}
+                    <span className="text-warning">{d.open} open</span> ·{" "}
+                    <span className="text-success">{d.completed} done</span> · {total}
                   </span>
                 </div>
                 <div className="flex h-2 overflow-hidden rounded-full bg-muted">
@@ -51,15 +57,25 @@ export function WorkloadDistribution() {
 }
 
 function PeopleList({
-  title, tone, people,
-}: { title: string; tone: "warning" | "info"; people: { id: string; name: string; initials: string; role: string; load: number }[] }) {
+  title,
+  tone,
+  people,
+}: {
+  title: string;
+  tone: "warning" | "info";
+  people: { id: string; name: string; initials: string; role: string; load: number }[];
+}) {
   return (
     <div className="rounded-lg border border-border bg-surface/40 p-3">
       <p className={`mb-2 text-xs font-medium uppercase tracking-wide text-${tone}`}>{title}</p>
       <ul className="space-y-2">
         {people.map((p) => (
           <li key={p.id} className="flex items-center gap-2">
-            <Avatar className="size-7"><AvatarFallback className="bg-muted text-[10px] font-semibold">{p.initials}</AvatarFallback></Avatar>
+            <Avatar className="size-7">
+              <AvatarFallback className="bg-muted text-[10px] font-semibold">
+                {p.initials}
+              </AvatarFallback>
+            </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm text-foreground">{p.name}</p>
               <p className="truncate text-xs text-muted-foreground">{p.role}</p>

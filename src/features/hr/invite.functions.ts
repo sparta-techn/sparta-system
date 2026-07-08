@@ -40,7 +40,9 @@ export interface InviteEmployeeInput {
 export const inviteEmployeeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: InviteEmployeeInput): InviteEmployeeInput => {
-    const email = String(data?.email ?? "").trim().toLowerCase();
+    const email = String(data?.email ?? "")
+      .trim()
+      .toLowerCase();
     if (!email || !email.includes("@")) {
       throw new Error("A valid invitee email is required.");
     }

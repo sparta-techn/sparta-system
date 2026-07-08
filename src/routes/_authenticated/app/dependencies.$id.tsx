@@ -81,10 +81,14 @@ function DependencyDetail() {
                 toast.success(`Status → ${STATE_LABEL[v as DependencyState]}`);
               }}
             >
-              <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {DEPENDENCY_STATES.map((s) => (
-                  <SelectItem key={s} value={s}>{STATE_LABEL[s]}</SelectItem>
+                  <SelectItem key={s} value={s}>
+                    {STATE_LABEL[s]}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -95,10 +99,14 @@ function DependencyDetail() {
                 toast.success(`Priority → ${PRIORITY_LABEL[v as DependencyPriority]}`);
               }}
             >
-              <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {DEPENDENCY_PRIORITIES.map((p) => (
-                  <SelectItem key={p} value={p}>{PRIORITY_LABEL[p]}</SelectItem>
+                  <SelectItem key={p} value={p}>
+                    {PRIORITY_LABEL[p]}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -123,14 +131,17 @@ function DependencyDetail() {
           </div>
 
           <Card>
-            <CardHeader><CardTitle className="text-sm">Description</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-sm">Description</CardTitle>
+            </CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap text-sm text-foreground">
                 {dep.description || "No description provided."}
               </p>
               {dep.relatedTaskRef && (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Related task: <span className="font-mono text-foreground">{dep.relatedTaskRef}</span>{" "}
+                  Related task:{" "}
+                  <span className="font-mono text-foreground">{dep.relatedTaskRef}</span>{" "}
                   <span className="italic">(ClickUp link — coming soon)</span>
                 </p>
               )}
@@ -151,10 +162,20 @@ function DependencyDetail() {
 
         <aside className="space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-sm">Details</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-sm">Details</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-3 text-xs">
               <Row label="Requester">
-                {requester ? <PersonChip name={requester.name} color={requester.avatarColor} sub={requester.role} /> : "—"}
+                {requester ? (
+                  <PersonChip
+                    name={requester.name}
+                    color={requester.avatarColor}
+                    sub={requester.role}
+                  />
+                ) : (
+                  "—"
+                )}
               </Row>
               <Row label="Owner">
                 {owner ? (

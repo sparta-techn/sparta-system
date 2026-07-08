@@ -13,11 +13,11 @@
 
 ## 1. Verdict
 
-| | Status |
-|---|---|
-| **Production infrastructure / ops layer** | ✅ **Ready** — containers, CI/CD, reverse proxy, TLS, env validation, monitoring, backups, and release process are implemented and documented. |
-| **Application data layer** | ❌ **Not production-ready** — most features run on **browser `localStorage` mock stores**, not the backend. Only `auth`, `attendance`, `hr` (and partially `projects`) are wired to Supabase. |
-| **Overall** | ⚠️ **Conditionally ready.** The platform can be *deployed and operated* safely today, but it is a **frontend-complete prototype**: it must not hold real company data until the mock stores are replaced with Supabase (§5, P0). This matches ARCHITECTURE.md's own framing. |
+|                                           | Status                                                                                                                                                                                                                                                                       |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Production infrastructure / ops layer** | ✅ **Ready** — containers, CI/CD, reverse proxy, TLS, env validation, monitoring, backups, and release process are implemented and documented.                                                                                                                               |
+| **Application data layer**                | ❌ **Not production-ready** — most features run on **browser `localStorage` mock stores**, not the backend. Only `auth`, `attendance`, `hr` (and partially `projects`) are wired to Supabase.                                                                                |
+| **Overall**                               | ⚠️ **Conditionally ready.** The platform can be _deployed and operated_ safely today, but it is a **frontend-complete prototype**: it must not hold real company data until the mock stores are replaced with Supabase (§5, P0). This matches ARCHITECTURE.md's own framing. |
 
 **Go / No-Go:** **No-Go for handling production data** until P0 items clear.
 **Go** for staging, demos, and standing up the production infrastructure.
@@ -34,20 +34,20 @@ Verified on 2026-07-04 with: `tsc --noEmit -p tsconfig.json`, `eslint .`,
 
 ## 3. Results by dimension
 
-| # | Dimension | Status | Evidence |
-|---|---|---|---|
-| 1 | **TypeScript** | ✅ Pass | `tsc --noEmit` → **0 errors**, strict mode, no `any` in app code. |
-| 2 | **Architecture** | ✅ Sound | Feature-first UI over `repositories → services → supabase` (35 repos / 35 services); clean layering, ports & adapters for integrations/logging/monitoring. |
-| 3 | **Security** | ✅ Strong | Service-role key **never** client-exposed (only ref is the leak-guard in `lib/env`); `client.server` used only in a `.server` module; `.env` git- & docker-ignored; **106 RLS policies** across the live schema. |
-| 4 | **Performance** | ⚠️ Adequate | TanStack Router **auto-splits routes** per file (per-route chunks present in `.output`); no manual splitting of heavy views (charts). Mock stores read `localStorage` synchronously (not a prod path). |
-| 5 | **Accessibility** | ✅ Good baseline | Radix/shadcn primitives; **397 `aria-*`**, 30 `role=`, 11 `sr-only`; both `<img>` tags have correct `alt` (one decorative `alt=""`, one descriptive). |
-| 6 | **Documentation** | ✅ Extensive | 150+ docs incl. the full ops set (DEPLOYMENT_PLAN, DOCKER, NGINX, CICD, ENVIRONMENT, MONITORING, BACKUPS, RELEASES). |
-| 7 | **CI/CD** | ✅ Implemented | Gated pipeline (lint→test→build→deploy), security scans, rollback, notifications. ⚠️ **Lint gate fails today** — see §4. |
-| 8 | **Docker** | ✅ Implemented | Multi-stage prod image (non-root, healthcheck), dev image, compose (dev + prod-with-Nginx). ⚠️ Preset caveat — see §4. |
-| 9 | **Deployment** | ✅ Documented & scripted | VPS + Cloudflare + Nginx topology, atomic releases, health-check auto-rollback. ⚠️ Requires `node-server` preset switch — see §4. |
-| 10 | **No mock data** | ❌ **Fail** | **17** `mock-data.ts`, **13** `localStorage` stores, **71** `localStorage` references. The dominant blocker. |
-| 11 | **No debug code** | ✅ Pass | **0** `console.log`, **0** `debugger`. 16 `console.error/warn` are intentional error surfaces (route via `@/lib/logging` — minor, §5). |
-| 12 | **No TODOs** | ⚠️ Minor | **6** real `// TODO:` — all in **unwired AI provider stubs** (`src/ai/providers/*`). None in core flows. |
+| #   | Dimension         | Status                   | Evidence                                                                                                                                                                                                         |
+| --- | ----------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **TypeScript**    | ✅ Pass                  | `tsc --noEmit` → **0 errors**, strict mode, no `any` in app code.                                                                                                                                                |
+| 2   | **Architecture**  | ✅ Sound                 | Feature-first UI over `repositories → services → supabase` (35 repos / 35 services); clean layering, ports & adapters for integrations/logging/monitoring.                                                       |
+| 3   | **Security**      | ✅ Strong                | Service-role key **never** client-exposed (only ref is the leak-guard in `lib/env`); `client.server` used only in a `.server` module; `.env` git- & docker-ignored; **106 RLS policies** across the live schema. |
+| 4   | **Performance**   | ⚠️ Adequate              | TanStack Router **auto-splits routes** per file (per-route chunks present in `.output`); no manual splitting of heavy views (charts). Mock stores read `localStorage` synchronously (not a prod path).           |
+| 5   | **Accessibility** | ✅ Good baseline         | Radix/shadcn primitives; **397 `aria-*`**, 30 `role=`, 11 `sr-only`; both `<img>` tags have correct `alt` (one decorative `alt=""`, one descriptive).                                                            |
+| 6   | **Documentation** | ✅ Extensive             | 150+ docs incl. the full ops set (DEPLOYMENT_PLAN, DOCKER, NGINX, CICD, ENVIRONMENT, MONITORING, BACKUPS, RELEASES).                                                                                             |
+| 7   | **CI/CD**         | ✅ Implemented           | Gated pipeline (lint→test→build→deploy), security scans, rollback, notifications. ⚠️ **Lint gate fails today** — see §4.                                                                                         |
+| 8   | **Docker**        | ✅ Implemented           | Multi-stage prod image (non-root, healthcheck), dev image, compose (dev + prod-with-Nginx). ⚠️ Preset caveat — see §4.                                                                                           |
+| 9   | **Deployment**    | ✅ Documented & scripted | VPS + Cloudflare + Nginx topology, atomic releases, health-check auto-rollback. ⚠️ Requires `node-server` preset switch — see §4.                                                                                |
+| 10  | **No mock data**  | ❌ **Fail**              | **17** `mock-data.ts`, **13** `localStorage` stores, **71** `localStorage` references. The dominant blocker.                                                                                                     |
+| 11  | **No debug code** | ✅ Pass                  | **0** `console.log`, **0** `debugger`. 16 `console.error/warn` are intentional error surfaces (route via `@/lib/logging` — minor, §5).                                                                           |
+| 12  | **No TODOs**      | ⚠️ Minor                 | **6** real `// TODO:` — all in **unwired AI provider stubs** (`src/ai/providers/*`). None in core flows.                                                                                                         |
 
 ---
 
@@ -78,36 +78,39 @@ Verified on 2026-07-04 with: `tsc --noEmit -p tsconfig.json`, `eslint .`,
 Prioritized. None require redesigning the application.
 
 ### P0 — before handling production data
+
 - [ ] **Wire features to Supabase.** Replace each `features/*/store.ts` +
-  `mock-data.ts` with repository calls behind TanStack Query hooks; keep stores as
-  at-most optimistic caches. Reference: `attendance` (`api.ts`+`queries.ts`).
-  (17 mock files, 13 stores.)
+      `mock-data.ts` with repository calls behind TanStack Query hooks; keep stores as
+      at-most optimistic caches. Reference: `attendance` (`api.ts`+`queries.ts`).
+      (17 mock files, 13 stores.)
 - [ ] **Land remaining schema:** `tasks`, `comments`, `sprints` (+ kanban,
-  time-tracking, analytics aggregates) with RLS + indexes (ARCHITECTURE §15).
+      time-tracking, analytics aggregates) with RLS + indexes (ARCHITECTURE §15).
 - [ ] **Confirm build ships `node-server`** in the release pipeline (§4.2).
 
 ### P1 — before/at first production release
+
 - [ ] **Fix the lint gate:** `prettier --write .` (cosmetic, no logic change) and
-  reconcile the Prettier version; fix the one empty-interface error. Then the CI
-  Lint check is green.
+      reconcile the Prettier version; fix the one empty-interface error. Then the CI
+      Lint check is green.
 - [ ] **RLS parity check** so `permissions.ts` can't drift from policy; guard
-  `owner:`/`hr:` routes beyond auth (ARCHITECTURE §15.5).
+      `owner:`/`hr:` routes beyond auth (ARCHITECTURE §15.5).
 - [ ] **Route error/console surfaces through `@/lib/logging`** (the 16
-  `console.error/warn`) so they reach sinks and redaction.
+      `console.error/warn`) so they reach sinks and redaction.
 - [ ] **Wire monitoring endpoints:** register the Supabase health check and mount
-  `/api/health` + internal `/metrics` ([`docs/MONITORING.md`](./MONITORING.md) §2–3).
+      `/api/health` + internal `/metrics` ([`docs/MONITORING.md`](./MONITORING.md) §2–3).
 - [ ] **Provision backups:** enable Supabase PITR + the off-site dump/sync jobs
-  ([`docs/BACKUPS.md`](./BACKUPS.md) §11 checklist).
+      ([`docs/BACKUPS.md`](./BACKUPS.md) §11 checklist).
 - [ ] **Input validation on every write** (extend `zod` to all mutation
-  boundaries) before it hits Supabase.
+      boundaries) before it hits Supabase.
 
 ### P2 — hardening / polish
+
 - [ ] Implement or feature-flag the **AI provider stubs** (6 TODOs) so no
-  half-wired provider is reachable in prod.
+      half-wired provider is reachable in prod.
 - [ ] **Code-split heavy routes** (analytics/charts) beyond the framework's
-  per-route split; memoize/virtualize long lists per the perf standard.
+      per-route split; memoize/virtualize long lists per the perf standard.
 - [ ] Enable **CSP** (`ENFORCE_CSP=true`) and finalize the policy
-  ([`docs/NGINX.md`](./NGINX.md) §6) with Supabase in `connect-src`.
+      ([`docs/NGINX.md`](./NGINX.md) §6) with Supabase in `connect-src`.
 - [ ] Promote **e2e** from best-effort to blocking once seeded test data exists.
 - [ ] Turn `react-refresh`/`exhaustive-deps` warnings to zero.
 
@@ -127,5 +130,5 @@ The gap to "fully production-ready" is **application data wiring** (P0), then th
 
 ---
 
-*Audit reflects the repository state on 2026-07-04. Re-run §2's commands after the
-P0/P1 items to reconfirm. No application code was modified to produce this report.*
+_Audit reflects the repository state on 2026-07-04. Re-run §2's commands after the
+P0/P1 items to reconfirm. No application code was modified to produce this report._

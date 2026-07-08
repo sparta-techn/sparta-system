@@ -10,7 +10,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useProjectsState } from "@/features/projects/store";
 import { createSprint } from "../store";
 
@@ -76,16 +82,24 @@ export function CreateSprintDialog({ open, onOpenChange, defaultProjectId }: Pro
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-medium">Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Sprint 4 · Reporting" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Sprint 4 · Reporting"
+            />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium">Project</label>
             <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger><SelectValue placeholder="Pick project" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Pick project" />
+              </SelectTrigger>
               <SelectContent>
                 {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -124,8 +138,12 @@ export function CreateSprintDialog({ open, onOpenChange, defaultProjectId }: Pro
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={!canSubmit} onClick={submit}>Create sprint</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!canSubmit} onClick={submit}>
+            Create sprint
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

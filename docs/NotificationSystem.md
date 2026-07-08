@@ -6,23 +6,23 @@ engine decides what to deliver, and the channel registry delivers it.
 
 ## Modules
 
-| File | Responsibility |
-| --- | --- |
-| `types.ts` | Event, notification, recipient, rule, preference contracts |
-| `event-bus.ts` | Synchronous pub/sub (`eventBus.publish`, `eventBus.subscribe`) |
-| `directory.ts` | Resolve `RecipientRule[]` to user ids (mock people, roles, departments) |
-| `channels.ts` | Channel registry. In-app is live; email/Slack/etc. registered as disabled |
-| `rules.ts` | Default automation rules |
-| `automation-engine.ts` | Subscribes to bus, runs rules, writes to store, calls channels |
-| `store.ts` | Notification persistence (localStorage). `useNotifications`, `useUnreadCount` |
-| `preferences.ts` | Category / channel / quiet-hours user prefs |
-| `bootstrap.ts` | `useNotificationBootstrap` — wires engine + seed on first mount |
-| `mock-data.ts` | Realistic seed + `fireDemoEvent` for the preferences page |
-| `ui.ts` | Icon + tone + bucket helpers |
-| `components/notification-dropdown.tsx` | Topbar popover + reusable row |
-| `components/notification-center.tsx` | Full `/app/notifications` page |
-| `components/notification-preferences.tsx` | `/app/notifications/preferences` page |
-| `components/notification-widgets.tsx` | Dashboard widgets (employee + manager) |
+| File                                      | Responsibility                                                                |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `types.ts`                                | Event, notification, recipient, rule, preference contracts                    |
+| `event-bus.ts`                            | Synchronous pub/sub (`eventBus.publish`, `eventBus.subscribe`)                |
+| `directory.ts`                            | Resolve `RecipientRule[]` to user ids (mock people, roles, departments)       |
+| `channels.ts`                             | Channel registry. In-app is live; email/Slack/etc. registered as disabled     |
+| `rules.ts`                                | Default automation rules                                                      |
+| `automation-engine.ts`                    | Subscribes to bus, runs rules, writes to store, calls channels                |
+| `store.ts`                                | Notification persistence (localStorage). `useNotifications`, `useUnreadCount` |
+| `preferences.ts`                          | Category / channel / quiet-hours user prefs                                   |
+| `bootstrap.ts`                            | `useNotificationBootstrap` — wires engine + seed on first mount               |
+| `mock-data.ts`                            | Realistic seed + `fireDemoEvent` for the preferences page                     |
+| `ui.ts`                                   | Icon + tone + bucket helpers                                                  |
+| `components/notification-dropdown.tsx`    | Topbar popover + reusable row                                                 |
+| `components/notification-center.tsx`      | Full `/app/notifications` page                                                |
+| `components/notification-preferences.tsx` | `/app/notifications/preferences` page                                         |
+| `components/notification-widgets.tsx`     | Dashboard widgets (employee + manager)                                        |
 
 ## Routes
 

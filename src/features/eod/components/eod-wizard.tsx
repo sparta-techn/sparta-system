@@ -16,13 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -43,7 +37,11 @@ import { MOCK_PLANNED_TASKS } from "@/features/checkin/mock-data";
 import type { PriorityLevel } from "@/features/checkin/types";
 import { useDependencies } from "@/features/dependencies/store";
 import { CURRENT_USER_ID } from "@/features/dependencies/mock-data";
-import { TASK_PROGRESS_META, type TaskProgressEntry, type TaskProgressState } from "@/features/midday/types";
+import {
+  TASK_PROGRESS_META,
+  type TaskProgressEntry,
+  type TaskProgressState,
+} from "@/features/midday/types";
 
 import { EodSummary } from "./eod-summary";
 import {
@@ -78,13 +76,48 @@ type StepId =
   | "review";
 
 const STEPS: { id: StepId; short: string; label: string; hint: string }[] = [
-  { id: "summary", short: "Summary", label: "Today's summary", hint: "One short paragraph. Max 500 characters." },
-  { id: "completed", short: "Completed", label: "Completed today", hint: "Mark each planned task." },
-  { id: "in_progress", short: "In progress", label: "Still in progress", hint: "What's carrying over to tomorrow." },
-  { id: "open_deps", short: "Dependencies", label: "Open dependencies", hint: "Pin or resolve what's still blocking." },
-  { id: "need", short: "Need", label: "Need from others tomorrow", hint: "Route specific asks. Optional." },
-  { id: "tomorrow", short: "Tomorrow", label: "Tomorrow's plan", hint: "Set the next day up before you close out." },
-  { id: "reflection", short: "Reflection", label: "Daily reflection", hint: "Optional. Two lines is plenty." },
+  {
+    id: "summary",
+    short: "Summary",
+    label: "Today's summary",
+    hint: "One short paragraph. Max 500 characters.",
+  },
+  {
+    id: "completed",
+    short: "Completed",
+    label: "Completed today",
+    hint: "Mark each planned task.",
+  },
+  {
+    id: "in_progress",
+    short: "In progress",
+    label: "Still in progress",
+    hint: "What's carrying over to tomorrow.",
+  },
+  {
+    id: "open_deps",
+    short: "Dependencies",
+    label: "Open dependencies",
+    hint: "Pin or resolve what's still blocking.",
+  },
+  {
+    id: "need",
+    short: "Need",
+    label: "Need from others tomorrow",
+    hint: "Route specific asks. Optional.",
+  },
+  {
+    id: "tomorrow",
+    short: "Tomorrow",
+    label: "Tomorrow's plan",
+    hint: "Set the next day up before you close out.",
+  },
+  {
+    id: "reflection",
+    short: "Reflection",
+    label: "Daily reflection",
+    hint: "Optional. Two lines is plenty.",
+  },
   { id: "review", short: "Review", label: "Review & submit", hint: "Final check before checkout." },
 ];
 
@@ -267,7 +300,10 @@ export function EodWizard({ existing, sessionSummary }: Props) {
           ) : null}
 
           {step.id === "need" ? (
-            <NeedStep value={draft.needFromOthers} onChange={(v) => setField("needFromOthers", v)} />
+            <NeedStep
+              value={draft.needFromOthers}
+              onChange={(v) => setField("needFromOthers", v)}
+            />
           ) : null}
 
           {step.id === "tomorrow" ? (
@@ -282,11 +318,18 @@ export function EodWizard({ existing, sessionSummary }: Props) {
             <ReflectionStep value={draft.reflection} onChange={(v) => setField("reflection", v)} />
           ) : null}
 
-          {step.id === "review" ? <EodSummary draft={draft} sessionSummary={sessionSummary} /> : null}
+          {step.id === "review" ? (
+            <EodSummary draft={draft} sessionSummary={sessionSummary} />
+          ) : null}
         </CardContent>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t px-6 py-4">
-          <Button type="button" variant="ghost" onClick={handleCancel} className="text-muted-foreground">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleCancel}
+            className="text-muted-foreground"
+          >
             Cancel
           </Button>
           <div className="flex items-center gap-2">
@@ -345,7 +388,9 @@ function SummaryStep({
             Write it for tomorrow's you — what would you want to know?
           </p>
         )}
-        <span className={cn("tabular-nums", remaining < 50 ? "text-warning" : "text-muted-foreground")}>
+        <span
+          className={cn("tabular-nums", remaining < 50 ? "text-warning" : "text-muted-foreground")}
+        >
           {remaining}
         </span>
       </div>
@@ -370,8 +415,12 @@ function CompletedStep({
     const existing = value.find((e) => e.taskId === taskId);
     const task = planned.find((p) => p.id === taskId);
     if (!task) return;
-    const base: TaskProgressEntry =
-      existing ?? { taskId, title: task.title, project: task.project, state: "not_started" };
+    const base: TaskProgressEntry = existing ?? {
+      taskId,
+      title: task.title,
+      project: task.project,
+      state: "not_started",
+    };
     const merged = { ...base, ...patch };
     const others = value.filter((e) => e.taskId !== taskId);
     onChange([...others, merged]);
@@ -455,10 +504,7 @@ function InProgressStep({
   onChange: (v: InProgressItem[]) => void;
 }) {
   function add() {
-    onChange([
-      ...value,
-      { id: `ip_${Date.now()}`, title: "", priority: "medium", eta: "" },
-    ]);
+    onChange([...value, { id: `ip_${Date.now()}`, title: "", priority: "medium", eta: "" }]);
   }
   function patch(id: string, p: Partial<InProgressItem>) {
     onChange(value.map((i) => (i.id === id ? { ...i, ...p } : i)));
@@ -499,10 +545,14 @@ function InProgressStep({
                   value={item.priority}
                   onValueChange={(v) => patch(item.id, { priority: v as PriorityLevel })}
                 >
-                  <SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
                   <SelectContent>
                     {PRIORITIES.map((p) => (
-                      <SelectItem key={p} value={p}>{p[0].toUpperCase() + p.slice(1)}</SelectItem>
+                      <SelectItem key={p} value={p}>
+                        {p[0].toUpperCase() + p.slice(1)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -608,7 +658,9 @@ function OpenDepsStep({
                         onClick={() => patch(dep.id, { resolvedNow: !linked.resolvedNow })}
                       >
                         {linked.resolvedNow ? (
-                          <><CheckCircle2 className="size-3.5" /> Resolved</>
+                          <>
+                            <CheckCircle2 className="size-3.5" /> Resolved
+                          </>
                         ) : (
                           "Mark resolved"
                         )}
@@ -681,10 +733,14 @@ function NeedStep({
                   value={item.department}
                   onValueChange={(v) => patch(item.id, { department: v as NeedDepartment })}
                 >
-                  <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Department" />
+                  </SelectTrigger>
                   <SelectContent>
                     {NEED_DEPARTMENTS.map((d) => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                      <SelectItem key={d} value={d}>
+                        {d}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -692,10 +748,14 @@ function NeedStep({
                   value={item.priority}
                   onValueChange={(v) => patch(item.id, { priority: v as PriorityLevel })}
                 >
-                  <SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
                   <SelectContent>
                     {PRIORITIES.map((p) => (
-                      <SelectItem key={p} value={p}>{p[0].toUpperCase() + p.slice(1)}</SelectItem>
+                      <SelectItem key={p} value={p}>
+                        {p[0].toUpperCase() + p.slice(1)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -727,7 +787,9 @@ function NeedStep({
                     patch(item.id, { relatedDependencyId: v === "_none" ? undefined : v })
                   }
                 >
-                  <SelectTrigger><SelectValue placeholder="Related dependency (optional)" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Related dependency (optional)" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">None</SelectItem>
                     {deps.slice(0, 30).map((d) => (
@@ -917,7 +979,13 @@ function Field({
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Textarea id={id} rows={2} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <Textarea
+        id={id}
+        rows={2}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
     </div>
   );
 }

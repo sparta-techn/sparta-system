@@ -9,14 +9,14 @@
 
 ## 1. What every route defines
 
-| Concern | Where it's defined | Default |
-| --- | --- | --- |
-| **Authentication Required** | `_authenticated` layout (`beforeLoad` + `staticData`) | Required for everything under `/_authenticated`; public elsewhere |
-| **Required Role** | `staticData.guard.roles` (any-of) | none = any authenticated user |
-| **Required Permissions** | `staticData.guard.permissions` (all-of) | none = any authenticated user |
-| **Unauthorized Page** | redirect target when not signed in | `/auth` (sign-in) |
-| **Forbidden Page** | redirect target when signed in but denied | `/unauthorized` |
-| **Session Expired Handling** | `beforeLoad` + gate + query layer | `/auth/session-expired` |
+| Concern                      | Where it's defined                                    | Default                                                           |
+| ---------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- |
+| **Authentication Required**  | `_authenticated` layout (`beforeLoad` + `staticData`) | Required for everything under `/_authenticated`; public elsewhere |
+| **Required Role**            | `staticData.guard.roles` (any-of)                     | none = any authenticated user                                     |
+| **Required Permissions**     | `staticData.guard.permissions` (all-of)               | none = any authenticated user                                     |
+| **Unauthorized Page**        | redirect target when not signed in                    | `/auth` (sign-in)                                                 |
+| **Forbidden Page**           | redirect target when signed in but denied             | `/unauthorized`                                                   |
+| **Session Expired Handling** | `beforeLoad` + gate + query layer                     | `/auth/session-expired`                                           |
 
 A route's **effective policy is the merge of its whole matched chain** (root →
 leaf). A leaf inherits its group layout's requirements and may only tighten
@@ -40,12 +40,12 @@ export const Route = createFileRoute("/_authenticated/app/hr")({
 
 `RouteGuard` fields (all optional):
 
-| Field | Semantics |
-| --- | --- |
-| `authRequired` | Require a session. Defaults to `true` under `_authenticated`; set `false` for public routes. |
-| `roles` | **Any-of** — roles are alternatives (e.g. a manager view allows owner/admin/hr/PM/lead). |
-| `permissions` | **All-of** — permissions are *requirements*; the user must hold every one. This is what makes inheritance tighten correctly. |
-| `requireAllRoles` | Switch `roles` to all-of for the rare "must hold every role" case. |
+| Field             | Semantics                                                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `authRequired`    | Require a session. Defaults to `true` under `_authenticated`; set `false` for public routes.                                 |
+| `roles`           | **Any-of** — roles are alternatives (e.g. a manager view allows owner/admin/hr/PM/lead).                                     |
+| `permissions`     | **All-of** — permissions are _requirements_; the user must hold every one. This is what makes inheritance tighten correctly. |
+| `requireAllRoles` | Switch `roles` to all-of for the rare "must hold every role" case.                                                           |
 
 ---
 
@@ -55,6 +55,7 @@ Two layers, both client-side (SSR is off for `_authenticated` because the
 Supabase session lives in `localStorage`):
 
 ### a. `beforeLoad` — authentication + session expiry
+
 `src/routes/_authenticated/route.tsx`:
 
 - `supabase.auth.getUser()` succeeds → continue.
@@ -65,6 +66,7 @@ Supabase session lives in `localStorage`):
   Expired** → `redirect → /auth/session-expired`.
 
 ### b. `<RouteGuardGate>` — roles + permissions
+
 `src/features/auth/components/route-guard-gate.tsx`, mounted around the layout
 `<Outlet/>`:
 
@@ -79,6 +81,7 @@ Supabase session lives in `localStorage`):
    - `ok` → renders the route.
 
 ### c. Query layer — session expiry on API calls
+
 `src/router.tsx` already redirects to `/auth/session-expired` when any query or
 mutation fails auth (`isSessionExpired`), guarded against redirect storms. So
 expiry is caught both on navigation (a) and on data fetches (c).
@@ -87,13 +90,13 @@ expiry is caught both on navigation (a) and on data fetches (c).
 
 ## 4. Pages
 
-| Page | Route | Meaning |
-| --- | --- | --- |
-| Sign-in (**Unauthorized**) | `/auth` | Not authenticated; `?redirect` returns you after login |
-| **Forbidden** | `/unauthorized` | Authenticated but your role/permissions don't allow this page |
-| **Session expired** | `/auth/session-expired` | A previously valid session became invalid |
+| Page                       | Route                   | Meaning                                                       |
+| -------------------------- | ----------------------- | ------------------------------------------------------------- |
+| Sign-in (**Unauthorized**) | `/auth`                 | Not authenticated; `?redirect` returns you after login        |
+| **Forbidden**              | `/unauthorized`         | Authenticated but your role/permissions don't allow this page |
+| **Session expired**        | `/auth/session-expired` | A previously valid session became invalid                     |
 
-> Naming note: the existing `/unauthorized` page reads as *access denied* — it is
+> Naming note: the existing `/unauthorized` page reads as _access denied_ — it is
 > the **Forbidden (403)** page. Unauthenticated (401) users are sent to sign-in
 > (`/auth`). No UI was redesigned; these pages already existed.
 
@@ -104,21 +107,21 @@ expiry is caught both on navigation (a) and on data fetches (c).
 Baseline: everything under `/_authenticated` requires authentication. Group
 layouts guard their whole subtree; leaves inherit and can tighten.
 
-| Route (subtree) | Guard |
-| --- | --- |
-| `/_authenticated/*` | `authRequired: true` |
-| `app/hr/*` | `permissions: [employees.read]` |
-| `app/projects/*` | `permissions: [projects.read]` |
-| `app/sprints/*` | `permissions: [projects.read]` |
-| `app/tasks/*` | `permissions: [tasks.read]` |
-| `app/dependencies/*` | `permissions: [projects.read]` |
+| Route (subtree)            | Guard                                                     |
+| -------------------------- | --------------------------------------------------------- |
+| `/_authenticated/*`        | `authRequired: true`                                      |
+| `app/hr/*`                 | `permissions: [employees.read]`                           |
+| `app/projects/*`           | `permissions: [projects.read]`                            |
+| `app/sprints/*`            | `permissions: [projects.read]`                            |
+| `app/tasks/*`              | `permissions: [tasks.read]`                               |
+| `app/dependencies/*`       | `permissions: [projects.read]`                            |
 | `app/dependencies/manager` | + `roles: [owner, admin, hr, project_manager, team_lead]` |
-| `app/analytics/*` | `permissions: [analytics.view]` |
-| `app/analytics/executive` | + `permissions: [dashboard.executive.view]` |
-| `app/analytics/hr` | + `roles: [owner, admin, hr]` |
-| `app/executive` | `permissions: [dashboard.executive.view]` (owner) |
-| `app/integrations` | `permissions: [integrations.manage]` |
-| `app/manager` | `roles: [owner, admin, hr, project_manager, team_lead]` |
+| `app/analytics/*`          | `permissions: [analytics.view]`                           |
+| `app/analytics/executive`  | + `permissions: [dashboard.executive.view]`               |
+| `app/analytics/hr`         | + `roles: [owner, admin, hr]`                             |
+| `app/executive`            | `permissions: [dashboard.executive.view]` (owner)         |
+| `app/integrations`         | `permissions: [integrations.manage]`                      |
+| `app/manager`              | `roles: [owner, admin, hr, project_manager, team_lead]`   |
 
 Routes without an explicit guard (e.g. `app` home, check-in, midday, EOD,
 notifications) inherit only the `authRequired` baseline — any signed-in user may
@@ -143,12 +146,12 @@ No component changes are needed — the gate enforces every route uniformly.
 
 ## 7. Files
 
-| File | Role |
-| --- | --- |
-| `src/features/auth/route-guard.ts` | `RouteGuard` type, `staticData` augmentation, `mergeGuards`, `evaluateAccess`, `routeGuard()` |
-| `src/features/auth/components/route-guard-gate.tsx` | Client gate: merges guards, evaluates, redirects |
-| `src/routes/_authenticated/route.tsx` | Auth `beforeLoad` (Unauthorized / Session Expired) + mounts the gate |
-| `src/routes/unauthorized.tsx` | Forbidden (403) page |
-| `src/routes/auth/session-expired.tsx` | Session-expired page |
-| `src/router.tsx` | Query-layer session-expiry redirect |
-| `src/features/auth/route-guard.test.ts` | Unit tests for merge + evaluate |
+| File                                                | Role                                                                                          |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/features/auth/route-guard.ts`                  | `RouteGuard` type, `staticData` augmentation, `mergeGuards`, `evaluateAccess`, `routeGuard()` |
+| `src/features/auth/components/route-guard-gate.tsx` | Client gate: merges guards, evaluates, redirects                                              |
+| `src/routes/_authenticated/route.tsx`               | Auth `beforeLoad` (Unauthorized / Session Expired) + mounts the gate                          |
+| `src/routes/unauthorized.tsx`                       | Forbidden (403) page                                                                          |
+| `src/routes/auth/session-expired.tsx`               | Session-expired page                                                                          |
+| `src/router.tsx`                                    | Query-layer session-expiry redirect                                                           |
+| `src/features/auth/route-guard.test.ts`             | Unit tests for merge + evaluate                                                               |

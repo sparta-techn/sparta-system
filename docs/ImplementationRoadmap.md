@@ -9,6 +9,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Walking skeleton; the team can deploy on day one.
 
 **Features / Work**
+
 - Repo bootstrap (Next.js, TS, Tailwind, shadcn, ESLint boundaries, Prettier, Husky).
 - Supabase project provisioning (dev/staging/prod).
 - CI/CD (lint, typecheck, tests, build, preview deploy on PR).
@@ -30,6 +31,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Real users with real roles in real teams.
 
 **Features**
+
 - Supabase Auth (Email + Google), MFA available.
 - `profiles`, `departments`, `teams`, `user_roles`.
 - `has_role` SECURITY DEFINER helpers.
@@ -50,6 +52,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Every employee can complete attendance flow.
 
 **Features**
+
 - Start Work, Break, Finish Work.
 - Late + break-overage detection.
 - Personal attendance history.
@@ -69,6 +72,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Morning, Midday, EOD flows live; daily friction < 2 minutes.
 
 **Features**
+
 - Morning Check-in form + autosave.
 - Midday Status form.
 - End-of-Day Report form + attachments.
@@ -88,6 +92,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Cross-person blockers tracked with SLAs.
 
 **Features**
+
 - Create / acknowledge / resolve / escalate.
 - Personal "my dependencies" view.
 - Aging + priority.
@@ -106,6 +111,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** In-app + email signals; HR can broadcast.
 
 **Features**
+
 - Notification center, preferences.
 - Email channel (Resend/SES).
 - Announcements with audience targeting + read receipts.
@@ -123,6 +129,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Visibility loop closes.
 
 **Features**
+
 - Team Lead dashboard.
 - PM cross-team board.
 - HR dashboard (attendance, late list, directory).
@@ -142,6 +149,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Leaves managed end-to-end.
 
 **Features**
+
 - Leave request + approval flow.
 - Balances + team calendar.
 - Onboarding checklist for new employees.
@@ -159,6 +167,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Strategic visibility for the Owner.
 
 **Features**
+
 - Company Health Score (composite).
 - Department comparison.
 - Performance trends per scope.
@@ -177,6 +186,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Hub plays well with existing tools.
 
 **Features**
+
 - ClickUp OAuth, project/task linking, read-only surfaces.
 - Slack OAuth, notifications to DMs, slash commands (basic).
 - Integration health page in Admin.
@@ -194,6 +204,7 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 **Objective:** Production-grade security posture.
 
 **Features**
+
 - Full audit log surface for HR/Super Admin.
 - MFA enforcement (Owner, HR, Super Admin).
 - Session management UI.
@@ -244,26 +255,26 @@ A milestone-based plan to take SpartaFlow Hub from empty repo to production EOS.
 
 ## Cross-Cutting Workstreams (Continuous)
 
-| Workstream | Cadence |
-|---|---|
-| Performance budgets | Every PR |
-| Accessibility audits | Per milestone |
-| Security review | Per milestone + quarterly |
-| Documentation | Per feature (`/docs` updated) |
-| Observability dashboards | Per milestone |
-| User research | Bi-weekly |
+| Workstream               | Cadence                       |
+| ------------------------ | ----------------------------- |
+| Performance budgets      | Every PR                      |
+| Accessibility audits     | Per milestone                 |
+| Security review          | Per milestone + quarterly     |
+| Documentation            | Per feature (`/docs` updated) |
+| Observability dashboards | Per milestone                 |
+| User research            | Bi-weekly                     |
 
 ---
 
 ## Risk Register (Roadmap-Level)
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| RLS gaps discovered late | M | H | Policy tests from M1; pentest at M10. |
-| Notification fatigue | M | M | Preferences from M5; digest mode; quiet hours by Phase 2. |
-| Surveillance perception | M | H | Communications plan; signals-not-keystrokes principle enforced. |
-| Integration provider changes | H | M | Adapter pattern isolates blast radius. |
-| Adoption stall after launch | M | H | Manager enablement; in-app tour; KPI gating. |
+| Risk                         | Likelihood | Impact | Mitigation                                                      |
+| ---------------------------- | ---------- | ------ | --------------------------------------------------------------- |
+| RLS gaps discovered late     | M          | H      | Policy tests from M1; pentest at M10.                           |
+| Notification fatigue         | M          | M      | Preferences from M5; digest mode; quiet hours by Phase 2.       |
+| Surveillance perception      | M          | H      | Communications plan; signals-not-keystrokes principle enforced. |
+| Integration provider changes | H          | M      | Adapter pattern isolates blast radius.                          |
+| Adoption stall after launch  | M          | H      | Manager enablement; in-app tour; KPI gating.                    |
 
 ---
 

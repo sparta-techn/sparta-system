@@ -4,7 +4,7 @@
 > **Method:** Read-only static inspection of `src/`, `supabase/migrations/`, routes, services,
 > repositories, and stores. No code was modified. Evidence cited as `file:line`.
 > **Date:** 2026-07-06. **Prior report:** `docs/MVP_STATUS.md` (2026-07-05).
-> **Not remotely verified:** claims about *applied* DB state are inferred from local git/link
+> **Not remotely verified:** claims about _applied_ DB state are inferred from local git/link
 > markers (no live query against the remote project was made). These are flagged inline.
 
 ## Legend
@@ -18,34 +18,34 @@
 
 ## 1. Summary table
 
-| Module | Status | Backend | Mock data | UI | CRUD (what works) | Known issues |
-|---|---|---|---|---|---|---|
-| Authentication | ✅ | yes | no | yes | login/logout/reset/verify | — |
-| RBAC | ✅ | yes | no | partial | role/permission checks enforced server-side (RLS) | UI checks cosmetic only |
-| Attendance | ✅ | yes | no | yes | clock in/out/break via RPCs | queries `supabase` directly, not via repo (`attendance/api.ts`) |
-| Daily Reports (checkin/midday/eod) | 🟡 | yes (submit+history) | drafts only | yes | submit + own-history read live | drafts localStorage; manager review UI not wired |
-| Organization | 🟡 | partial (read) | yes (admin UI) | yes | dept/team/company **read** live | write UI is localStorage (`admin/system-store.ts`) |
-| Employee Management | 🟡 | partial | yes (writes) | yes | directory **read** live; **invite issuance now real** | mutations localStorage overlay; unhandled invite call |
-| Projects | 🟡 | yes (read+create) | overlay | yes | hydrate + create + members live | favorites/templates/clients localStorage overlay |
-| Tasks | 🔴 | yes (columns) but **writes fail** | overlay + mock catalogs | yes (rich) | read live; **create/update silently fail to persist** | create dialog uses **mock** projects → FK/RLS insert rejection swallowed |
-| Kanban | 🟡 | no | yes | yes | localStorage column config; reads tasks store | no persistence table |
-| Comments | 🟡 | no | yes | yes | localStorage only (3 divergent stores) | no `comments`/`task_comments` table |
-| File Attachments | ❌ | no | yes (fake blobs) | stub | none (in-memory `previewUrl`) | no Storage bucket; downloads are mock toasts |
-| Notifications | 🟡 | yes (inbox+realtime) | generation | yes | read/lifecycle live | server-side generation added but **unapplied**; still in-memory |
-| Time Tracking | 🟡 | no | yes | yes | localStorage only | header comment: "no backend writes" |
-| Dashboard | 🟡 | mixed | yes (some widgets) | yes | live check-in/reports/notif widgets; rest mock | summary/tasks/team/activity widgets are mock |
-| Analytics | 🟡 | no | yes | yes | read-only mock | `saved_reports` service exists but unused |
-| Settings | 🟡 | partial | yes (workspace UI) | yes | `company_settings` live (attendance) | general/workspace settings not wired |
-| Audit Logs | 🔴 | code targets Supabase | seeds (fallback) | yes | capture wired to `audit_logs` but table **likely unapplied** → writes fail | migration untracked/newer than link |
-| AI Assistant (`ai`, `ai-settings`) | ❌ | no | yes | yes (chat UI) | none — provider calls are `TODO` stubs | keys XOR-obfuscated in localStorage |
-| Dependencies | 🟡 | no | yes (in-memory) | yes | in-memory only (no localStorage even) | mock `MOCK_DEPENDENCIES` |
-| Sprints | 🔴 | no (feature); service reaches missing table | yes | yes | localStorage feature; `sprints` **table missing** but queried live via Executive AI | swallowed at runtime |
-| Executive dashboard | 🟡 | no | yes | yes | mock KPIs; AI "Generate" reaches missing `sprints` | AI output is mock (stubbed providers) |
-| Manager dashboard | 🟡 | no | yes | yes | mock only | — |
-| Admin console | 🟡 | no | yes | yes | localStorage (`system-store.ts`) | audit events captured, org writes not persisted |
-| Task-communication (comments/files) | 🟡/❌ | no | yes | yes | localStorage comments; fake file blobs | source of Comments + File Attachments surfaces |
-| Project-analytics | 🟡 | derived | inherits | yes | read-only selectors over other stores | no own persistence |
-| Realtime | ✅ (infra) | yes | no | n/a | subscription adapter over Supabase realtime | `tasks` subscribed but not in publication |
+| Module                              | Status     | Backend                                     | Mock data               | UI            | CRUD (what works)                                                                   | Known issues                                                             |
+| ----------------------------------- | ---------- | ------------------------------------------- | ----------------------- | ------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Authentication                      | ✅         | yes                                         | no                      | yes           | login/logout/reset/verify                                                           | —                                                                        |
+| RBAC                                | ✅         | yes                                         | no                      | partial       | role/permission checks enforced server-side (RLS)                                   | UI checks cosmetic only                                                  |
+| Attendance                          | ✅         | yes                                         | no                      | yes           | clock in/out/break via RPCs                                                         | queries `supabase` directly, not via repo (`attendance/api.ts`)          |
+| Daily Reports (checkin/midday/eod)  | 🟡         | yes (submit+history)                        | drafts only             | yes           | submit + own-history read live                                                      | drafts localStorage; manager review UI not wired                         |
+| Organization                        | 🟡         | partial (read)                              | yes (admin UI)          | yes           | dept/team/company **read** live                                                     | write UI is localStorage (`admin/system-store.ts`)                       |
+| Employee Management                 | 🟡         | partial                                     | yes (writes)            | yes           | directory **read** live; **invite issuance now real**                               | mutations localStorage overlay; unhandled invite call                    |
+| Projects                            | 🟡         | yes (read+create)                           | overlay                 | yes           | hydrate + create + members live                                                     | favorites/templates/clients localStorage overlay                         |
+| Tasks                               | 🔴         | yes (columns) but **writes fail**           | overlay + mock catalogs | yes (rich)    | read live; **create/update silently fail to persist**                               | create dialog uses **mock** projects → FK/RLS insert rejection swallowed |
+| Kanban                              | 🟡         | no                                          | yes                     | yes           | localStorage column config; reads tasks store                                       | no persistence table                                                     |
+| Comments                            | 🟡         | no                                          | yes                     | yes           | localStorage only (3 divergent stores)                                              | no `comments`/`task_comments` table                                      |
+| File Attachments                    | ❌         | no                                          | yes (fake blobs)        | stub          | none (in-memory `previewUrl`)                                                       | no Storage bucket; downloads are mock toasts                             |
+| Notifications                       | 🟡         | yes (inbox+realtime)                        | generation              | yes           | read/lifecycle live                                                                 | server-side generation added but **unapplied**; still in-memory          |
+| Time Tracking                       | 🟡         | no                                          | yes                     | yes           | localStorage only                                                                   | header comment: "no backend writes"                                      |
+| Dashboard                           | 🟡         | mixed                                       | yes (some widgets)      | yes           | live check-in/reports/notif widgets; rest mock                                      | summary/tasks/team/activity widgets are mock                             |
+| Analytics                           | 🟡         | no                                          | yes                     | yes           | read-only mock                                                                      | `saved_reports` service exists but unused                                |
+| Settings                            | 🟡         | partial                                     | yes (workspace UI)      | yes           | `company_settings` live (attendance)                                                | general/workspace settings not wired                                     |
+| Audit Logs                          | 🔴         | code targets Supabase                       | seeds (fallback)        | yes           | capture wired to `audit_logs` but table **likely unapplied** → writes fail          | migration untracked/newer than link                                      |
+| AI Assistant (`ai`, `ai-settings`)  | ❌         | no                                          | yes                     | yes (chat UI) | none — provider calls are `TODO` stubs                                              | keys XOR-obfuscated in localStorage                                      |
+| Dependencies                        | 🟡         | no                                          | yes (in-memory)         | yes           | in-memory only (no localStorage even)                                               | mock `MOCK_DEPENDENCIES`                                                 |
+| Sprints                             | 🔴         | no (feature); service reaches missing table | yes                     | yes           | localStorage feature; `sprints` **table missing** but queried live via Executive AI | swallowed at runtime                                                     |
+| Executive dashboard                 | 🟡         | no                                          | yes                     | yes           | mock KPIs; AI "Generate" reaches missing `sprints`                                  | AI output is mock (stubbed providers)                                    |
+| Manager dashboard                   | 🟡         | no                                          | yes                     | yes           | mock only                                                                           | —                                                                        |
+| Admin console                       | 🟡         | no                                          | yes                     | yes           | localStorage (`system-store.ts`)                                                    | audit events captured, org writes not persisted                          |
+| Task-communication (comments/files) | 🟡/❌      | no                                          | yes                     | yes           | localStorage comments; fake file blobs                                              | source of Comments + File Attachments surfaces                           |
+| Project-analytics                   | 🟡         | derived                                     | inherits                | yes           | read-only selectors over other stores                                               | no own persistence                                                       |
+| Realtime                            | ✅ (infra) | yes                                         | no                      | n/a           | subscription adapter over Supabase realtime                                         | `tasks` subscribed but not in publication                                |
 
 Support module not in the table: `daily-sync.ts` — Supabase-backed helper (`daily-sync.ts:6-7`) used by checkin/midday/eod.
 
@@ -80,7 +80,7 @@ migration `supabase/migrations/20260706120000_audit_logs.sql` is **untracked in 
 2026-07-05 16:01). If it has not been pushed, every insert fails (swallowed at `:218-223`) and
 hydrate falls back to seed data (`:71-85`) — i.e. the audit trail is not durable on the remote.
 **Suspected root cause:** code change landed without the accompanying migration being committed/
-applied. *Requires remote verification to confirm applied state.*
+applied. _Requires remote verification to confirm applied state._
 
 ### DEGRADED
 
@@ -103,7 +103,7 @@ than crashing — and the AI provider is itself a stub (see D4), so the output i
 not fan out to persisted notifications; generation remains the in-memory engine
 (`features/notifications/rules.ts`/`automation-engine.ts`). Even once applied, the task-assigned
 trigger only fires when a `tasks` insert succeeds — which currently fails (see B1). The inbox itself
-is live and unaffected (`notifications/store.ts:12,93`). *Requires remote verification.*
+is live and unaffected (`notifications/store.ts:12,93`). _Requires remote verification._
 
 **D3 — File Attachments never persist.** `[degraded]` (by design / not yet built)
 `task-files-panel.tsx` creates an in-memory `URL.createObjectURL` blob on "upload"
@@ -142,12 +142,12 @@ until then. By design, but means non-admins can briefly see mock rows.
 These compile (the generic `BaseService` uses a relaxed casted client — `services/core/client.ts:14`
 — so unknown tables are **not** caught by `tsc`) and would throw only if wired to the UI:
 
-| Missing table | Bound at | Only referenced by | Verdict |
-|---|---|---|---|
-| `ai_conversations`, `ai_messages` | `services/ai/ai.service.ts:23,36` | barrel `services/index.ts:32` | dead — live chat uses a different subsystem |
-| `saved_reports` | `services/analytics/analytics.service.ts:28` | barrel `services/index.ts:28` | dead — analytics reads mock-data |
-| `eod_reports` | `services/reports/reports.service.ts:25` | `report.repository.ts:4,15` → barrel only | dead — live EOD uses `daily_reports` |
-| `task_comments` | `services/tasks/tasks.service.ts:94,105` | AI `comments.source.ts:27` (employee/manager AI only) | dead — no live UI hits the employee AI surface |
+| Missing table                     | Bound at                                     | Only referenced by                                    | Verdict                                        |
+| --------------------------------- | -------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------- |
+| `ai_conversations`, `ai_messages` | `services/ai/ai.service.ts:23,36`            | barrel `services/index.ts:32`                         | dead — live chat uses a different subsystem    |
+| `saved_reports`                   | `services/analytics/analytics.service.ts:28` | barrel `services/index.ts:28`                         | dead — analytics reads mock-data               |
+| `eod_reports`                     | `services/reports/reports.service.ts:25`     | `report.repository.ts:4,15` → barrel only             | dead — live EOD uses `daily_reports`           |
+| `task_comments`                   | `services/tasks/tasks.service.ts:94,105`     | AI `comments.source.ts:27` (employee/manager AI only) | dead — no live UI hits the employee AI surface |
 
 ---
 
@@ -175,7 +175,7 @@ read live and hydrate Projects/HR. Admin/org **write** UI is localStorage (`admi
 
 **Employee Management — 🟡.** Directory read live (`hr/api.ts:172-204`); **invitation issuance is now
 real** (server fn `inviteEmployeeFn`, `hr/invitations-store.ts:212`; commits `ef3a3ab`/`78db025`).
-Mutations still localStorage overlay (`hr/employees-store.ts:21`). *Suspected issue:* unhandled
+Mutations still localStorage overlay (`hr/employees-store.ts:21`). _Suspected issue:_ unhandled
 invite call (D5).
 
 **Projects — 🟡.** Store hydrates from repositories (`projects/store.ts:17-29,170-224`); create +
@@ -185,7 +185,7 @@ Well wrapped in try/catch.
 **Tasks — 🔴.** HYBRID: durable columns via `taskRepository` (`store.ts:19,230,344,360`); `TaskRow`
 matches the table exactly (`tasks.service.ts:14-27` vs `20260705120000_tasks_table.sql:32-46`).
 Rich fields (labels/checklist/relations) + comments/activity in localStorage overlay
-(`store.ts:45`). *Suspected root cause of breakage:* create dialog wired to mock `seedProjects`
+(`store.ts:45`). _Suspected root cause of breakage:_ create dialog wired to mock `seedProjects`
 (B1) → inserts rejected by FK+RLS, swallowed. Read hydrate is correctly guarded (`store.ts:237-242`).
 
 **Kanban — 🟡.** localStorage board/columns (`kanban/store.ts:11`), reads the tasks store, owns no data.
@@ -262,6 +262,7 @@ cross-reference resolves to an earlier migration (e.g. `tasks` (0705) → `proje
 uses the old literal.
 
 **Applied state (inferred locally, not remotely verified):**
+
 - `20260706120000_audit_logs.sql` and `20260706130000_notification_triggers.sql` are **untracked**
   (`git status` → `??`) and newer than the last link marker (`supabase/.temp/` 2026-07-05 16:01) →
   **most likely not pushed/applied.** This is the basis for B2 and D2.
@@ -279,6 +280,7 @@ employee invitation flow" (2026-07-06) · `78db025` "real invitation" (2026-07-0
 exist; most recent work is **uncommitted** in the working tree.
 
 **Uncommitted working changes (the highest-risk deltas since the 2026-07-05 report):**
+
 - `M src/features/audit/audit-store.ts` — swapped localStorage → Supabase `audit_logs` (basis for B2).
 - `?? supabase/migrations/20260706120000_audit_logs.sql` — new, untracked (B2).
 - `?? supabase/migrations/20260706130000_notification_triggers.sql` — new, untracked (D2).
@@ -287,6 +289,7 @@ exist; most recent work is **uncommitted** in the working tree.
   "Preview" badges/banners to mock-fed surfaces (cosmetic, no logic change).
 
 **Areas actively changed since 2026-07-05 and thus most likely to harbor new breakage:**
+
 - **Tasks** — newly wired to `taskRepository`/`tasks` table (was localStorage-only in the prior
   report). New breakage: B1 (create dialog still uses mock projects → silent write failure).
 - **Audit** — newly Supabase-backed. New breakage: B2 (table likely unapplied).

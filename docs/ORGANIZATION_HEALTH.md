@@ -12,24 +12,24 @@
 Rolls the operational KPIs up into **seven health metrics**, each scored 0–100 and
 mapped to a **four-level band**:
 
-| Metric | Composed from |
-| --- | --- |
-| **Engineering Health** | velocity attainment · flow (blockers) · capacity · workload balance |
-| **HR Health** | retention · staffing · onboarding |
-| **Project Health** | on-track ratio · completion rate · delivery success |
-| **Attendance Health** | attendance rate · punctuality · anomaly load |
-| **Collaboration Health** | report completion · responsiveness · dependency flow |
-| **AI Confidence** | data coverage · grounding quality · signal agreement |
-| **Overall Organization Score** | weighted blend of the six domains above |
+| Metric                         | Composed from                                                       |
+| ------------------------------ | ------------------------------------------------------------------- |
+| **Engineering Health**         | velocity attainment · flow (blockers) · capacity · workload balance |
+| **HR Health**                  | retention · staffing · onboarding                                   |
+| **Project Health**             | on-track ratio · completion rate · delivery success                 |
+| **Attendance Health**          | attendance rate · punctuality · anomaly load                        |
+| **Collaboration Health**       | report completion · responsiveness · dependency flow                |
+| **AI Confidence**              | data coverage · grounding quality · signal agreement                |
+| **Overall Organization Score** | weighted blend of the six domains above                             |
 
 ### Bands (display)
 
-| Band | Label | Default cutoff |
-| --- | --- | --- |
-| `excellent` | **Excellent** | score ≥ 85 |
-| `good` | **Good** | score ≥ 70 |
-| `needs_attention` | **Needs Attention** | score ≥ 50 |
-| `critical` | **Critical** | score < 50 |
+| Band              | Label               | Default cutoff |
+| ----------------- | ------------------- | -------------- |
+| `excellent`       | **Excellent**       | score ≥ 85     |
+| `good`            | **Good**            | score ≥ 70     |
+| `needs_attention` | **Needs Attention** | score ≥ 50     |
+| `critical`        | **Critical**        | score < 50     |
 
 Cutoffs are configurable per call via `BandThresholds`.
 
@@ -141,6 +141,6 @@ score.
 
 ---
 
-*Next: gate the dashboard route on `owner:access`, feed live KPIs/extras via the
+_Next: gate the dashboard route on `owner:access`, feed live KPIs/extras via the
 adapter, and (optionally) trend the Overall Organization Score over time using the
-existing `LineChart`.*
+existing `LineChart`._

@@ -33,7 +33,7 @@ Supabase (RLS enforced)
   `db` client (`services/core/client.ts`) — exactly as documented for
   projects/tasks/etc.
 - **Repositories** are the domain-facing API. The attendance repository
-  *orchestrates* four services into lifecycle verbs; the report repositories are
+  _orchestrates_ four services into lifecycle verbs; the report repositories are
   thin intention-revealing wrappers.
 - Every singleton is exported lower-camel (`attendanceRecordsService`); import
   the singleton, not the class.
@@ -45,11 +45,11 @@ These tables run **parallel** to the live `work_sessions` / `work_session_breaks
 own folders and are **not** re-exported from the root `@/repositories` barrel —
 the same convention the HR repositories use:
 
-| Concern | New (this doc) | Legacy (unchanged) |
-| --- | --- | --- |
-| Import path | `@/repositories/attendance`, `@/repositories/reports` | `@/repositories` |
+| Concern           | New (this doc)                                                             | Legacy (unchanged)                                  |
+| ----------------- | -------------------------------------------------------------------------- | --------------------------------------------------- |
+| Import path       | `@/repositories/attendance`, `@/repositories/reports`                      | `@/repositories`                                    |
 | Attendance tables | `attendance`, `attendance_sessions`, `break_sessions`, `attendance_events` | `work_sessions`, `work_session_breaks` (RPC-backed) |
-| Report tables | `daily_reports`, `daily_status_updates`, `dependency_requests` | `eod_reports` |
+| Report tables     | `daily_reports`, `daily_status_updates`, `dependency_requests`             | `eod_reports`                                       |
 
 Services use distinct class names (`AttendanceRecordsService`,
 `DailyReportsService`, …) so they coexist in the root `@/services` barrel.
@@ -60,20 +60,20 @@ Services use distinct class names (`AttendanceRecordsService`,
 
 ### Attendance — `@/services/attendance`
 
-| Service / singleton | Table | Key methods (beyond inherited CRUD) |
-| --- | --- | --- |
-| `AttendanceRecordsService` / `attendanceRecordsService` | `attendance` | `getByDate(userId, workDate)`, `ensureForDate(userId, workDate, seed?)`, `listByUser`, `listByDate` |
-| `AttendanceSessionsService` / `attendanceSessionsService` | `attendance_sessions` | `getActive(userId, workDate)`, `listByAttendance`, `listByUser` |
-| `BreakSessionsService` / `breakSessionsService` | `break_sessions` | `getOpenBreak(sessionId)`, `listBySession`, `listByAttendance` |
-| `AttendanceEventsService` / `attendanceEventsService` | `attendance_events` | `log(event)`, `listByAttendance`, `listByUser` — **append-only**: `update`/`upsert`/`remove` reject with `append_only` |
+| Service / singleton                                       | Table                 | Key methods (beyond inherited CRUD)                                                                                    |
+| --------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `AttendanceRecordsService` / `attendanceRecordsService`   | `attendance`          | `getByDate(userId, workDate)`, `ensureForDate(userId, workDate, seed?)`, `listByUser`, `listByDate`                    |
+| `AttendanceSessionsService` / `attendanceSessionsService` | `attendance_sessions` | `getActive(userId, workDate)`, `listByAttendance`, `listByUser`                                                        |
+| `BreakSessionsService` / `breakSessionsService`           | `break_sessions`      | `getOpenBreak(sessionId)`, `listBySession`, `listByAttendance`                                                         |
+| `AttendanceEventsService` / `attendanceEventsService`     | `attendance_events`   | `log(event)`, `listByAttendance`, `listByUser` — **append-only**: `update`/`upsert`/`remove` reject with `append_only` |
 
 ### Reports — `@/services/reports`
 
-| Service / singleton | Table | Key methods |
-| --- | --- | --- |
-| `DailyReportsService` / `dailyReportsService` | `daily_reports` | `submit(input)` (idempotent), `getByDate`, `getBySession`, `listByUser`, `listByDate` |
-| `StatusUpdatesService` / `statusUpdatesService` | `daily_status_updates` | `submit(input)` (idempotent on `(user, date, kind)`), `getByKind`, `listByUser`, `listByDate(date, kind)` |
-| `DependencyRequestsService` / `dependencyRequestsService` | `dependency_requests` | `setState`, `setPriority`, `setOwner`, `listOpen`, `listByState/Requester/Owner/Department` |
+| Service / singleton                                       | Table                  | Key methods                                                                                               |
+| --------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `DailyReportsService` / `dailyReportsService`             | `daily_reports`        | `submit(input)` (idempotent), `getByDate`, `getBySession`, `listByUser`, `listByDate`                     |
+| `StatusUpdatesService` / `statusUpdatesService`           | `daily_status_updates` | `submit(input)` (idempotent on `(user, date, kind)`), `getByKind`, `listByUser`, `listByDate(date, kind)` |
+| `DependencyRequestsService` / `dependencyRequestsService` | `dependency_requests`  | `setState`, `setPriority`, `setOwner`, `listOpen`, `listByState/Requester/Owner/Department`               |
 
 `submit(...)` on both report services is **idempotent**: it updates the existing
 row for the day (or `(day, kind)`) if present, else inserts — stamping
@@ -89,24 +89,24 @@ Orchestrates the four attendance services into the lifecycle verbs. Resolves the
 company-timezone work date via the existing `current_work_date` RPC when the
 caller omits `workDate`.
 
-| Verb | Signature | What it does |
-| --- | --- | --- |
-| **Check-in** | `checkIn(userId, context?, workDate?)` → `AttendanceSession` | ensure `attendance` row → set `first_check_in_at` → open `attendance_sessions` (`working`) → log `clock_in` |
-| **Check-out** | `checkOut(userId, workDate?)` → `AttendanceRecord` | close any open break → close active session (`finished`, `duration_seconds`) → accumulate `worked_seconds`/`break_seconds` + `last_check_out_at` → log `clock_out` |
-| **Break Start** | `startBreak(userId, reason?, workDate?)` → `BreakSession` | open `break_sessions` → flip session to `on_break` → log `break_start` |
-| **Break End** | `endBreak(userId, workDate?)` → `BreakSession` | close open break (`duration_seconds`) → flip session to `working` → log `break_end` |
-| Reads | `getDay(userId, workDate?)` → `AttendanceDay`, `getActiveSession(userId, workDate?)` | snapshot (record + sessions + breaks); current open session |
+| Verb            | Signature                                                                            | What it does                                                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Check-in**    | `checkIn(userId, context?, workDate?)` → `AttendanceSession`                         | ensure `attendance` row → set `first_check_in_at` → open `attendance_sessions` (`working`) → log `clock_in`                                                        |
+| **Check-out**   | `checkOut(userId, workDate?)` → `AttendanceRecord`                                   | close any open break → close active session (`finished`, `duration_seconds`) → accumulate `worked_seconds`/`break_seconds` + `last_check_out_at` → log `clock_out` |
+| **Break Start** | `startBreak(userId, reason?, workDate?)` → `BreakSession`                            | open `break_sessions` → flip session to `on_break` → log `break_start`                                                                                             |
+| **Break End**   | `endBreak(userId, workDate?)` → `BreakSession`                                       | close open break (`duration_seconds`) → flip session to `working` → log `break_end`                                                                                |
+| Reads           | `getDay(userId, workDate?)` → `AttendanceDay`, `getActiveSession(userId, workDate?)` | snapshot (record + sessions + breaks); current open session                                                                                                        |
 
 Guards throw `ServiceError` with stable codes: `no_active_session`,
 `already_on_break`, `not_on_break`.
 
 ### `@/repositories/reports`
 
-| Repository / singleton | Backs | Verbs |
-| --- | --- | --- |
-| `StatusUpdateRepository` / `statusUpdateRepository` | **Morning Check-in** + **Midday Status** | `submitCheckin(payload)`, `getCheckin(userId, date)`, `submitMidday(payload)`, `getMidday(userId, date)`, `update(id, patch)`, `listCheckinsByDate`, `listMiddayByDate`, `listByUser` |
-| `DailyReportRepository` / `dailyReportRepository` | **End-of-Day Report** | `submit(report)`, `update`, `getByDate`, `getBySession`, `getById`, `listByUser`, `listByDate`, `remove` |
-| `DependencyRequestRepository` / `dependencyRequestRepository` | **Dependency Requests** | `create`, `update`, `get`/`getOrThrow`, `listOpen`/`listForRequester`/`listForOwner`/`listForDepartment`/`listByState`, `setState`/`setPriority`/`assignOwner`, semantic transitions `accept`/`start`/`block`/`resolve`/`reject`/`cancel`/`close` |
+| Repository / singleton                                        | Backs                                    | Verbs                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `StatusUpdateRepository` / `statusUpdateRepository`           | **Morning Check-in** + **Midday Status** | `submitCheckin(payload)`, `getCheckin(userId, date)`, `submitMidday(payload)`, `getMidday(userId, date)`, `update(id, patch)`, `listCheckinsByDate`, `listMiddayByDate`, `listByUser`                                                             |
+| `DailyReportRepository` / `dailyReportRepository`             | **End-of-Day Report**                    | `submit(report)`, `update`, `getByDate`, `getBySession`, `getById`, `listByUser`, `listByDate`, `remove`                                                                                                                                          |
+| `DependencyRequestRepository` / `dependencyRequestRepository` | **Dependency Requests**                  | `create`, `update`, `get`/`getOrThrow`, `listOpen`/`listForRequester`/`listForOwner`/`listForDepartment`/`listByState`, `setState`/`setPriority`/`assignOwner`, semantic transitions `accept`/`start`/`block`/`resolve`/`reject`/`cancel`/`close` |
 
 `StatusUpdatePayload` = the status-update insert **without** `kind` (the verb sets
 `morning_checkin` vs `midday`).
@@ -115,16 +115,16 @@ Guards throw `ServiceError` with stable codes: `no_active_session`,
 
 ## 4. Supported operations → call sites
 
-| Operation | Call |
-| --- | --- |
-| Morning Check-in | `statusUpdateRepository.submitCheckin({ user_id, work_date, mood, main_goal, priorities, … })` |
-| Check-out | `attendanceRepository.checkOut(userId)` |
-| Break Start | `attendanceRepository.startBreak(userId, reason?)` |
-| Break End | `attendanceRepository.endBreak(userId)` |
-| Midday Status | `statusUpdateRepository.submitMidday({ user_id, work_date, progress, current_focus, outlook, … })` |
-| End-of-Day Report | `dailyReportRepository.submit({ user_id, work_date, summary, completed, in_progress, … })` |
-| Dependency Requests | `dependencyRequestRepository.create({ title, requester_id, type, priority, … })` + `.resolve(id)` etc. |
-| Clock-in (opens the day) | `attendanceRepository.checkIn(userId, context?)` |
+| Operation                | Call                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Morning Check-in         | `statusUpdateRepository.submitCheckin({ user_id, work_date, mood, main_goal, priorities, … })`         |
+| Check-out                | `attendanceRepository.checkOut(userId)`                                                                |
+| Break Start              | `attendanceRepository.startBreak(userId, reason?)`                                                     |
+| Break End                | `attendanceRepository.endBreak(userId)`                                                                |
+| Midday Status            | `statusUpdateRepository.submitMidday({ user_id, work_date, progress, current_focus, outlook, … })`     |
+| End-of-Day Report        | `dailyReportRepository.submit({ user_id, work_date, summary, completed, in_progress, … })`             |
+| Dependency Requests      | `dependencyRequestRepository.create({ title, requester_id, type, priority, … })` + `.resolve(id)` etc. |
+| Clock-in (opens the day) | `attendanceRepository.checkIn(userId, context?)`                                                       |
 
 `user_id` / `userId` is passed in by the caller (the authenticated user's id);
 RLS (`auth.uid()`) and the `created_by`/`actor_id` `DEFAULT auth.uid()` columns
@@ -164,8 +164,8 @@ omitted so the `DEFAULT auth.uid()` fires.
    (no `company_settings` integration in the new lifecycle) — left at defaults
    until the lifecycle moves into RPCs.
 4. **UI not connected** (by request). Next: feature `queries.ts` (`queryOptions`
-   + key factories) + mutation hooks that call these repositories, then swap the
-   `localStorage`/in-memory stores in `features/checkin|midday|eod|dependencies`.
+   - key factories) + mutation hooks that call these repositories, then swap the
+     `localStorage`/in-memory stores in `features/checkin|midday|eod|dependencies`.
 
 ---
 

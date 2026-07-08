@@ -16,7 +16,13 @@ export type PriorityLevel = "low" | "medium" | "high" | "critical";
 export type MilestoneStatus = "upcoming" | "in_progress" | "done" | "missed";
 export type RiskStatus = "open" | "mitigating" | "resolved" | "accepted" | "closed";
 export type CalendarEventType =
-  "meeting" | "deadline" | "release" | "review" | "kickoff" | "holiday" | "other";
+  | "meeting"
+  | "deadline"
+  | "release"
+  | "review"
+  | "kickoff"
+  | "holiday"
+  | "other";
 export type ProjectActivityType =
   | "project_created"
   | "status_changed"

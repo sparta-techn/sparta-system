@@ -69,18 +69,18 @@ getActiveLogForTask(taskId, userId) → TimeLog | null
 Reactive selector hook:
 
 ```ts
-const logs = useTimeState((s) => s.logs.filter(l => l.taskId === id));
+const logs = useTimeState((s) => s.logs.filter((l) => l.taskId === id));
 ```
 
 ## UI Surfaces
 
-| Surface | Where | What |
-|---|---|---|
-| Time chip | Task header (Task Detail) | Total hours · active indicator |
-| Time tab | Task Detail | Totals, daily breakdown, entries list, start/stop, manual entry |
-| My time logs | `/app/tasks/time` | Today / Week / Month totals, daily bars, top tasks, entries |
-| Project time | Project Detail → Time tab | Project total, contributors, active timers, top tasks |
-| Floating timer | AppShell (global) | Active-timer pill — link to task, live duration, stop |
+| Surface        | Where                     | What                                                            |
+| -------------- | ------------------------- | --------------------------------------------------------------- |
+| Time chip      | Task header (Task Detail) | Total hours · active indicator                                  |
+| Time tab       | Task Detail               | Totals, daily breakdown, entries list, start/stop, manual entry |
+| My time logs   | `/app/tasks/time`         | Today / Week / Month totals, daily bars, top tasks, entries     |
+| Project time   | Project Detail → Time tab | Project total, contributors, active timers, top tasks           |
+| Floating timer | AppShell (global)         | Active-timer pill — link to task, live duration, stop           |
 
 ## Responsive Behavior
 
@@ -114,14 +114,14 @@ single **running timer** so the live UI is exercised on first load.
 
 When Supabase lands:
 
-| Client call | Server function | Notes |
-|---|---|---|
-| `startTimer` | `start_time_log` | RLS: `auth.uid() = user_id`; stops prior active timer in same txn |
-| `stopTimer` | `stop_time_log` | Calculates duration server-side |
-| `addManualEntry` | `add_time_log` | Validates `hours > 0`, date ≤ today |
-| `deleteLog` | `delete_time_log` | Soft-delete (`deleted_at`) recommended |
-| Per-task totals | View `task_time_totals` | Materialized for hot paths |
-| Per-user range | RPC `user_time_summary(uid, range)` | Server-computed today/week/month |
+| Client call      | Server function                     | Notes                                                             |
+| ---------------- | ----------------------------------- | ----------------------------------------------------------------- |
+| `startTimer`     | `start_time_log`                    | RLS: `auth.uid() = user_id`; stops prior active timer in same txn |
+| `stopTimer`      | `stop_time_log`                     | Calculates duration server-side                                   |
+| `addManualEntry` | `add_time_log`                      | Validates `hours > 0`, date ≤ today                               |
+| `deleteLog`      | `delete_time_log`                   | Soft-delete (`deleted_at`) recommended                            |
+| Per-task totals  | View `task_time_totals`             | Materialized for hot paths                                        |
+| Per-user range   | RPC `user_time_summary(uid, range)` | Server-computed today/week/month                                  |
 
 ## Non-Goals (Important)
 

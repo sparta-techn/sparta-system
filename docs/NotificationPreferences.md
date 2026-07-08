@@ -5,14 +5,14 @@ mock; backend swap = `user_notification_preferences` table).
 
 ## Categories
 
-| Key | UI label | What it gates |
-| --- | --- | --- |
-| `attendance` | Attendance | Check-in / break / late / absent notifications |
-| `dependencies` | Dependencies | Assignments, blockers, comments, resolutions |
-| `announcements` | Announcements | Company / team announcements |
-| `reports` | Reports | Morning, midday, EOD reminders |
-| `mentions` | Mentions | `@you` in any comment thread |
-| `system` | System | Account, security and platform updates |
+| Key             | UI label      | What it gates                                  |
+| --------------- | ------------- | ---------------------------------------------- |
+| `attendance`    | Attendance    | Check-in / break / late / absent notifications |
+| `dependencies`  | Dependencies  | Assignments, blockers, comments, resolutions   |
+| `announcements` | Announcements | Company / team announcements                   |
+| `reports`       | Reports       | Morning, midday, EOD reminders                 |
+| `mentions`      | Mentions      | `@you` in any comment thread                   |
+| `system`        | System        | Account, security and platform updates         |
 
 A `false` category means the engine drops matching specs before they
 reach `notificationStore`. The event is still on the bus — other
@@ -39,7 +39,7 @@ preferences.setCategory("dependencies", false);
 preferences.setChannel("email", true);
 preferences.setQuietHours({ enabled: true, start: "22:00", end: "07:00" });
 preferences.reset();
-usePreferences();        // React hook
+usePreferences(); // React hook
 ```
 
 ## UI

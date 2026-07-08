@@ -3,7 +3,7 @@
 > A tamper-evident, append-only record of **security-sensitive activity**: who
 > did what, when, and what changed. Distinct from the HR-scoped activity list
 > (`features/hr` `auditLog`) and the project/task `activity_feed` — this is the
-> cross-cutting *security* audit.
+> cross-cutting _security_ audit.
 >
 > The store is a reactive, `localStorage`-backed sink mirroring a future
 > append-only Supabase `audit_logs` table + `AuditService`; swapping it for
@@ -13,17 +13,17 @@
 
 ## 1. Tracked events
 
-| Action | Category | Emitted from |
-| --- | --- | --- |
-| `login` | auth | `auth-service.signInWithPassword` (success) |
-| `logout` | auth | `auth-service.signOut` |
-| `failed_login` | auth | `auth-service.signInWithPassword` (error) |
-| `role_changed` | access | Employee actions menu → Assign role |
-| `permission_changed` | access | Role → permission matrix editor (future UI); seeded example |
-| `employee_created` | employee | Employee form dialog → Create |
-| `employee_deleted` | employee | Employee actions menu → Delete (soft delete) |
-| `project_deleted` | project | `projects/store.archiveProject` (retire/delete) |
-| `settings_changed` | settings | Invitation expiry, AI provider settings |
+| Action               | Category | Emitted from                                                |
+| -------------------- | -------- | ----------------------------------------------------------- |
+| `login`              | auth     | `auth-service.signInWithPassword` (success)                 |
+| `logout`             | auth     | `auth-service.signOut`                                      |
+| `failed_login`       | auth     | `auth-service.signInWithPassword` (error)                   |
+| `role_changed`       | access   | Employee actions menu → Assign role                         |
+| `permission_changed` | access   | Role → permission matrix editor (future UI); seeded example |
+| `employee_created`   | employee | Employee form dialog → Create                               |
+| `employee_deleted`   | employee | Employee actions menu → Delete (soft delete)                |
+| `project_deleted`    | project  | `projects/store.archiveProject` (retire/delete)             |
+| `settings_changed`   | settings | Invitation expiry, AI provider settings                     |
 
 `permission_changed` has no live UI yet (there is no role→permission matrix
 editor); the action, category, and a seeded example exist so it renders and is
@@ -36,17 +36,17 @@ ready to wire the day that editor lands.
 Each `AuditEvent` (`src/features/audit/types.ts`) captures exactly the required
 columns:
 
-| Field | Column | Notes |
-| --- | --- | --- |
-| **Who** | `actor` + `actorId` | Display name/email + user id. `actorId` is `null` for pre-auth events (failed login). |
-| **When** | `at` | ISO timestamp. |
-| **What** | `action` (+ `category`) | The tracked action. |
-| **Old value** | `oldValue` | Value before the change (nullable). |
-| **New value** | `newValue` | Value after the change (nullable). |
-| **IP (future)** | `ip` | Reserved — always `null` client-side; filled server-side later. |
-| **Device (future)** | `device` | Reserved — same. |
-| — | `target` / `targetType` | The object acted upon (employee name, project, "Invitation settings", …). |
-| — | `meta` | Free-form structured context. |
+| Field               | Column                  | Notes                                                                                 |
+| ------------------- | ----------------------- | ------------------------------------------------------------------------------------- |
+| **Who**             | `actor` + `actorId`     | Display name/email + user id. `actorId` is `null` for pre-auth events (failed login). |
+| **When**            | `at`                    | ISO timestamp.                                                                        |
+| **What**            | `action` (+ `category`) | The tracked action.                                                                   |
+| **Old value**       | `oldValue`              | Value before the change (nullable).                                                   |
+| **New value**       | `newValue`              | Value after the change (nullable).                                                    |
+| **IP (future)**     | `ip`                    | Reserved — always `null` client-side; filled server-side later.                       |
+| **Device (future)** | `device`                | Reserved — same.                                                                      |
+| —                   | `target` / `targetType` | The object acted upon (employee name, project, "Invitation settings", …).             |
+| —                   | `meta`                  | Free-form structured context.                                                         |
 
 > **Why IP/Device are reserved.** A browser cannot see its own public IP
 > reliably and a spoofable `navigator.userAgent` is not trustworthy for a
@@ -65,8 +65,8 @@ recordAudit({
   action: "role_changed",
   target: employee.name,
   targetType: "employee",
-  oldValue: employee.role,   // "employee"
-  newValue: nextRole,        // "team_lead"
+  oldValue: employee.role, // "employee"
+  newValue: nextRole, // "team_lead"
 });
 ```
 
@@ -96,14 +96,14 @@ recordAudit({
 
 ## 5. Files
 
-| File | Role |
-| --- | --- |
-| `src/features/audit/types.ts` | `AuditEvent`, `AuditAction`, category/label maps, sensitive-action set |
-| `src/features/audit/audit-store.ts` | Reactive sink: `recordAudit`, `setCurrentActor`, `useAuditLog`, `filterAudit` |
-| `src/features/audit/seed.ts` | Deterministic seed events |
-| `src/features/audit/components/audit-log-view.tsx` | The viewer |
-| `src/routes/_authenticated/app/audit.tsx` | Guarded route (owner/admin) |
-| `src/features/audit/audit-store.test.ts` | Unit tests |
+| File                                               | Role                                                                          |
+| -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `src/features/audit/types.ts`                      | `AuditEvent`, `AuditAction`, category/label maps, sensitive-action set        |
+| `src/features/audit/audit-store.ts`                | Reactive sink: `recordAudit`, `setCurrentActor`, `useAuditLog`, `filterAudit` |
+| `src/features/audit/seed.ts`                       | Deterministic seed events                                                     |
+| `src/features/audit/components/audit-log-view.tsx` | The viewer                                                                    |
+| `src/routes/_authenticated/app/audit.tsx`          | Guarded route (owner/admin)                                                   |
+| `src/features/audit/audit-store.test.ts`           | Unit tests                                                                    |
 
 Emitters live at the action sites: `features/auth/auth-service.ts` &
 `auth-context.tsx` (auth + actor), `features/hr/components/employee-*`

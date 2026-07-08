@@ -20,10 +20,7 @@ import type { ZapierClientConfig, ZapierHookResponse } from "./types";
 export class ZapierClient implements AutomationTransport {
   constructor(private readonly config: ZapierClientConfig = {}) {}
 
-  async triggerWorkflow(
-    accountId: string,
-    request: WorkflowTriggerRequest,
-  ): Promise<WorkflowRun> {
+  async triggerWorkflow(accountId: string, request: WorkflowTriggerRequest): Promise<WorkflowRun> {
     const response = await this.postCatchHookRaw(accountId, request);
     return {
       id: response.requestId,
@@ -37,11 +34,10 @@ export class ZapierClient implements AutomationTransport {
     return { id: runId, workflowId: "", status: "unknown" };
   }
 
-  async postWebhook(
-    accountId: string,
-    message: OutgoingWebhookMessage,
-  ): Promise<{ id: string }> {
-    return notImplemented(`ZapierClient.postWebhook (account ${accountId}, event ${message.eventType})`);
+  async postWebhook(accountId: string, message: OutgoingWebhookMessage): Promise<{ id: string }> {
+    return notImplemented(
+      `ZapierClient.postWebhook (account ${accountId}, event ${message.eventType})`,
+    );
   }
 
   async verifySignature(accountId: string, delivery: RawWebhookDelivery): Promise<boolean> {
@@ -54,6 +50,8 @@ export class ZapierClient implements AutomationTransport {
     accountId: string,
     request: WorkflowTriggerRequest,
   ): Promise<ZapierHookResponse> {
-    return notImplemented(`ZapierClient.postCatchHook (account ${accountId}, zap ${request.workflowId})`);
+    return notImplemented(
+      `ZapierClient.postCatchHook (account ${accountId}, zap ${request.workflowId})`,
+    );
   }
 }

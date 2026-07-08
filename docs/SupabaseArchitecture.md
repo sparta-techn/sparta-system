@@ -4,30 +4,31 @@ How SpartaFlow uses the Supabase platform end-to-end: project layout, clients, n
 
 ## 1. Platform Components in Use
 
-| Component | Purpose |
-|---|---|
-| Postgres | System of record for all domain data. |
-| Auth (GoTrue) | Authentication, sessions, password policy, MFA. |
-| Storage | Avatars, announcement assets, documents, exports. |
-| Realtime | Live updates for dependencies, notifications, announcements, manager dashboards. |
-| Edge Functions | Webhook receivers (ClickUp/Slack/GitHub), scheduled jobs, AI calls, admin-only maintenance. Not used for ordinary app reads/writes. |
-| Vault | Encrypted storage of integration credentials and signing keys. |
-| pg_cron | In-DB scheduling for nightly rollups, attendance close, retention purges. |
-| pg_net | Outbound HTTP from DB (notification dispatcher, webhook delivery). |
-| Logflare / Logs Explorer | Centralized logs for Postgres, Auth, Edge Functions. |
+| Component                | Purpose                                                                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Postgres                 | System of record for all domain data.                                                                                               |
+| Auth (GoTrue)            | Authentication, sessions, password policy, MFA.                                                                                     |
+| Storage                  | Avatars, announcement assets, documents, exports.                                                                                   |
+| Realtime                 | Live updates for dependencies, notifications, announcements, manager dashboards.                                                    |
+| Edge Functions           | Webhook receivers (ClickUp/Slack/GitHub), scheduled jobs, AI calls, admin-only maintenance. Not used for ordinary app reads/writes. |
+| Vault                    | Encrypted storage of integration credentials and signing keys.                                                                      |
+| pg_cron                  | In-DB scheduling for nightly rollups, attendance close, retention purges.                                                           |
+| pg_net                   | Outbound HTTP from DB (notification dispatcher, webhook delivery).                                                                  |
+| Logflare / Logs Explorer | Centralized logs for Postgres, Auth, Edge Functions.                                                                                |
 
 ## 2. Client Strategy
 
 Three clients, never confused:
 
-| Client | Where it runs | Key | RLS |
-|---|---|---|---|
-| Browser (`@/integrations/supabase/client`) | React components, realtime subscriptions | publishable | applies |
-| Authenticated server (`requireSupabaseAuth` middleware) | `createServerFn` handlers | publishable + user bearer | applies as user |
-| Server publishable | Public read-only server fns | publishable | applies as anon |
-| Admin (`supabaseAdmin`) | Verified webhooks, maintenance, Auth Admin | service role | bypassed |
+| Client                                                  | Where it runs                              | Key                       | RLS             |
+| ------------------------------------------------------- | ------------------------------------------ | ------------------------- | --------------- |
+| Browser (`@/integrations/supabase/client`)              | React components, realtime subscriptions   | publishable               | applies         |
+| Authenticated server (`requireSupabaseAuth` middleware) | `createServerFn` handlers                  | publishable + user bearer | applies as user |
+| Server publishable                                      | Public read-only server fns                | publishable               | applies as anon |
+| Admin (`supabaseAdmin`)                                 | Verified webhooks, maintenance, Auth Admin | service role              | bypassed        |
 
 Rules:
+
 - `supabaseAdmin` is imported inside handlers, never at module top-level of client-reachable files.
 - Never use service role for ordinary Data API reads.
 - Public route loaders only call public server fns (no `requireSupabaseAuth`).
@@ -41,6 +42,7 @@ One Supabase project per environment:
 - `spartaflow-prod` — production.
 
 Each project has its own:
+
 - Database (separate Postgres instance).
 - Auth user pool (no cross-env users).
 - Storage buckets.
@@ -49,14 +51,14 @@ Each project has its own:
 
 ## 4. Schema Organization
 
-| Schema | Use |
-|---|---|
-| `auth` | Supabase-managed. Read-only from app via `auth.uid()`. |
-| `storage` | Supabase-managed. RLS via storage policies. |
-| `public` | Application tables, views, functions. RLS on every table. |
-| `private` | Internal helpers, materialized views, dispatcher queues. No GRANTs to `anon`/`authenticated`. |
-| `audit` | `audit_logs` and append-only tables. Insert-only grants. |
-| `extensions` | `pgcrypto`, `pg_net`, `pg_cron`, `pg_trgm`, `unaccent`, `pgjwt`, `pgaudit` (optional). |
+| Schema       | Use                                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| `auth`       | Supabase-managed. Read-only from app via `auth.uid()`.                                        |
+| `storage`    | Supabase-managed. RLS via storage policies.                                                   |
+| `public`     | Application tables, views, functions. RLS on every table.                                     |
+| `private`    | Internal helpers, materialized views, dispatcher queues. No GRANTs to `anon`/`authenticated`. |
+| `audit`      | `audit_logs` and append-only tables. Insert-only grants.                                      |
+| `extensions` | `pgcrypto`, `pg_net`, `pg_cron`, `pg_trgm`, `unaccent`, `pgjwt`, `pgaudit` (optional).        |
 
 ## 5. Migrations & Change Management
 
@@ -92,6 +94,7 @@ Full details: `AuthFlow.md`.
 ## 9. Edge Functions
 
 Used only for:
+
 - Inbound webhooks (ClickUp, Slack, GitHub) — verify signature, persist `integration_events`, enqueue work.
 - AI gateway calls (summaries, anomaly detection) — keep API key server-side.
 - Scheduled maintenance triggered by pg_cron via pg_net.
@@ -101,39 +104,41 @@ App-internal logic stays in TanStack `createServerFn`.
 
 ## 10. Scheduled Jobs (pg_cron)
 
-| Job | Schedule | Purpose |
-|---|---|---|
-| `close_open_attendance` | hourly | Auto-close attendance still open past end of day. |
-| `refresh_company_health` | every 15 min | Refresh `mv_company_health_daily`. |
-| `refresh_user_perf_weekly` | daily 02:00 | Refresh weekly user performance. |
-| `dispatch_outbox` | every minute | Pull from `domain_event_outbox`, deliver via pg_net. |
-| `purge_old_notifications` | daily 03:00 | Archive >90d, hard delete archived >180d. |
-| `purge_integration_events` | daily 03:30 | Delete >30d. |
-| `rotate_session_table` | daily | Delete revoked sessions older than 30d. |
-| `daily_summary_emails` | weekdays 08:30 | Manager digests via Edge Function. |
+| Job                        | Schedule       | Purpose                                              |
+| -------------------------- | -------------- | ---------------------------------------------------- |
+| `close_open_attendance`    | hourly         | Auto-close attendance still open past end of day.    |
+| `refresh_company_health`   | every 15 min   | Refresh `mv_company_health_daily`.                   |
+| `refresh_user_perf_weekly` | daily 02:00    | Refresh weekly user performance.                     |
+| `dispatch_outbox`          | every minute   | Pull from `domain_event_outbox`, deliver via pg_net. |
+| `purge_old_notifications`  | daily 03:00    | Archive >90d, hard delete archived >180d.            |
+| `purge_integration_events` | daily 03:30    | Delete >30d.                                         |
+| `rotate_session_table`     | daily          | Delete revoked sessions older than 30d.              |
+| `daily_summary_emails`     | weekdays 08:30 | Manager digests via Edge Function.                   |
 
 ## 11. Environments
 
-| Env | Domain | DB | Auth users | Integrations |
-|---|---|---|---|---|
-| Dev | `dev.spartaflow.app` | dev project | seeded test users | sandbox tokens |
-| Staging | `staging.spartaflow.app` | staging project | invite-only QA | sandbox tokens |
-| Prod | `app.spartaflow.app` | prod project | real users | real tokens |
+| Env     | Domain                   | DB              | Auth users        | Integrations   |
+| ------- | ------------------------ | --------------- | ----------------- | -------------- |
+| Dev     | `dev.spartaflow.app`     | dev project     | seeded test users | sandbox tokens |
+| Staging | `staging.spartaflow.app` | staging project | invite-only QA    | sandbox tokens |
+| Prod    | `app.spartaflow.app`     | prod project    | real users        | real tokens    |
 
 Each environment has its own Supabase project, Vercel project, Sentry project, and integration apps. No cross-env reads or shared secrets.
 
 ## 12. Environment Variables
 
 Browser:
+
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 - `VITE_APP_ENV` (`dev|staging|prod`)
 - `VITE_SENTRY_DSN`
 
 Server (TanStack server fns + Edge Functions):
+
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` *(server-only)*
+- `SUPABASE_SERVICE_ROLE_KEY` _(server-only)_
 - `SUPABASE_JWT_SECRET`
 - `WEBHOOK_SECRET_CLICKUP`, `WEBHOOK_SECRET_SLACK`, `WEBHOOK_SECRET_GITHUB`
 - `RESEND_API_KEY`

@@ -36,7 +36,11 @@ export const TaskRow = memo(function TaskRow({
       )}
     >
       <div className="pt-1">
-        <Checkbox checked={selected} onCheckedChange={(c) => onToggle(task.id, c === true)} aria-label="Select task" />
+        <Checkbox
+          checked={selected}
+          onCheckedChange={(c) => onToggle(task.id, c === true)}
+          aria-label="Select task"
+        />
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">

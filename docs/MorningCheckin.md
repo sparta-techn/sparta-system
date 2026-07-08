@@ -22,15 +22,15 @@ One check-in per work session. Re-opening the wizard during the edit window load
 
 ## Sections (steps)
 
-| # | Step          | Required | Notes                                             |
-|---|---------------|----------|---------------------------------------------------|
-| 1 | Mood          | No       | 5 options + optional manager-visible note         |
-| 2 | Main goal     | **Yes**  | One sentence, max 140 chars                       |
-| 3 | Priorities    | **Yes**  | 1–5 items, with level + effort, reorderable       |
-| 4 | Planned tasks | No       | Pick from mocked ClickUp list                     |
-| 5 | Blockers      | No       | Presets + custom + optional note                  |
-| 6 | Help request  | No       | Toggle. If on: department, person, desc, priority |
-| 7 | Review        | —        | Read-only summary, then submit                    |
+| #   | Step          | Required | Notes                                             |
+| --- | ------------- | -------- | ------------------------------------------------- |
+| 1   | Mood          | No       | 5 options + optional manager-visible note         |
+| 2   | Main goal     | **Yes**  | One sentence, max 140 chars                       |
+| 3   | Priorities    | **Yes**  | 1–5 items, with level + effort, reorderable       |
+| 4   | Planned tasks | No       | Pick from mocked ClickUp list                     |
+| 5   | Blockers      | No       | Presets + custom + optional note                  |
+| 6   | Help request  | No       | Toggle. If on: department, person, desc, priority |
+| 7   | Review        | —        | Read-only summary, then submit                    |
 
 Validation triggers when leaving a required step; the wizard never silently swallows missing data.
 

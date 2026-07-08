@@ -14,17 +14,17 @@
 
 ## 1. Scope
 
-| Capability | Actor | Status |
-| --- | --- | --- |
-| Create Employee + Send Invitation | Owner / Admin / HR | **Mock** — `invitations-store` |
-| Resend Invitation | Owner / Admin / HR | **Mock** — refreshes window + token |
-| Cancel Invitation | Owner / Admin / HR | **Mock** — revokes the link |
-| Configurable expiry period | Owner / Admin / HR | **Mock** — default + per-invite override |
-| Auto-expire after the window | System | **Derived** at read time — no cron |
-| Receive email with setup link | Invitee | Delivered by Supabase Auth invite email |
-| Set password | Invitee | **Live** — Supabase `updateUser` |
-| Complete profile | Invitee | **Live** — name + job title → user metadata |
-| Accept company policies | Invitee | **Live** — required checkbox → metadata |
+| Capability                        | Actor              | Status                                      |
+| --------------------------------- | ------------------ | ------------------------------------------- |
+| Create Employee + Send Invitation | Owner / Admin / HR | **Mock** — `invitations-store`              |
+| Resend Invitation                 | Owner / Admin / HR | **Mock** — refreshes window + token         |
+| Cancel Invitation                 | Owner / Admin / HR | **Mock** — revokes the link                 |
+| Configurable expiry period        | Owner / Admin / HR | **Mock** — default + per-invite override    |
+| Auto-expire after the window      | System             | **Derived** at read time — no cron          |
+| Receive email with setup link     | Invitee            | Delivered by Supabase Auth invite email     |
+| Set password                      | Invitee            | **Live** — Supabase `updateUser`            |
+| Complete profile                  | Invitee            | **Live** — name + job title → user metadata |
+| Accept company policies           | Invitee            | **Live** — required checkbox → metadata     |
 
 ---
 
@@ -50,7 +50,7 @@
      └──────────┘
 ```
 
-- **`pending → expired`** is *derived*, not stored. `effectiveStatus()` reports
+- **`pending → expired`** is _derived_, not stored. `effectiveStatus()` reports
   a pending invite as `expired` once `expiresAt` is in the past, so no
   background job is needed. `resendInvitation` sets a fresh window and returns
   it to `pending`.
@@ -64,20 +64,20 @@
 `HrInvitation` (`src/features/hr/mock-data.ts`) — shaped to mirror a future
 Supabase `invitations` table:
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `string` | `inv_…` |
-| `email` | `string` | Normalised to lower-case on create |
-| `name?` | `string` | Prefilled name, captured at "Create Employee" time |
-| `role` | `EmployeeRole` | `employee` \| `team_lead` \| `manager` \| `hr` \| … |
-| `department` | `Department` | |
-| `invitedBy` | `string` | Actor who sent it |
-| `invitedAt` | ISO string | (Re)send timestamp |
-| `expiresAt` | ISO string | `invitedAt + expiryDays` |
-| `status` | `InvitationStatus` | `pending` \| `accepted` \| `expired` \| `cancelled` |
-| `token?` | `string` | Opaque token in the setup link; rotated on resend |
-| `resentAt?` | ISO string | Last resend |
-| `acceptedAt?` | ISO string | Set when the invitee completes setup |
+| Field         | Type               | Notes                                               |
+| ------------- | ------------------ | --------------------------------------------------- |
+| `id`          | `string`           | `inv_…`                                             |
+| `email`       | `string`           | Normalised to lower-case on create                  |
+| `name?`       | `string`           | Prefilled name, captured at "Create Employee" time  |
+| `role`        | `EmployeeRole`     | `employee` \| `team_lead` \| `manager` \| `hr` \| … |
+| `department`  | `Department`       |                                                     |
+| `invitedBy`   | `string`           | Actor who sent it                                   |
+| `invitedAt`   | ISO string         | (Re)send timestamp                                  |
+| `expiresAt`   | ISO string         | `invitedAt + expiryDays`                            |
+| `status`      | `InvitationStatus` | `pending` \| `accepted` \| `expired` \| `cancelled` |
+| `token?`      | `string`           | Opaque token in the setup link; rotated on resend   |
+| `resentAt?`   | ISO string         | Last resend                                         |
+| `acceptedAt?` | ISO string         | Set when the invitee completes setup                |
 
 `InvitationSettings` — `{ expiryDays: number }`. The configurable default,
 persisted in the store. Selectable windows: **`EXPIRY_OPTIONS = [3, 7, 14, 30]`**
@@ -116,12 +116,12 @@ Persistence key: `spartaflow:hr:invitations:v1`.
 
 ## 5. UI
 
-| Surface | File | Route |
-| --- | --- | --- |
-| Invitations manager (tabs, resend, cancel, default-expiry control) | `src/features/hr/components/invitations-manager.tsx` | `/app/hr/invitations` |
-| Invite dialog (name, email, department, role, per-invite expiry) | `src/features/hr/components/invite-employee-dialog.tsx` | — |
-| Status / role badges | `src/features/hr/components/badges.tsx` | — |
-| Invitee accept page | `src/routes/auth/accept-invitation.tsx` | `/auth/accept-invitation` |
+| Surface                                                            | File                                                    | Route                     |
+| ------------------------------------------------------------------ | ------------------------------------------------------- | ------------------------- |
+| Invitations manager (tabs, resend, cancel, default-expiry control) | `src/features/hr/components/invitations-manager.tsx`    | `/app/hr/invitations`     |
+| Invite dialog (name, email, department, role, per-invite expiry)   | `src/features/hr/components/invite-employee-dialog.tsx` | —                         |
+| Status / role badges                                               | `src/features/hr/components/badges.tsx`                 | —                         |
+| Invitee accept page                                                | `src/routes/auth/accept-invitation.tsx`                 | `/auth/accept-invitation` |
 
 All UI reuses the shared primitives (`Button`, `Card`, `Dialog`, `Table`,
 `Tabs`, `Select`, `Checkbox`, `Badge`) per the UI rules — no new components.
@@ -143,7 +143,7 @@ All UI reuses the shared primitives (`Button`, `Card`, `Dialog`, `Table`,
 4. **Accept company policies** — a **required** checkbox (Terms, Privacy, Code
    of Conduct); enforced by `acceptInvitationSchema.acceptPolicies`.
 5. On submit, `updatePassword(password, { full_name, job_title?,
-   policies_accepted, policies_accepted_at })` writes the password and profile /
+policies_accepted, policies_accepted_at })` writes the password and profile /
    consent to the auth user's metadata, then redirects to `/app`.
 
 Validation lives in `src/features/auth/validation.ts` (`acceptInvitationSchema`).

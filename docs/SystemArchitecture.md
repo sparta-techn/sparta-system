@@ -50,14 +50,15 @@ SpartaFlow Hub follows a **modular, feature-first, layered architecture** on top
 
 Each feature is internally organized into four layers. Dependencies flow **inward only**.
 
-| Layer | Responsibility | Examples |
-|---|---|---|
-| **Presentation** | UI rendering, user interaction, accessibility. No business rules. | Pages, screens, shadcn components, forms. |
-| **Application** | Use-cases, orchestration, validation, mapping DTOs. | `submitEndOfDayReport`, `acknowledgeDependency`. |
-| **Domain** | Pure business rules, entities, invariants, policies. | `Attendance` entity, "late after 10:00" rule, RBAC policies. |
-| **Infrastructure** | I/O: Supabase queries, Edge Functions, integrations, storage, email. | Repositories, integration adapters, realtime channels. |
+| Layer              | Responsibility                                                       | Examples                                                     |
+| ------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Presentation**   | UI rendering, user interaction, accessibility. No business rules.    | Pages, screens, shadcn components, forms.                    |
+| **Application**    | Use-cases, orchestration, validation, mapping DTOs.                  | `submitEndOfDayReport`, `acknowledgeDependency`.             |
+| **Domain**         | Pure business rules, entities, invariants, policies.                 | `Attendance` entity, "late after 10:00" rule, RBAC policies. |
+| **Infrastructure** | I/O: Supabase queries, Edge Functions, integrations, storage, email. | Repositories, integration adapters, realtime channels.       |
 
 Rules:
+
 - Presentation never imports Infrastructure directly — it calls Application services.
 - Domain has zero external dependencies (no Supabase, no React).
 - Infrastructure implements interfaces (ports) defined in Domain/Application.
@@ -78,6 +79,7 @@ features/attendance/
 ```
 
 Cross-feature communication happens **only** via:
+
 1. Public API (`index.ts`) of the feature.
 2. Domain events on the in-app event bus.
 3. Shared kernel (types, IDs, enums) under `shared/`.
@@ -104,11 +106,13 @@ This prevents the typical "everything imports everything" decay.
 ## 6. Data Flow
 
 **Read path (query):**
+
 ```
 Component → useFeatureQuery() → Application service → Repository (Supabase) → Postgres (RLS) → DTO → Domain mapper → Component
 ```
 
 **Write path (mutation):**
+
 ```
 Component → useFeatureMutation() → Zod validation → Application use-case → Domain rules → Repository → Postgres → Domain event → (Realtime + Notification + Integration adapters)
 ```
@@ -151,13 +155,14 @@ Global Redux-style stores are explicitly avoided.
 
 Three communication channels, each with a clear purpose:
 
-| Channel | Used for |
-|---|---|
-| **Supabase JS Client (RLS-scoped)** | Standard CRUD as the signed-in user. |
-| **Edge Functions** | Privileged work, cross-table transactions, integrations, scheduled jobs, webhooks. |
-| **Next.js Route Handlers / Server Actions** | BFF for SSR data, webhook receivers, AI streaming endpoints. |
+| Channel                                     | Used for                                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Supabase JS Client (RLS-scoped)**         | Standard CRUD as the signed-in user.                                               |
+| **Edge Functions**                          | Privileged work, cross-table transactions, integrations, scheduled jobs, webhooks. |
+| **Next.js Route Handlers / Server Actions** | BFF for SSR data, webhook receivers, AI streaming endpoints.                       |
 
 Conventions:
+
 - All payloads validated with Zod on both client and server.
 - All responses follow `{ data, error, meta }` envelope.
 - Idempotency keys on attendance and report mutations to prevent duplicates on retry.
@@ -230,14 +235,14 @@ Domain Event ──► Notification Dispatcher ──► Channels
 
 ## 15. Cross-Cutting Concerns
 
-| Concern | Approach |
-|---|---|
-| Configuration | `shared/config` reads typed env at boot; missing vars fail fast. |
-| Feature flags | `feature_flags` table + `useFeatureFlag` hook; flags resolved server-side. |
-| i18n | Architecture supports it via `next-intl` even if launch is English-only. |
-| Time & timezone | All timestamps stored UTC; rendered in user timezone from profile. |
-| Accessibility | Enforced at the design-system level; every primitive is keyboard- and screen-reader-friendly. |
-| Observability | Sentry (errors), PostHog (product analytics), Supabase logs (DB), custom metrics endpoint. |
+| Concern         | Approach                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Configuration   | `shared/config` reads typed env at boot; missing vars fail fast.                              |
+| Feature flags   | `feature_flags` table + `useFeatureFlag` hook; flags resolved server-side.                    |
+| i18n            | Architecture supports it via `next-intl` even if launch is English-only.                      |
+| Time & timezone | All timestamps stored UTC; rendered in user timezone from profile.                            |
+| Accessibility   | Enforced at the design-system level; every primitive is keyboard- and screen-reader-friendly. |
+| Observability   | Sentry (errors), PostHog (product analytics), Supabase logs (DB), custom metrics endpoint.    |
 
 ---
 

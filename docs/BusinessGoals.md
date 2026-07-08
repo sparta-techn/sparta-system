@@ -26,38 +26,42 @@
 
 ## 4. Success Metrics (Headline)
 
-| Metric | Target |
-|---|---|
-| Daily check-in completion rate | ≥ 95% |
-| End-of-day report completion rate | ≥ 90% |
-| Average time to complete the full daily flow | < 2 minutes |
-| Attendance compliance | ≥ 95% on-time arrivals |
-| Average dependency resolution time | < 24 working hours |
-| Manager response time to blockers | < 2 working hours |
-| Employee engagement score with the tool | ≥ 8 / 10 |
-| System uptime | ≥ 99.9% |
+| Metric                                       | Target                 |
+| -------------------------------------------- | ---------------------- |
+| Daily check-in completion rate               | ≥ 95%                  |
+| End-of-day report completion rate            | ≥ 90%                  |
+| Average time to complete the full daily flow | < 2 minutes            |
+| Attendance compliance                        | ≥ 95% on-time arrivals |
+| Average dependency resolution time           | < 24 working hours     |
+| Manager response time to blockers            | < 2 working hours      |
+| Employee engagement score with the tool      | ≥ 8 / 10               |
+| System uptime                                | ≥ 99.9%                |
 
 ## 5. KPIs by Stakeholder
 
 **Owner**
+
 - Company-wide attendance compliance.
 - Department performance index.
 - Blocker rate per department per week.
 - Active vs. blocked employee ratio.
 
 **HR**
+
 - Attendance compliance rate.
 - Leave usage and balance accuracy.
 - Onboarding completion time.
 - Announcement read rate.
 
 **Project Manager / Team Lead**
+
 - Team daily report completion rate.
 - Average blocker age.
 - Dependency turnaround time.
 - Workload balance variance across team members.
 
 **Employee**
+
 - Personal daily-flow completion streak.
 - Average check-in time.
 - Number of unresolved personal blockers.

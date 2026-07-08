@@ -8,25 +8,25 @@ Implemented in `src/features/project-analytics/insights.ts` (`calcProjectHealth(
 
 `score = Σ (factor.value × factor.weight)`, rounded.
 
-| Factor                  | Value (0–100)                                     | Weight |
-| ----------------------- | ------------------------------------------------- | ------ |
-| Task completion         | `completionPct`                                   | 0.35   |
-| Blockers & overdue      | `100 − blocked·18 − overdue·10` (clamped ≥ 0)     | 0.30   |
-| Sprint progress         | active sprint pct, fallback 60/70                 | 0.20   |
-| Time tracking coverage  | `min(100, 40 + logs·2)` else 25                   | 0.15   |
+| Factor                 | Value (0–100)                                 | Weight |
+| ---------------------- | --------------------------------------------- | ------ |
+| Task completion        | `completionPct`                               | 0.35   |
+| Blockers & overdue     | `100 − blocked·18 − overdue·10` (clamped ≥ 0) | 0.30   |
+| Sprint progress        | active sprint pct, fallback 60/70             | 0.20   |
+| Time tracking coverage | `min(100, 40 + logs·2)` else 25               | 0.15   |
 
 ## Bands
 
-| Score   | Level     | Color    |
-| ------- | --------- | -------- |
-| 75–100  | Good      | Emerald  |
-| 50–74   | At Risk   | Amber    |
-| 0–49    | Critical  | Red      |
+| Score  | Level    | Color   |
+| ------ | -------- | ------- |
+| 75–100 | Good     | Emerald |
+| 50–74  | At Risk  | Amber   |
+| 0–49   | Critical | Red     |
 
 ## Display
 
 - Circular SVG gauge with the numeric score and band label.
-- Per-factor mini progress bars below the gauge — transparent about *why* the score is what it is.
+- Per-factor mini progress bars below the gauge — transparent about _why_ the score is what it is.
 
 ## Non-goals
 

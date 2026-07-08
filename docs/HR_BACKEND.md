@@ -65,13 +65,13 @@ repositories are **only** exported from `@/repositories/hr` (see §6).
 DB-shaped, snake_case (so `BaseService` filter/`orderBy` keys map straight to
 PostgREST columns):
 
-| Type | Notes |
-| --- | --- |
+| Type                                                   | Notes                                                                                          |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
 | `Department` / `DepartmentInsert` / `DepartmentUpdate` | `name`, `slug` required on insert; `description`, `lead_id` optional; `archived_at` on update. |
-| `Team` / `TeamInsert` / `TeamUpdate` | adds `department_id`. |
-| `Position` / `PositionInsert` / `PositionUpdate` | `title`, `slug`; `department_id`, `level`, `is_active`. |
-| `Employee` / `EmployeeInsert` / `EmployeeUpdate` | `user_id` required (1:1 with `profiles`); `manager_id` self-ref; `status` is `EmployeeStatus`. |
-| `EmployeeStatus` | re-exported from `@/features/auth/types` (`active`/`invited`/`suspended`/`offboarded`). |
+| `Team` / `TeamInsert` / `TeamUpdate`                   | adds `department_id`.                                                                          |
+| `Position` / `PositionInsert` / `PositionUpdate`       | `title`, `slug`; `department_id`, `level`, `is_active`.                                        |
+| `Employee` / `EmployeeInsert` / `EmployeeUpdate`       | `user_id` required (1:1 with `profiles`); `manager_id` self-ref; `status` is `EmployeeStatus`. |
+| `EmployeeStatus`                                       | re-exported from `@/features/auth/types` (`active`/`invited`/`suspended`/`offboarded`).        |
 
 Insert types omit server-managed columns (`id`, `created_at`, `updated_at`,
 `created_by`/`updated_by` — the DB defaults `created_by` to `auth.uid()`).
@@ -85,52 +85,52 @@ domain methods. Repositories expose the same surface plus the aggregates noted.
 
 ### Departments — `departmentRepository` → `DepartmentsService`
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Reads (inherited). |
-| `listActive()` | Non-archived (`archived_at IS NULL`). |
-| `getBySlug(slug)` | Lookup by unique slug. |
-| `listByLead(leadId)` | Departments a person heads. |
-| `create` / `update` / `remove` | Writes. |
-| `setLead(id, leadId\|null)` | Assign / clear department head. |
-| `archive(id)` / `restore(id)` | Soft-archive lifecycle. |
+| Method                                | Purpose                               |
+| ------------------------------------- | ------------------------------------- |
+| `list` / `getById` / `getByIdOrThrow` | Reads (inherited).                    |
+| `listActive()`                        | Non-archived (`archived_at IS NULL`). |
+| `getBySlug(slug)`                     | Lookup by unique slug.                |
+| `listByLead(leadId)`                  | Departments a person heads.           |
+| `create` / `update` / `remove`        | Writes.                               |
+| `setLead(id, leadId\|null)`           | Assign / clear department head.       |
+| `archive(id)` / `restore(id)`         | Soft-archive lifecycle.               |
 
 ### Teams — `teamRepository` → `TeamsService`
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Reads. |
-| `listActive()` | Non-archived. |
-| `listByDepartment(departmentId)` | Teams in a department. |
-| `getBySlug(slug)` | Lookup by slug. |
-| `create` / `update` / `remove` | Writes. |
-| `setLead` / `archive` / `restore` | Lead + soft-archive lifecycle. |
+| Method                                | Purpose                        |
+| ------------------------------------- | ------------------------------ |
+| `list` / `getById` / `getByIdOrThrow` | Reads.                         |
+| `listActive()`                        | Non-archived.                  |
+| `listByDepartment(departmentId)`      | Teams in a department.         |
+| `getBySlug(slug)`                     | Lookup by slug.                |
+| `create` / `update` / `remove`        | Writes.                        |
+| `setLead` / `archive` / `restore`     | Lead + soft-archive lifecycle. |
 
 ### Positions — `positionRepository` → `PositionsService`
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Reads. |
-| `listActive()` | `is_active = true`. |
-| `listByDepartment(departmentId)` | Positions in a department. |
-| `getBySlug(slug)` | Lookup by slug. |
-| `create` / `update` / `remove` | Writes. |
+| Method                                | Purpose                    |
+| ------------------------------------- | -------------------------- |
+| `list` / `getById` / `getByIdOrThrow` | Reads.                     |
+| `listActive()`                        | `is_active = true`.        |
+| `listByDepartment(departmentId)`      | Positions in a department. |
+| `getBySlug(slug)`                     | Lookup by slug.            |
+| `create` / `update` / `remove`        | Writes.                    |
 | `setActive(id, bool)` / `archive(id)` | Activation / soft-archive. |
 
 ### Employees — `employeeRepository` → `EmployeesService`
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Reads. |
-| `getByUserId(userId)` | Employment record for an auth user / profile id. |
-| `getByCode(code)` | Lookup by unique employee code. |
-| `listByDepartment` / `listByTeam` / `listByStatus` | Filtered lists. |
-| `getDirectReports(managerId)` | Reports for a manager. |
-| `getManager(id)` | **Aggregate** — resolves the manager record (2-hop). |
-| `create` / `update` / `remove` | Writes. |
-| `setStatus(id, status)` | Lifecycle status change. |
-| `assignManager(id, managerId\|null)` | Reporting line (cycle-guarded in DB). |
-| `setDepartment` / `setTeam` / `setPosition` | Re-org moves (or clear with `null`). |
+| Method                                             | Purpose                                              |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| `list` / `getById` / `getByIdOrThrow`              | Reads.                                               |
+| `getByUserId(userId)`                              | Employment record for an auth user / profile id.     |
+| `getByCode(code)`                                  | Lookup by unique employee code.                      |
+| `listByDepartment` / `listByTeam` / `listByStatus` | Filtered lists.                                      |
+| `getDirectReports(managerId)`                      | Reports for a manager.                               |
+| `getManager(id)`                                   | **Aggregate** — resolves the manager record (2-hop). |
+| `create` / `update` / `remove`                     | Writes.                                              |
+| `setStatus(id, status)`                            | Lifecycle status change.                             |
+| `assignManager(id, managerId\|null)`               | Reporting line (cycle-guarded in DB).                |
+| `setDepartment` / `setTeam` / `setPosition`        | Re-org moves (or clear with `null`).                 |
 
 ---
 
@@ -184,6 +184,7 @@ const repo = new DepartmentRepository(fakeDepartmentsService);
 
   They are **not** merged into one barrel to avoid a name clash; import the HR one
   from `@/repositories/hr`.
+
 - **Soft-archive over delete.** `archive`/`restore` set `archived_at`; `remove`
   is a hard delete, exposed but rarely the right call for org data.
 - **`null` filtering** (`listActive`) uses a custom `.is("archived_at", null)`
@@ -202,4 +203,4 @@ const repo = new DepartmentRepository(fakeDepartmentsService);
 - **Next (not done here):** `features/hr/{queries.ts}` query hooks, then swap each
   HR screen from mock data to these repositories.
 
-*No frontend files were modified. `npx tsc --noEmit` passes with 0 errors.*
+_No frontend files were modified. `npx tsc --noEmit` passes with 0 errors._

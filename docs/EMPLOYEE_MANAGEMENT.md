@@ -14,22 +14,22 @@
 
 ## 1. Capabilities
 
-| Action | Actor | Effect |
-| --- | --- | --- |
-| Create Employee | Owner / HR | New record added to the directory (distinct from Invite) |
-| Edit Employee | Owner / HR | Update name, email, title, department, team, role, work mode |
-| Change Department | Owner / HR | Move to another department |
-| Assign Manager | Owner / HR | Set / clear the reporting line |
-| Assign Team | Owner / HR | Move to another team |
-| Assign Role | Owner / HR | Change RBAC role (owner transfer excluded) |
-| Reset Password | Owner / HR | Sends a password-reset email (no record change) |
-| Deactivate | Owner / HR | Revoke access, keep the record — reversible |
-| Reactivate | Owner / HR | Restore a deactivated / suspended employee |
-| Suspend Account | Owner / HR | Temporary hold (e.g. security review) — reversible |
-| Soft Delete | Owner / HR | Remove from the directory; record retained + restorable |
+| Action            | Actor      | Effect                                                       |
+| ----------------- | ---------- | ------------------------------------------------------------ |
+| Create Employee   | Owner / HR | New record added to the directory (distinct from Invite)     |
+| Edit Employee     | Owner / HR | Update name, email, title, department, team, role, work mode |
+| Change Department | Owner / HR | Move to another department                                   |
+| Assign Manager    | Owner / HR | Set / clear the reporting line                               |
+| Assign Team       | Owner / HR | Move to another team                                         |
+| Assign Role       | Owner / HR | Change RBAC role (owner transfer excluded)                   |
+| Reset Password    | Owner / HR | Sends a password-reset email (no record change)              |
+| Deactivate        | Owner / HR | Revoke access, keep the record — reversible                  |
+| Reactivate        | Owner / HR | Restore a deactivated / suspended employee                   |
+| Suspend Account   | Owner / HR | Temporary hold (e.g. security review) — reversible           |
+| Soft Delete       | Owner / HR | Remove from the directory; record retained + restorable      |
 
-> **Create Employee vs Invite.** *Create* makes the record directly (status
-> `active`). *Invite* sends a setup email and tracks acceptance — see
+> **Create Employee vs Invite.** _Create_ makes the record directly (status
+> `active`). _Invite_ sends a setup email and tracks acceptance — see
 > [`INVITATIONS.md`](./INVITATIONS.md).
 
 ---
@@ -99,14 +99,14 @@ surfaced in the profile's **Activity** tab.
 
 ## 5. UI
 
-| Surface | File |
-| --- | --- |
-| Directory (filters, New employee, per-row actions) | `src/features/hr/components/employee-directory.tsx` |
-| Profile (header **Manage** menu, Activity timeline) | `src/features/hr/components/employee-profile.tsx` |
-| Shared actions menu + all lifecycle dialogs | `src/features/hr/components/employee-actions-menu.tsx` |
-| Create / Edit form dialog | `src/features/hr/components/employee-form-dialog.tsx` |
-| Assignable roles | `src/features/hr/components/employee-role-options.ts` |
-| Routes | `src/routes/_authenticated/app/hr.employees.index.tsx`, `hr.employees.$id.tsx` |
+| Surface                                             | File                                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Directory (filters, New employee, per-row actions)  | `src/features/hr/components/employee-directory.tsx`                            |
+| Profile (header **Manage** menu, Activity timeline) | `src/features/hr/components/employee-profile.tsx`                              |
+| Shared actions menu + all lifecycle dialogs         | `src/features/hr/components/employee-actions-menu.tsx`                         |
+| Create / Edit form dialog                           | `src/features/hr/components/employee-form-dialog.tsx`                          |
+| Assignable roles                                    | `src/features/hr/components/employee-role-options.ts`                          |
+| Routes                                              | `src/routes/_authenticated/app/hr.employees.index.tsx`, `hr.employees.$id.tsx` |
 
 `EmployeeActionsMenu` is the single source of truth for the eleven actions,
 reused by the directory (icon trigger, per row) and the profile (a **Manage**
@@ -124,18 +124,18 @@ The live layer already exists: `EmployeesService`
 (`src/repositories/hr/employee.repository.ts`) over `public.employees`
 (RLS-gated to `hr` / `admin` / `owner`). To promote the overlay:
 
-| Overlay verb | Live target |
-| --- | --- |
-| `createEmployee` | `employeeRepository.create(insert)` |
-| `editEmployee` | `employeeRepository.update(id, patch)` |
-| `changeDepartment` | `employeeRepository.setDepartment(id, departmentId)` |
-| `assignManager` | `employeeRepository.assignManager(id, managerId)` (DB cycle-guarded) |
-| `assignTeam` | `employeeRepository.setTeam(id, teamId)` |
-| `assignRole` | a `user_roles` write (add a `RolesService`) |
-| `deactivate` / `suspend` | `employeeRepository.setStatus(id, 'suspended')` |
-| `reactivate` | `employeeRepository.setStatus(id, 'active')` |
-| `resetPassword` | `supabase.auth.resetPasswordForEmail(email)` |
-| `softDeleteEmployee` | add a `deleted_at` column + `setStatus`/soft-delete verb |
+| Overlay verb             | Live target                                                          |
+| ------------------------ | -------------------------------------------------------------------- |
+| `createEmployee`         | `employeeRepository.create(insert)`                                  |
+| `editEmployee`           | `employeeRepository.update(id, patch)`                               |
+| `changeDepartment`       | `employeeRepository.setDepartment(id, departmentId)`                 |
+| `assignManager`          | `employeeRepository.assignManager(id, managerId)` (DB cycle-guarded) |
+| `assignTeam`             | `employeeRepository.setTeam(id, teamId)`                             |
+| `assignRole`             | a `user_roles` write (add a `RolesService`)                          |
+| `deactivate` / `suspend` | `employeeRepository.setStatus(id, 'suspended')`                      |
+| `reactivate`             | `employeeRepository.setStatus(id, 'active')`                         |
+| `resetPassword`          | `supabase.auth.resetPasswordForEmail(email)`                         |
+| `softDeleteEmployee`     | add a `deleted_at` column + `setStatus`/soft-delete verb             |
 
 Then have each component mutation call the repository and
 `queryClient.invalidateQueries(hrKeys.employees())` instead of the overlay; the
@@ -151,4 +151,7 @@ component tree is unchanged. Notes:
   the overlay's audit trail is the interim stand-in.
 - **RBAC.** Gate the directory/profile management actions behind the existing
   role guards (Owner / HR).
+
+```
+
 ```

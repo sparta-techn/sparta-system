@@ -15,14 +15,14 @@ external integration is wired yet, and activating one later is a one-liner.
 
 ## 1. Design goals
 
-| Goal | How |
-| --- | --- |
-| **Reusable** | Six category services with fixed conventions — features never re-derive levels/shape. |
-| **Isomorphic** | No React/Supabase/vendor imports in the core; safe in browser, SSR, and edge/worker runtimes. |
-| **Structured** | Every log is a typed `LogRecord` (JSON in prod) — parseable by any shipper without an SDK. |
-| **Safe** | Sensitive fields are redacted at emit time; a broken sink can never throw into the app. |
-| **Swappable sinks** | Adapters are injected via `configureLogging`; vendors are prepared, not hard-wired. |
-| **Correlatable** | A `correlationId` threads every stream (and DB audit rows — `AuditSystem.md` §7). |
+| Goal                | How                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| **Reusable**        | Six category services with fixed conventions — features never re-derive levels/shape.         |
+| **Isomorphic**      | No React/Supabase/vendor imports in the core; safe in browser, SSR, and edge/worker runtimes. |
+| **Structured**      | Every log is a typed `LogRecord` (JSON in prod) — parseable by any shipper without an SDK.    |
+| **Safe**            | Sensitive fields are redacted at emit time; a broken sink can never throw into the app.       |
+| **Swappable sinks** | Adapters are injected via `configureLogging`; vendors are prepared, not hard-wired.           |
+| **Correlatable**    | A `correlationId` threads every stream (and DB audit rows — `AuditSystem.md` §7).             |
 
 ---
 
@@ -48,14 +48,14 @@ src/lib/logging/
 
 ## 3. The six log streams
 
-| Stream | Service | Level(s) | Use for |
-| --- | --- | --- | --- |
-| **Application** | `appLog` | trace–error | Diagnostics, state transitions, feature flow. |
-| **Error** | `errorLog` | error / fatal | Captured exceptions (serialized + redacted). |
-| **Audit** | `auditLog` | info | Immutable trail of sensitive actions (role grants, overrides…). |
-| **Authentication** | `authLog` | info / warn | Sign-in/out, failures, session expiry (emails masked). |
-| **Activity** | `activityLog` | info | User-visible activity stream (bridges to `activity_feed`). |
-| **Performance** | `perfLog` | info | Timings, spans, web vitals. |
+| Stream             | Service       | Level(s)      | Use for                                                         |
+| ------------------ | ------------- | ------------- | --------------------------------------------------------------- |
+| **Application**    | `appLog`      | trace–error   | Diagnostics, state transitions, feature flow.                   |
+| **Error**          | `errorLog`    | error / fatal | Captured exceptions (serialized + redacted).                    |
+| **Audit**          | `auditLog`    | info          | Immutable trail of sensitive actions (role grants, overrides…). |
+| **Authentication** | `authLog`     | info / warn   | Sign-in/out, failures, session expiry (emails masked).          |
+| **Activity**       | `activityLog` | info          | User-visible activity stream (bridges to `activity_feed`).      |
+| **Performance**    | `perfLog`     | info          | Timings, spans, web vitals.                                     |
 
 All six share one engine, so level filtering, redaction, context, and sink
 routing behave identically across streams.
@@ -143,13 +143,13 @@ call sites don't have to remember to sanitize. Add project-specific keys with
 An adapter is any `{ name, minLevel?, handle(record), flush?, close? }`. The
 logger isolates `handle` failures, so a sink can never break the app.
 
-| Adapter | Status | Notes |
-| --- | --- | --- |
-| `ConsoleAdapter` | **Live** | Pretty text in dev; **NDJSON** in prod (`structured: true`) — a legitimate prod transport that any shipper can tail/parse. |
-| `NoopAdapter` | Live | Drops everything. |
-| `SentryAdapter` | Prepared / inert | Forwards to an injected `SentryClient`; **no `@sentry/*` dep, no DSN**. Inert with no client. |
-| `LogtailAdapter` | Prepared / inert | Batches `LogtailPayload`s; flushes via an injected `transport`. Buffers (bounded) with none. |
-| `OtelAdapter` | Prepared / inert | Maps to the OTel Logs Data Model; forwards to an injected `emit` bridge. Inert with none. |
+| Adapter          | Status           | Notes                                                                                                                      |
+| ---------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `ConsoleAdapter` | **Live**         | Pretty text in dev; **NDJSON** in prod (`structured: true`) — a legitimate prod transport that any shipper can tail/parse. |
+| `NoopAdapter`    | Live             | Drops everything.                                                                                                          |
+| `SentryAdapter`  | Prepared / inert | Forwards to an injected `SentryClient`; **no `@sentry/*` dep, no DSN**. Inert with no client.                              |
+| `LogtailAdapter` | Prepared / inert | Batches `LogtailPayload`s; flushes via an injected `transport`. Buffers (bounded) with none.                               |
+| `OtelAdapter`    | Prepared / inert | Maps to the OTel Logs Data Model; forwards to an injected `emit` bridge. Inert with none.                                  |
 
 Each prepared adapter ships a **pure mapping function** (`toSentryEvent`,
 `toLogtailPayload`, `toOtelLogRecord`) that is unit-tested today, so wiring the
@@ -185,7 +185,7 @@ Call `configureLogging` once per runtime at bootstrap; it's idempotent.
 
 `@/lib/errors` `reportError()` — the funnel for global query/mutation `onError`
 handlers and React error boundaries (see `ERROR_HANDLING.md`) — now fans out to
-**`errorLog.capture()`** (structured logging) *and* the Lovable in-editor
+**`errorLog.capture()`** (structured logging) _and_ the Lovable in-editor
 transport. So every reported error already flows through this pipeline: today it
 lands in the console as structured JSON; once a sink is wired it lands in
 Sentry/Logtail/OTel too — no call-site changes.

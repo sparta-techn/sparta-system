@@ -156,7 +156,11 @@ export class MockTelemetryService {
     this.set(id, {
       ...current,
       status: { ...current.status, state: "disconnected", connected: false, accountCount: 0 },
-      logs: prepend(current.logs, { at: nowIso(), level: "info", message: "Account disconnected." }),
+      logs: prepend(current.logs, {
+        at: nowIso(),
+        level: "info",
+        message: "Account disconnected.",
+      }),
     });
   }
 
@@ -225,16 +229,31 @@ export class MockTelemetryService {
     const accountCount = 1 + Math.floor(rng() * 3);
     const checkedAt = new Date(now - Math.floor(rng() * 5 * 60_000)).toISOString();
 
-    const errorCount = healthState === "down" ? 1 + Math.floor(rng() * 2) : healthState === "degraded" ? (rng() < 0.5 ? 1 : 0) : 0;
+    const errorCount =
+      healthState === "down"
+        ? 1 + Math.floor(rng() * 2)
+        : healthState === "degraded"
+          ? rng() < 0.5
+            ? 1
+            : 0
+          : 0;
     const errors: TelemetryError[] = Array.from({ length: errorCount }, (_, i) => {
       const pick = ERROR_POOL[Math.floor(rng() * ERROR_POOL.length)];
-      return { at: new Date(now - Math.floor(rng() * 2 * HOUR)).toISOString(), code: pick.code, message: pick.message };
+      return {
+        at: new Date(now - Math.floor(rng() * 2 * HOUR)).toISOString(),
+        code: pick.code,
+        message: pick.message,
+      };
     });
 
     const logCount = 5 + Math.floor(rng() * 6);
     const logs: LogEntry[] = Array.from({ length: logCount }, (_, i) => {
       const pick = LOG_POOL[Math.floor(rng() * LOG_POOL.length)];
-      return { at: new Date(now - i * (5 + Math.floor(rng() * 40)) * 60_000).toISOString(), level: pick.level, message: pick.message };
+      return {
+        at: new Date(now - i * (5 + Math.floor(rng() * 40)) * 60_000).toISOString(),
+        level: pick.level,
+        message: pick.message,
+      };
     });
 
     const lastSyncAt = new Date(now - Math.floor(rng() * 6 * HOUR)).toISOString();

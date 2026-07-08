@@ -16,7 +16,12 @@ export type Department =
   | "Finance";
 
 export type EmploymentStatus =
-  "active" | "on_leave" | "invited" | "suspended" | "deactivated" | "offboarding";
+  | "active"
+  | "on_leave"
+  | "invited"
+  | "suspended"
+  | "deactivated"
+  | "offboarding";
 
 export type EmployeeRole = "owner" | "super_admin" | "hr" | "manager" | "team_lead" | "employee";
 
@@ -66,7 +71,12 @@ export interface HrInvitation {
 }
 
 export type LeaveType =
-  "annual" | "sick" | "emergency" | "unpaid" | "remote_exception" | "parental";
+  | "annual"
+  | "sick"
+  | "emergency"
+  | "unpaid"
+  | "remote_exception"
+  | "parental";
 
 export interface HrLeaveRequest {
   id: string;
@@ -659,7 +669,9 @@ export const onboardingTasks: HrOnboardingTask[] = (() => {
       label: l.label,
       owner: l.owner,
       status: (j < 3 - (i % 4) ? "done" : j === 3 - (i % 4) ? "in_progress" : "todo") as
-        "todo" | "in_progress" | "done",
+        | "todo"
+        | "in_progress"
+        | "done",
       dueAt: daysFromNow(j),
     })),
   );

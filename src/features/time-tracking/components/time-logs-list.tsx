@@ -50,10 +50,7 @@ export function TimeLogsList({
         return (
           <li
             key={log.id}
-            className={cn(
-              "flex items-start gap-3 p-3 text-sm",
-              active && "bg-primary/5",
-            )}
+            className={cn("flex items-start gap-3 p-3 text-sm", active && "bg-primary/5")}
           >
             <div
               className={cn(

@@ -26,26 +26,26 @@ Routes:
 
 ## Form sections
 
-| # | Section | Component | Required |
-| - | - | - | - |
-| 1 | Overall progress (0–100, 10% steps) | `ProgressStep` (Slider + 10% chips + visual bar) | ✓ |
-| 2 | Completed since morning | `CompletedStep` (pulls morning tasks → completed / partial / not started + note) | — |
-| 3 | Current focus | `Input` (≤140 chars) | ✓ |
-| 4 | Current blockers | `BlockersStep` (link to open dependencies, mark resolved, new-blocker note + "Create dependency" hand-off) | — |
-| 5 | Need assistance | `HelpStep` (toggle → Department / Person / Description / Priority) | — |
-| 6 | End-of-day outlook | `OutlookStep` (radiogroup: On track / Need more time / Blocked / Need manager help) | ✓ |
-| 7 | Review | `MiddaySummary` | — |
+| #   | Section                             | Component                                                                                                  | Required |
+| --- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------- |
+| 1   | Overall progress (0–100, 10% steps) | `ProgressStep` (Slider + 10% chips + visual bar)                                                           | ✓        |
+| 2   | Completed since morning             | `CompletedStep` (pulls morning tasks → completed / partial / not started + note)                           | —        |
+| 3   | Current focus                       | `Input` (≤140 chars)                                                                                       | ✓        |
+| 4   | Current blockers                    | `BlockersStep` (link to open dependencies, mark resolved, new-blocker note + "Create dependency" hand-off) | —        |
+| 5   | Need assistance                     | `HelpStep` (toggle → Department / Person / Description / Priority)                                         | —        |
+| 6   | End-of-day outlook                  | `OutlookStep` (radiogroup: On track / Need more time / Blocked / Need manager help)                        | ✓        |
+| 7   | Review                              | `MiddaySummary`                                                                                            | —        |
 
 ## Store facade (`store.ts`)
 
 The single integration seam. UI never touches `localStorage` directly.
 
 ```ts
-getMiddayDraft() / setMiddayDraft(d) / clearMiddayDraft()
-getMiddaySubmission() / submitMidday(d) / updateMiddaySubmission(patch)
-canEditMidday(s)             // 30-minute window
-useTodayMidday()              // reactive widget hook
-shouldRemind()                // reminder logic (default 14:00, stops at 18:00)
+getMiddayDraft() / setMiddayDraft(d) / clearMiddayDraft();
+getMiddaySubmission() / submitMidday(d) / updateMiddaySubmission(patch);
+canEditMidday(s); // 30-minute window
+useTodayMidday(); // reactive widget hook
+shouldRemind(); // reminder logic (default 14:00, stops at 18:00)
 ```
 
 When wired to the backend this file becomes a thin wrapper around three Supabase RPCs (`submit_midday_status`, `update_midday_status`, `get_today_midday`) plus a TanStack Query subscription. The component API does not change.

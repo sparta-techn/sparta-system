@@ -17,12 +17,10 @@ export function ProjectTimeSummary({ projectId }: Props) {
   const projectTaskIds = useTasksState((s) =>
     s.tasks.filter((t) => t.projectId === projectId).map((t) => t.id),
   );
-  const taskMap = useTasksState((s) =>
-    new Map(s.tasks.filter((t) => t.projectId === projectId).map((t) => [t.id, t])),
+  const taskMap = useTasksState(
+    (s) => new Map(s.tasks.filter((t) => t.projectId === projectId).map((t) => [t.id, t])),
   );
-  const logs = useTimeState((s) =>
-    s.logs.filter((l) => projectTaskIds.includes(l.taskId)),
-  );
+  const logs = useTimeState((s) => s.logs.filter((l) => projectTaskIds.includes(l.taskId)));
   const now = useNow(logs.some((l) => l.endTime === null) ? 1000 : 60_000);
 
   const total = sumMinutes(logs, now);
@@ -52,11 +50,7 @@ export function ProjectTimeSummary({ projectId }: Props) {
           hint={formatMinutes(total)}
           icon={Clock}
         />
-        <StatCard
-          label="Contributors"
-          value={contributors}
-          hint={`${logs.length} entries`}
-        />
+        <StatCard label="Contributors" value={contributors} hint={`${logs.length} entries`} />
         <StatCard
           label="Active timers"
           value={activeNow}
@@ -85,9 +79,7 @@ export function ProjectTimeSummary({ projectId }: Props) {
                       </span>
                       {task?.title ?? "Unknown task"}
                     </Link>
-                    <span className="font-mono text-xs tabular-nums">
-                      {formatHours(r.minutes)}
-                    </span>
+                    <span className="font-mono text-xs tabular-nums">{formatHours(r.minutes)}</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                     <div

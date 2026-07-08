@@ -7,13 +7,7 @@ import {
   Activity,
   type LucideIcon,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { mockNotifications, type MockNotification } from "../mock-data";
 import { cn } from "@/lib/utils";
@@ -65,22 +59,15 @@ export function NotificationsWidget() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {n.title}
-                  </p>
+                  <p className="truncate text-sm font-medium text-foreground">{n.title}</p>
                   <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
                     {n.time}
                   </span>
                 </div>
-                <p className="truncate text-xs text-muted-foreground">
-                  {n.description}
-                </p>
+                <p className="truncate text-xs text-muted-foreground">{n.description}</p>
               </div>
               {n.unread ? (
-                <span
-                  className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
-                  aria-hidden
-                />
+                <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-hidden />
               ) : null}
             </div>
           );

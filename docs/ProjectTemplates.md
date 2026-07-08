@@ -4,31 +4,31 @@ A **Project Template** seeds a new project with sensible defaults so creation ta
 
 ## What a template carries
 
-| Field | Notes |
-| --- | --- |
-| Name, icon, color, description | Identity. |
-| Default statuses | Status columns the future Tasks board will render. |
-| Default milestones | Suggested checkpoints; appear on project Overview from day one. |
-| Default project roles | Role buckets to invite into (lead, contributor, reviewer, stakeholder). |
-| Recommended duration | Used to pre-fill the project end date. |
-| Usage count | Informational signal — which templates the company actually relies on. |
+| Field                          | Notes                                                                   |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| Name, icon, color, description | Identity.                                                               |
+| Default statuses               | Status columns the future Tasks board will render.                      |
+| Default milestones             | Suggested checkpoints; appear on project Overview from day one.         |
+| Default project roles          | Role buckets to invite into (lead, contributor, reviewer, stakeholder). |
+| Recommended duration           | Used to pre-fill the project end date.                                  |
+| Usage count                    | Informational signal — which templates the company actually relies on.  |
 
 ## Built-in templates
 
-| Template | Statuses | Milestones |
-| --- | --- | --- |
-| Flutter App | Backlog → In Design → In Dev → QA → Released | MVP · Beta · Public Launch |
-| Backend API | Spec → Building → Review → Deployed | Schema frozen · Internal alpha · GA |
-| Website | Wireframe → Design → Build → QA → Live | Design freeze · Soft launch · Public launch |
-| Admin Dashboard | Backlog → In Progress → Review → Done | Auth + shell · Core modules · Reports · Handover |
-| Internal Tool | Todo → Doing → Done | v1 |
+| Template        | Statuses                                     | Milestones                                       |
+| --------------- | -------------------------------------------- | ------------------------------------------------ |
+| Flutter App     | Backlog → In Design → In Dev → QA → Released | MVP · Beta · Public Launch                       |
+| Backend API     | Spec → Building → Review → Deployed          | Schema frozen · Internal alpha · GA              |
+| Website         | Wireframe → Design → Build → QA → Live       | Design freeze · Soft launch · Public launch      |
+| Admin Dashboard | Backlog → In Progress → Review → Done        | Auth + shell · Core modules · Reports · Handover |
+| Internal Tool   | Todo → Doing → Done                          | v1                                               |
 
 These match the most common project shapes for a software company and double as examples for teams creating new templates.
 
 ## Surfaces
 
-| Route | Purpose |
-| --- | --- |
+| Route                     | Purpose                                        |
+| ------------------------- | ---------------------------------------------- |
 | `/app/projects/templates` | Browse, create, and "Use template" entry point |
 
 Clicking **Use template** opens the project creation dialog with the template pre-selected; defaults are applied automatically.

@@ -37,14 +37,14 @@ images are created via `URL.createObjectURL` and revoked on delete.
 
 ## File Kinds & Icons
 
-| Kind | Extensions / MIME | Icon |
-|---|---|---|
-| image | png, jpg, jpeg, gif, webp, svg, `image/*` | `FileImage` |
-| pdf | pdf, `application/pdf` | `FileType` |
-| doc | doc, docx, txt, md, rtf, odt | `FileText` |
-| zip | zip, rar, 7z, tar, gz | `Archive` |
-| code | ts, tsx, js, jsx, json, py, go, rs, rb, java, css, html, sql, sh, yml, yaml | `FileCode2` |
-| other | anything else | `Paperclip` |
+| Kind  | Extensions / MIME                                                           | Icon        |
+| ----- | --------------------------------------------------------------------------- | ----------- |
+| image | png, jpg, jpeg, gif, webp, svg, `image/*`                                   | `FileImage` |
+| pdf   | pdf, `application/pdf`                                                      | `FileType`  |
+| doc   | doc, docx, txt, md, rtf, odt                                                | `FileText`  |
+| zip   | zip, rar, 7z, tar, gz                                                       | `Archive`   |
+| code  | ts, tsx, js, jsx, json, py, go, rs, rb, java, css, html, sql, sh, yml, yaml | `FileCode2` |
+| other | anything else                                                               | `Paperclip` |
 
 Each kind has a semantic tint class (emerald/red/blue/amber/violet/muted)
 applied to the thumbnail container only — no hardcoded colors leak into

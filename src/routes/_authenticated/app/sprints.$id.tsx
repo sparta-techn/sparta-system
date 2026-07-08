@@ -17,11 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  deleteSprint,
-  setSprintStatus,
-  useSprintsState,
-} from "@/features/sprints/store";
+import { deleteSprint, setSprintStatus, useSprintsState } from "@/features/sprints/store";
 import { SprintOverview } from "@/features/sprints/components/sprint-overview";
 import { SprintTasks } from "@/features/sprints/components/sprint-tasks";
 import { SprintProgress } from "@/features/sprints/components/sprint-progress";
@@ -100,7 +96,8 @@ function SprintDetail() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete this sprint?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Tasks in this sprint will be detached and returned to the project backlog. Tasks themselves are not deleted.
+                    Tasks in this sprint will be detached and returned to the project backlog. Tasks
+                    themselves are not deleted.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

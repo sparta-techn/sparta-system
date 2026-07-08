@@ -8,6 +8,7 @@
 >
 > **For the real, as-built folder structure, see
 > [`ARCHITECTURE.md` §1](./ARCHITECTURE.md).** In particular:
+>
 > - Routes: `src/routes/` (TanStack Start file routes), **not** `src/app/`.
 > - Data layers: top-level `src/repositories/` → `src/services/` → Supabase,
 >   **not** per-feature `domain/application/infrastructure`.
@@ -15,7 +16,7 @@
 > - No `src/shared/`, `src/domain/`, or `src/server/` folders exist.
 >
 > The DDD ideas below (feature slices, ports & adapters, import boundaries) remain
-> useful as *aspirational guidance*; the concrete paths are inaccurate. Retained
+> useful as _aspirational guidance_; the concrete paths are inaccurate. Retained
 > for reference and possible future migration. See `DOCUMENTATION_STATUS.md`.
 
 ---
@@ -147,18 +148,18 @@ Other feature folders follow the same pattern: `dashboard`, `workflow-morning`, 
 
 ## `src/shared/` — Horizontal Reuse
 
-| Folder | Responsibility |
-|---|---|
+| Folder        | Responsibility                                                                                                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `components/` | Design-system primitives and composite UI used in ≥ 2 features (Button, Card, DataTable, EmptyState, ErrorState, LoadingSkeleton, Modal, Drawer, Tabs, CommandPalette, Sidebar, Topbar, Breadcrumb, Charts, Timeline…). |
-| `hooks/` | Framework-level hooks (`usePagination`, `useDebounce`, `useRealtimeChannel`, `useMediaQuery`, `useClipboard`). |
-| `services/` | Cross-cutting services (logger, analytics, feature flags, toast service). |
-| `providers/` | React context providers (Auth, QueryClient, Theme, Realtime, Toast, FeatureFlags). |
-| `types/` | Global types, branded IDs (`UserId`, `TeamId`), enums (`Role`, `WorkflowStep`). |
-| `utils/` | Pure helpers: `date`, `format`, `string`, `array`, `guards`, `result`. |
-| `config/` | Typed env loader, app constants, route map, RBAC matrix, feature flag defaults. |
-| `lib/` | Third-party SDK wrappers (`supabase/client.ts`, `supabase/server.ts`, `sentry.ts`, `posthog.ts`). |
-| `styles/` | Tailwind config extensions, global CSS, design tokens. |
-| `assets/` | Logos, icons, illustrations, fonts. |
+| `hooks/`      | Framework-level hooks (`usePagination`, `useDebounce`, `useRealtimeChannel`, `useMediaQuery`, `useClipboard`).                                                                                                          |
+| `services/`   | Cross-cutting services (logger, analytics, feature flags, toast service).                                                                                                                                               |
+| `providers/`  | React context providers (Auth, QueryClient, Theme, Realtime, Toast, FeatureFlags).                                                                                                                                      |
+| `types/`      | Global types, branded IDs (`UserId`, `TeamId`), enums (`Role`, `WorkflowStep`).                                                                                                                                         |
+| `utils/`      | Pure helpers: `date`, `format`, `string`, `array`, `guards`, `result`.                                                                                                                                                  |
+| `config/`     | Typed env loader, app constants, route map, RBAC matrix, feature flag defaults.                                                                                                                                         |
+| `lib/`        | Third-party SDK wrappers (`supabase/client.ts`, `supabase/server.ts`, `sentry.ts`, `posthog.ts`).                                                                                                                       |
+| `styles/`     | Tailwind config extensions, global CSS, design tokens.                                                                                                                                                                  |
+| `assets/`     | Logos, icons, illustrations, fonts.                                                                                                                                                                                     |
 
 ---
 

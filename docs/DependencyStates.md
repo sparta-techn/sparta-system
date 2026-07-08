@@ -2,26 +2,26 @@
 
 Canonical state vocabulary. Tone tokens are design-system semantic colors.
 
-| State | Tone | When it applies | Open? |
-|---|---|---|---|
-| `draft` | neutral | Saved by requester but not submitted | No (private) |
-| `pending` | warning | Submitted, awaiting owner action | Yes |
-| `accepted` | info | Owner acknowledged, not started yet | Yes |
-| `in_progress` | primary | Owner actively working | Yes |
-| `blocked` | danger | Owner is themselves blocked | Yes |
-| `resolved` | success | Owner marked done, awaiting requester confirmation | Yes (until closed) |
-| `rejected` | danger | Owner declined (with reason in comment) | No (terminal) |
-| `cancelled` | neutral | Requester withdrew the ask | No (terminal) |
-| `closed` | neutral | Requester confirmed resolution | No (terminal) |
+| State         | Tone    | When it applies                                    | Open?              |
+| ------------- | ------- | -------------------------------------------------- | ------------------ |
+| `draft`       | neutral | Saved by requester but not submitted               | No (private)       |
+| `pending`     | warning | Submitted, awaiting owner action                   | Yes                |
+| `accepted`    | info    | Owner acknowledged, not started yet                | Yes                |
+| `in_progress` | primary | Owner actively working                             | Yes                |
+| `blocked`     | danger  | Owner is themselves blocked                        | Yes                |
+| `resolved`    | success | Owner marked done, awaiting requester confirmation | Yes (until closed) |
+| `rejected`    | danger  | Owner declined (with reason in comment)            | No (terminal)      |
+| `cancelled`   | neutral | Requester withdrew the ask                         | No (terminal)      |
+| `closed`      | neutral | Requester confirmed resolution                     | No (terminal)      |
 
 ## Priority
 
-| Priority | Tone | Guidance |
-|---|---|---|
-| `low` | neutral | Nice-to-have, no deadline pressure |
-| `medium` | info | Standard ask, within a few days |
-| `high` | warning | Blocking work, needed this sprint |
-| `critical` | danger | Production / launch blocker, same day |
+| Priority   | Tone    | Guidance                              |
+| ---------- | ------- | ------------------------------------- |
+| `low`      | neutral | Nice-to-have, no deadline pressure    |
+| `medium`   | info    | Standard ask, within a few days       |
+| `high`     | warning | Blocking work, needed this sprint     |
+| `critical` | danger  | Production / launch blocker, same day |
 
 ## Types
 

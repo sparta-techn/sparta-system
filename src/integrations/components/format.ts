@@ -36,7 +36,9 @@ export function healthDotClass(state: HealthState): string {
 }
 
 /** Badge variant per log level, reusing the shared Badge variants. */
-export function logLevelVariant(level: LogLevel): "default" | "secondary" | "destructive" | "outline" {
+export function logLevelVariant(
+  level: LogLevel,
+): "default" | "secondary" | "destructive" | "outline" {
   switch (level) {
     case "error":
       return "destructive";

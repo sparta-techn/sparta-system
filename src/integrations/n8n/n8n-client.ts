@@ -21,10 +21,7 @@ import type { N8nClientConfig, N8nExecution, N8nExecutionStatus } from "./types"
 export class N8nClient implements AutomationTransport {
   constructor(private readonly config: N8nClientConfig = {}) {}
 
-  async triggerWorkflow(
-    accountId: string,
-    request: WorkflowTriggerRequest,
-  ): Promise<WorkflowRun> {
+  async triggerWorkflow(accountId: string, request: WorkflowTriggerRequest): Promise<WorkflowRun> {
     const execution = await this.runWorkflowRaw(accountId, request);
     return toWorkflowRun(execution);
   }
@@ -34,11 +31,10 @@ export class N8nClient implements AutomationTransport {
     return toWorkflowRun(execution);
   }
 
-  async postWebhook(
-    accountId: string,
-    message: OutgoingWebhookMessage,
-  ): Promise<{ id: string }> {
-    return notImplemented(`N8nClient.postWebhook (account ${accountId}, event ${message.eventType})`);
+  async postWebhook(accountId: string, message: OutgoingWebhookMessage): Promise<{ id: string }> {
+    return notImplemented(
+      `N8nClient.postWebhook (account ${accountId}, event ${message.eventType})`,
+    );
   }
 
   async verifySignature(accountId: string, delivery: RawWebhookDelivery): Promise<boolean> {
@@ -51,7 +47,9 @@ export class N8nClient implements AutomationTransport {
     accountId: string,
     request: WorkflowTriggerRequest,
   ): Promise<N8nExecution> {
-    return notImplemented(`N8nClient.runWorkflow (account ${accountId}, workflow ${request.workflowId})`);
+    return notImplemented(
+      `N8nClient.runWorkflow (account ${accountId}, workflow ${request.workflowId})`,
+    );
   }
 
   private async getExecutionRaw(accountId: string, runId: string): Promise<N8nExecution> {

@@ -2,7 +2,14 @@ import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { BarChart, LineChart, TrendCard } from "../charts";
 import { ChartCard } from "./chart-card";
 import { InsightGrid } from "./insight-card";
@@ -31,13 +38,17 @@ export function ExecutiveDashboard() {
         <TrendCard label="Open operational risks" value={k.openRisks} positiveIsDown />
       </section>
 
-      <section><InsightGrid insights={insightsByScope.executive} /></section>
+      <section>
+        <InsightGrid insights={insightsByScope.executive} />
+      </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Department health</CardTitle>
-            <CardDescription>Composite score across attendance, reporting, and flow.</CardDescription>
+            <CardDescription>
+              Composite score across attendance, reporting, and flow.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {executiveAnalytics.departmentHealth.map((d) => (
@@ -78,14 +89,27 @@ export function ExecutiveDashboard() {
         <ChartCard title="Dependency trend" description="Company-wide opened vs resolved">
           <BarChart
             data={executiveAnalytics.dependencyTrend}
-            series={[{ label: "opened", values: [] }, { label: "resolved", values: [] }]}
+            series={[
+              { label: "opened", values: [] },
+              { label: "resolved", values: [] },
+            ]}
             colorClasses={["fill-warning", "fill-success"]}
           />
         </ChartCard>
         <ChartCard title="Report & attendance compliance" description="Weekly">
-          <LineChart data={executiveAnalytics.reportTrend} colorClass="stroke-primary" formatValue={(n) => `${n}%`} ariaLabel="Report compliance" />
+          <LineChart
+            data={executiveAnalytics.reportTrend}
+            colorClass="stroke-primary"
+            formatValue={(n) => `${n}%`}
+            ariaLabel="Report compliance"
+          />
           <div className="mt-4">
-            <LineChart data={executiveAnalytics.attendanceTrend} colorClass="stroke-success" formatValue={(n) => `${n}%`} ariaLabel="Attendance compliance" />
+            <LineChart
+              data={executiveAnalytics.attendanceTrend}
+              colorClass="stroke-success"
+              formatValue={(n) => `${n}%`}
+              ariaLabel="Attendance compliance"
+            />
           </div>
         </ChartCard>
       </section>

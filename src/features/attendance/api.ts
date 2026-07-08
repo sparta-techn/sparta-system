@@ -1,10 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type {
-  CompanySettings,
-  TodaySession,
-  WorkSessionBreakRow,
-  WorkSessionRow,
-} from "./types";
+import type { CompanySettings, TodaySession, WorkSessionBreakRow, WorkSessionRow } from "./types";
 
 /** Detect a friendly browser label from UA string. */
 function detectBrowser(): string {
@@ -145,9 +140,7 @@ export async function getTeamToday(): Promise<TeammateToday[]> {
   const workDate = await getCurrentWorkDate();
   const { data, error } = await supabase
     .from("work_sessions")
-    .select(
-      "*, profile:profiles!inner(id, full_name, display_name, avatar_url, job_title)",
-    )
+    .select("*, profile:profiles!inner(id, full_name, display_name, avatar_url, job_title)")
     .eq("work_date", workDate)
     .order("started_at", { ascending: true });
   if (error) throw error;

@@ -22,13 +22,13 @@ Read-only visualization layer over existing Tasks, Sprints, Time Logs, Comments,
 
 ## Data sources (read-only)
 
-| Source                                  | Used for                                  |
-| --------------------------------------- | ----------------------------------------- |
-| `features/tasks/store`                  | All task stats, flow, status, activity    |
-| `features/sprints/store`                | Sprint progress, velocity, burndown       |
-| `features/time-tracking/store`          | Hours, per-user time, top tasks           |
-| `features/task-communication/store`     | Comments + files in timeline              |
-| `features/hr/mock-data`                 | Member names for filters & charts         |
+| Source                              | Used for                               |
+| ----------------------------------- | -------------------------------------- |
+| `features/tasks/store`              | All task stats, flow, status, activity |
+| `features/sprints/store`            | Sprint progress, velocity, burndown    |
+| `features/time-tracking/store`      | Hours, per-user time, top tasks        |
+| `features/task-communication/store` | Comments + files in timeline           |
+| `features/hr/mock-data`             | Member names for filters & charts      |
 
 All selectors live in `utils.ts`. The dashboard never mutates any store.
 

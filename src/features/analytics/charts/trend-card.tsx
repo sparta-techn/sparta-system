@@ -24,11 +24,7 @@ export function TrendCard({ label, value, positiveIsDown, hint, className }: Tre
   const dir: "up" | "down" | "flat" = Math.abs(delta) < 0.01 ? "flat" : delta > 0 ? "up" : "down";
   const isPositive = dir === "flat" ? false : positiveIsDown ? dir === "down" : dir === "up";
   const intentClass =
-    dir === "flat"
-      ? "text-muted-foreground"
-      : isPositive
-        ? "text-success"
-        : "text-destructive";
+    dir === "flat" ? "text-muted-foreground" : isPositive ? "text-success" : "text-destructive";
   const Icon = dir === "up" ? ArrowUpRight : dir === "down" ? ArrowDownRight : Minus;
   return (
     <Card className={cn("relative overflow-hidden", className)}>

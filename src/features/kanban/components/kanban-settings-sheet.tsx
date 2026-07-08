@@ -10,13 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { STATUS_LABEL, STATUS_ORDER, type TaskStatus } from "@/features/tasks/types";
-import {
-  moveColumn,
-  resetSettings,
-  setWipLimit,
-  toggleColumn,
-  useKanbanState,
-} from "../store";
+import { moveColumn, resetSettings, setWipLimit, toggleColumn, useKanbanState } from "../store";
 
 export function KanbanSettingsSheet({
   open,
@@ -28,10 +22,7 @@ export function KanbanSettingsSheet({
   const columns = useKanbanState((s) => s.settings.columns);
   const wipLimits = useKanbanState((s) => s.settings.wipLimits);
 
-  const ordered: TaskStatus[] = [
-    ...columns,
-    ...STATUS_ORDER.filter((s) => !columns.includes(s)),
-  ];
+  const ordered: TaskStatus[] = [...columns, ...STATUS_ORDER.filter((s) => !columns.includes(s))];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -39,8 +30,8 @@ export function KanbanSettingsSheet({
         <SheetHeader>
           <SheetTitle>Board settings</SheetTitle>
           <SheetDescription>
-            Show or hide columns, reorder them, and set visual WIP limits.
-            WIP limits are display only — they don't block status changes.
+            Show or hide columns, reorder them, and set visual WIP limits. WIP limits are display
+            only — they don't block status changes.
           </SheetDescription>
         </SheetHeader>
 

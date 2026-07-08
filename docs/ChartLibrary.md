@@ -5,25 +5,36 @@ Reusable, dependency-free chart primitives for the Analytics module. Implemented
 Location: `src/features/analytics/charts/`
 
 ```ts
-import { LineChart, AreaChart, BarChart, DonutChart, Heatmap, TrendCard, Timeline } from "@/features/analytics/charts";
+import {
+  LineChart,
+  AreaChart,
+  BarChart,
+  DonutChart,
+  Heatmap,
+  TrendCard,
+  Timeline,
+} from "@/features/analytics/charts";
 ```
 
 ## Components
 
 ### `LineChart`
+
 ```tsx
 <LineChart
-  data={[{ label: "W1", value: 88 }, /* ... */]}
-  colorClass="stroke-success"   // any Tailwind stroke-* class
+  data={[{ label: "W1", value: 88 } /* ... */]}
+  colorClass="stroke-success" // any Tailwind stroke-* class
   formatValue={(n) => `${n}%`}
   showDots
   showGrid
   ariaLabel="Attendance"
 />
 ```
+
 Renders a polyline with a filled-area underlay. Auto-scales to data, draws 5 horizontal grid lines, and labels each point on the x-axis. Re-exported as `AreaChart` since the area is always rendered.
 
 ### `BarChart`
+
 ```tsx
 <BarChart
   data={[{ label: "Mon", value: 7 }, /* ... */]}
@@ -37,29 +48,34 @@ Renders a polyline with a filled-area underlay. Auto-scales to data, draws 5 hor
   colorClasses={["fill-warning", "fill-success"]}
 />
 ```
+
 For grouped bars, pass the series names and they will be read from each row by key. `values` is unused; the row values drive the bars (this is a design decision so callers can keep the per-row data shape).
 
 ### `DonutChart`
+
 ```tsx
-<DonutChart
-  data={[{ label: "Flow", value: 86 }, /* ... */]}
-  centerValue="82"
-  centerLabel="Health"
-/>
+<DonutChart data={[{ label: "Flow", value: 86 } /* ... */]} centerValue="82" centerLabel="Health" />
 ```
+
 Donut + side legend with percentages. Palette cycles through `fill-primary`, `fill-success`, `fill-warning`, `fill-info`, `fill-destructive`, `fill-secondary`; override per slice via `colorClass`.
 
 ### `Heatmap`
+
 ```tsx
 <Heatmap
-  data={[[0, 1, 2], [3, 4, 5]]}
+  data={[
+    [0, 1, 2],
+    [3, 4, 5],
+  ]}
   rowLabels={["Mon", "Tue"]}
   colLabels={["8a", "9a", "10a"]}
 />
 ```
+
 Renders as an accessible `<table>` with `color-mix(in oklab, hsl(var(--primary)) X%, transparent)` to encode intensity. Empty cells (value `0`) fall back to `hsl(var(--muted))`.
 
 ### `TrendCard`
+
 ```tsx
 <TrendCard
   label="Attendance rate"
@@ -67,12 +83,15 @@ Renders as an accessible `<table>` with `color-mix(in oklab, hsl(var(--primary))
   positiveIsDown={false}
 />
 ```
+
 Displays a KPI with an inferred trend arrow. `positiveIsDown` flips the color semantics (used for metrics like "blocker duration" or "open risks" where lower is better). Supported formats: `number`, `percent`, `hours`, `minutes`.
 
 ### `Timeline`
+
 ```tsx
 <Timeline events={[{ id, date, title, description, intent: "positive" }]} />
 ```
+
 Vertical event list with intent-colored markers.
 
 ## Theming

@@ -2,8 +2,15 @@
  * Auto-generated UI insights & project health score.
  * Pure derivations from analytics utils — no business logic.
  */
-import { snapshotTasks, filterProjectTasks, sprintProgressList, projectTimeLogs,
-  totalHours, dependencyInsights, tasksPerUser } from "./utils";
+import {
+  snapshotTasks,
+  filterProjectTasks,
+  sprintProgressList,
+  projectTimeLogs,
+  totalHours,
+  dependencyInsights,
+  tasksPerUser,
+} from "./utils";
 
 export type InsightIntent = "positive" | "warning" | "negative" | "neutral";
 
@@ -25,32 +32,54 @@ export function generateInsights(projectId: string): Insight[] {
   const out: Insight[] = [];
 
   if (snap.completionPct >= 70) {
-    out.push({ id: "vel", title: `Team velocity is strong — ${snap.completionPct}% complete`, intent: "positive" });
+    out.push({
+      id: "vel",
+      title: `Team velocity is strong — ${snap.completionPct}% complete`,
+      intent: "positive",
+    });
   } else if (snap.completionPct < 30 && snap.total > 5) {
-    out.push({ id: "vel", title: `Velocity is low — only ${snap.completionPct}% delivered`, intent: "warning" });
+    out.push({
+      id: "vel",
+      title: `Velocity is low — only ${snap.completionPct}% delivered`,
+      intent: "warning",
+    });
   } else {
     out.push({ id: "vel", title: `Progress steady at ${snap.completionPct}%`, intent: "neutral" });
   }
 
   if (dep.blockedCount > 0) {
-    out.push({ id: "blk", title: `${dep.blockedCount} ${dep.blockedCount === 1 ? "task is" : "tasks are"} blocking progress`,
+    out.push({
+      id: "blk",
+      title: `${dep.blockedCount} ${dep.blockedCount === 1 ? "task is" : "tasks are"} blocking progress`,
       intent: dep.blockedCount > 2 ? "negative" : "warning",
-      description: dep.mostBlocking ? `Top blocker: ${dep.mostBlocking}` : undefined });
+      description: dep.mostBlocking ? `Top blocker: ${dep.mostBlocking}` : undefined,
+    });
   }
 
   if (snap.overdue > 0) {
-    out.push({ id: "due", title: `${snap.overdue} overdue ${snap.overdue === 1 ? "task" : "tasks"}`, intent: "negative" });
+    out.push({
+      id: "due",
+      title: `${snap.overdue} overdue ${snap.overdue === 1 ? "task" : "tasks"}`,
+      intent: "negative",
+    });
   }
 
   if (stats.length) {
     const top = stats[0];
-    out.push({ id: "wl", title: `Most workload assigned to ${top.name}`,
-      description: `${top.total} tasks · ${top.done} done`, intent: "neutral" });
+    out.push({
+      id: "wl",
+      title: `Most workload assigned to ${top.name}`,
+      description: `${top.total} tasks · ${top.done} done`,
+      intent: "neutral",
+    });
   }
 
   if (active) {
-    out.push({ id: "spr", title: `${active.sprint.name} is ${active.pct}% complete`,
-      intent: active.pct >= 70 ? "positive" : active.pct < 30 ? "warning" : "neutral" });
+    out.push({
+      id: "spr",
+      title: `${active.sprint.name} is ${active.pct}% complete`,
+      intent: active.pct >= 70 ? "positive" : active.pct < 30 ? "warning" : "neutral",
+    });
   }
 
   const hrs = totalHours(logs);
@@ -76,10 +105,10 @@ export function calcProjectHealth(projectId: string): HealthScore {
   const logs = projectTimeLogs(projectId);
   const active = sprints.find((s) => s.sprint.status === "active");
 
-  const completion = snap.completionPct;                                                // 0-100
-  const blockerPenalty = Math.max(0, 100 - snap.blocked * 18 - snap.overdue * 10);      // 0-100
-  const sprintHealth = active ? active.pct : sprints.length ? 60 : 70;                  // 0-100
-  const timeCoverage = logs.length > 0 ? Math.min(100, 40 + logs.length * 2) : 25;      // 0-100
+  const completion = snap.completionPct; // 0-100
+  const blockerPenalty = Math.max(0, 100 - snap.blocked * 18 - snap.overdue * 10); // 0-100
+  const sprintHealth = active ? active.pct : sprints.length ? 60 : 70; // 0-100
+  const timeCoverage = logs.length > 0 ? Math.min(100, 40 + logs.length * 2) : 25; // 0-100
 
   const factors = [
     { label: "Task completion", value: completion, weight: 0.35 },

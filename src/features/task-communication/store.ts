@@ -57,10 +57,7 @@ function nextId(prefix: string) {
 function pushActivity(a: Omit<TaskCommActivity, "id" | "at"> & { at?: string }) {
   state = {
     ...state,
-    activity: [
-      ...state.activity,
-      { ...a, id: nextId("a"), at: a.at ?? new Date().toISOString() },
-    ],
+    activity: [...state.activity, { ...a, id: nextId("a"), at: a.at ?? new Date().toISOString() }],
   };
 }
 
@@ -151,9 +148,7 @@ export const commStore = {
     state = {
       ...state,
       comments: state.comments.map((x) =>
-        x.id === commentId
-          ? { ...x, deletedAt: new Date().toISOString(), message: "" }
-          : x,
+        x.id === commentId ? { ...x, deletedAt: new Date().toISOString(), message: "" } : x,
       ),
     };
     pushActivity({

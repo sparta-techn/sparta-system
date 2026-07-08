@@ -6,17 +6,17 @@ A unified error model spans client, server, and database. Every error is **typed
 
 ## 1. Error Taxonomy
 
-| Category | Source | Examples |
-|---|---|---|
-| **Validation** | Zod, client + server | Missing fields, bad date range. |
-| **Authentication** | Supabase Auth | Expired session, MFA required, invalid credentials. |
-| **Authorization** | Server + RLS | Insufficient permission, scope mismatch. |
-| **Domain** | Application use-cases | "Cannot finish work before starting", "Leave overlaps existing approved leave". |
-| **Conflict** | DB constraints | Duplicate attendance, optimistic concurrency. |
-| **Network** | fetch, Realtime | Timeout, offline, 5xx. |
-| **Integration** | ClickUp/Slack/etc. | Rate limited, invalid token, schema mismatch. |
-| **Infrastructure** | Postgres, Storage | Connection error, quota exceeded. |
-| **Unknown** | Anything uncaught | Rendering errors, unexpected exceptions. |
+| Category           | Source                | Examples                                                                        |
+| ------------------ | --------------------- | ------------------------------------------------------------------------------- |
+| **Validation**     | Zod, client + server  | Missing fields, bad date range.                                                 |
+| **Authentication** | Supabase Auth         | Expired session, MFA required, invalid credentials.                             |
+| **Authorization**  | Server + RLS          | Insufficient permission, scope mismatch.                                        |
+| **Domain**         | Application use-cases | "Cannot finish work before starting", "Leave overlaps existing approved leave". |
+| **Conflict**       | DB constraints        | Duplicate attendance, optimistic concurrency.                                   |
+| **Network**        | fetch, Realtime       | Timeout, offline, 5xx.                                                          |
+| **Integration**    | ClickUp/Slack/etc.    | Rate limited, invalid token, schema mismatch.                                   |
+| **Infrastructure** | Postgres, Storage     | Connection error, quota exceeded.                                               |
+| **Unknown**        | Anything uncaught     | Rendering errors, unexpected exceptions.                                        |
 
 ---
 
@@ -109,6 +109,7 @@ All thrown errors are normalized by `toAppError(err)` at the boundary before bei
 ## 11. User-Friendly Messages
 
 Principles:
+
 - Plain language; no stack traces, no codes (codes shown only on a "Details" toggle).
 - Explain what happened, what they can do, and where to go next.
 - Never blame the user ("You did X wrong" → "X isn't available because Y").
@@ -118,13 +119,13 @@ Principles:
 
 ## 12. Retry Strategy
 
-| Operation | Auto-retry | Manual retry UI |
-|---|---|---|
-| Idempotent reads | yes (3x, backoff) | yes |
-| Idempotent writes with idempotency key | yes (1x) | yes |
-| Non-idempotent writes | no | yes ("Try again") |
-| Webhook delivery | yes (queue, exponential) | replay via admin |
-| Realtime reconnect | yes (backoff, capped) | manual reload offered after long disconnect |
+| Operation                              | Auto-retry               | Manual retry UI                             |
+| -------------------------------------- | ------------------------ | ------------------------------------------- |
+| Idempotent reads                       | yes (3x, backoff)        | yes                                         |
+| Idempotent writes with idempotency key | yes (1x)                 | yes                                         |
+| Non-idempotent writes                  | no                       | yes ("Try again")                           |
+| Webhook delivery                       | yes (queue, exponential) | replay via admin                            |
+| Realtime reconnect                     | yes (backoff, capped)    | manual reload offered after long disconnect |
 
 ---
 

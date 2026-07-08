@@ -101,7 +101,9 @@ export function PersonChip({
       </span>
       <span className="min-w-0 leading-tight">
         <span className="block truncate text-xs font-medium text-foreground">{name}</span>
-        {sub ? <span className="block truncate text-[10px] text-muted-foreground">{sub}</span> : null}
+        {sub ? (
+          <span className="block truncate text-[10px] text-muted-foreground">{sub}</span>
+        ) : null}
       </span>
     </span>
   );

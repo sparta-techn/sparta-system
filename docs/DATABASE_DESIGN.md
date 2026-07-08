@@ -22,11 +22,11 @@ These rules are already established by the live `auth` + `attendance` schema and
   soft references (actor/granted_by).
 - **RLS**: `ENABLE ROW LEVEL SECURITY` on every table (CLAUDE.md "Use RLS").
   Authorization helpers already exist and are `SECURITY DEFINER`, `search_path =
-  public`, execute revoked from `anon`:
+public`, execute revoked from `anon`:
   - `public.has_role(uid, role)` · `public.has_any_role(uid, role[])` ·
     `public.current_user_roles()`.
 - **Grants**: `GRANT SELECT[, INSERT, UPDATE, DELETE] … TO authenticated;
-  GRANT ALL … TO service_role;` Never grant to `anon`.
+GRANT ALL … TO service_role;` Never grant to `anon`.
 - **Controlled mutation**: tables whose writes must be validated/atomic (attendance,
   timers, report submission, dependency state) expose **`SECURITY DEFINER` RPC
   functions** instead of direct INSERT/UPDATE grants — the pattern set by
@@ -41,6 +41,7 @@ These rules are already established by the live `auth` + `attendance` schema and
   analytics) — see §20.
 
 ### Legend
+
 ✅ exists today · 🆕 new table · 🔁 extend existing table.
 
 ---
@@ -98,19 +99,19 @@ already auto-provisions a `profiles` row + default `employee` role on signup, an
 1:1 with `auth.users`. The canonical "person" record; the mock `HrEmployee`
 should map onto this + the `employment` extension (§5), **not** a parallel table.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | → `auth.users(id)` ON DELETE CASCADE |
-| email | text NOT NULL UNIQUE | |
-| full_name / display_name | text | |
-| avatar_url | text | Storage `avatars` bucket |
-| job_title | text | |
-| department_id | uuid | → `departments(id)` SET NULL |
-| team_id | uuid | → `teams(id)` SET NULL |
-| status | employee_status | default `invited` |
-| timezone / locale | text | |
-| last_seen_at | timestamptz | |
-| created_at / updated_at | timestamptz | trigger-maintained |
+| Column                   | Type                 | Notes                                |
+| ------------------------ | -------------------- | ------------------------------------ |
+| id                       | uuid PK              | → `auth.users(id)` ON DELETE CASCADE |
+| email                    | text NOT NULL UNIQUE |                                      |
+| full_name / display_name | text                 |                                      |
+| avatar_url               | text                 | Storage `avatars` bucket             |
+| job_title                | text                 |                                      |
+| department_id            | uuid                 | → `departments(id)` SET NULL         |
+| team_id                  | uuid                 | → `teams(id)` SET NULL               |
+| status                   | employee_status      | default `invited`                    |
+| timezone / locale        | text                 |                                      |
+| last_seen_at             | timestamptz          |                                      |
+| created_at / updated_at  | timestamptz          | trigger-maintained                   |
 
 - **Indexes** (exist): `(department_id)`, `(team_id)`, `(status)`.
 - **RLS** (exists): read all non-offboarded (`profile_read_directory`); self-update
@@ -123,14 +124,14 @@ should map onto this + the `employment` extension (§5), **not** a parallel tabl
 Roles are stored **separately from profiles** (deliberate — prevents privilege
 escalation via profile self-update).
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| user_id | uuid NOT NULL | → `auth.users(id)` CASCADE |
-| role | app_role NOT NULL | |
-| granted_by | uuid | → `auth.users(id)` SET NULL |
-| granted_at | timestamptz | |
-| | | UNIQUE `(user_id, role)` |
+| Column     | Type              | Notes                       |
+| ---------- | ----------------- | --------------------------- |
+| id         | uuid PK           |                             |
+| user_id    | uuid NOT NULL     | → `auth.users(id)` CASCADE  |
+| role       | app_role NOT NULL |                             |
+| granted_by | uuid              | → `auth.users(id)` SET NULL |
+| granted_at | timestamptz       |                             |
+|            |                   | UNIQUE `(user_id, role)`    |
 
 - **Index** (exists): `(user_id)`.
 - **RLS** (exists): self or HR/admin read (`roles_self_read`); only
@@ -144,11 +145,11 @@ Moves the frontend `permissions.ts` matrix into the DB as the single source of
 truth, so UI gating and RLS derive from the same table (closes audit finding on
 matrix drift). Seeded, rarely mutated.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| role | app_role NOT NULL | composite PK |
-| permission | permission_key NOT NULL | composite PK |
-| | | PK `(role, permission)` |
+| Column     | Type                    | Notes                   |
+| ---------- | ----------------------- | ----------------------- |
+| role       | app_role NOT NULL       | composite PK            |
+| permission | permission_key NOT NULL | composite PK            |
+|            |                         | PK `(role, permission)` |
 
 - **Index**: PK covers lookups; add `(role)` for "permissions for role".
 - **Helper RPC**: `public.has_permission(uid, permission_key)` (SECURITY DEFINER) —
@@ -166,17 +167,17 @@ matrix drift). Seeded, rarely mutated.
 HR/employment facts that don't belong on the lightweight `profiles` record.
 One row per employee (PK = profile id), keeping the directory in `profiles`.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| profile_id | uuid PK | → `profiles(id)` CASCADE |
-| employee_code | text UNIQUE | e.g. `EMP-014` |
-| manager_id | uuid | → `profiles(id)` SET NULL (reporting line) |
-| employment_type | text | full_time / contractor / intern |
-| hire_date | date | |
-| birth_date | date | drives birthday widgets |
-| end_date | date | offboarding |
-| work_location | text | remote / city |
-| created_at / updated_at | timestamptz | trigger |
+| Column                  | Type        | Notes                                      |
+| ----------------------- | ----------- | ------------------------------------------ |
+| profile_id              | uuid PK     | → `profiles(id)` CASCADE                   |
+| employee_code           | text UNIQUE | e.g. `EMP-014`                             |
+| manager_id              | uuid        | → `profiles(id)` SET NULL (reporting line) |
+| employment_type         | text        | full_time / contractor / intern            |
+| hire_date               | date        |                                            |
+| birth_date              | date        | drives birthday widgets                    |
+| end_date                | date        | offboarding                                |
+| work_location           | text        | remote / city                              |
+| created_at / updated_at | timestamptz | trigger                                    |
 
 - **Indexes**: `(manager_id)`, `(hire_date)`, `(birth_date)`.
 - **RLS**: self read own; manager reads reports; HR/super_admin/owner read+write all.
@@ -190,12 +191,12 @@ One row per employee (PK = profile id), keeping the directory in `profiles`.
 
 # 6. Departments — `public.departments` ✅ / `public.teams` ✅ (exist)
 
-| departments | Type | | teams | Type |
-| --- | --- | --- | --- | --- |
-| id | uuid PK | | id | uuid PK |
-| name | text UNIQUE | | department_id | uuid → departments SET NULL |
-| slug | text UNIQUE | | name | text |
-| created/updated_at | timestamptz | | slug | text UNIQUE |
+| departments        | Type        |     | teams         | Type                        |
+| ------------------ | ----------- | --- | ------------- | --------------------------- |
+| id                 | uuid PK     |     | id            | uuid PK                     |
+| name               | text UNIQUE |     | department_id | uuid → departments SET NULL |
+| slug               | text UNIQUE |     | name          | text                        |
+| created/updated_at | timestamptz |     | slug          | text UNIQUE                 |
 
 - **RLS** (exists): read for all authenticated; write HR/super_admin/owner.
 
@@ -208,17 +209,17 @@ One session per `(user_id, work_date)`; all transitions via SECURITY DEFINER RPC
 `current_work_date`). Supporting singletons `company_settings` ✅ (see §19) and
 `holidays` ✅.
 
-| work_sessions (key cols) | Type |
-| --- | --- |
-| id | uuid PK |
-| user_id | uuid NOT NULL (→ auth.users) |
-| work_date | date NOT NULL |
-| started_at / finished_at | timestamptz |
-| session_status | work_session_status |
-| attendance_status | attendance_status |
-| late_minutes / working_seconds / break_seconds / overtime_seconds | int |
-| device / browser / ip / location / timezone / notes | text |
-| | UNIQUE `(user_id, work_date)` |
+| work_sessions (key cols)                                          | Type                          |
+| ----------------------------------------------------------------- | ----------------------------- |
+| id                                                                | uuid PK                       |
+| user_id                                                           | uuid NOT NULL (→ auth.users)  |
+| work_date                                                         | date NOT NULL                 |
+| started_at / finished_at                                          | timestamptz                   |
+| session_status                                                    | work_session_status           |
+| attendance_status                                                 | attendance_status             |
+| late_minutes / working_seconds / break_seconds / overtime_seconds | int                           |
+| device / browser / ip / location / timezone / notes               | text                          |
+|                                                                   | UNIQUE `(user_id, work_date)` |
 
 - **Indexes** (exist): `(user_id, work_date DESC)`, `(work_date DESC)`, partial
   `(session_status) WHERE status IN ('working','on_break')`.
@@ -229,25 +230,25 @@ One session per `(user_id, work_date)`; all transitions via SECURITY DEFINER RPC
 
 # 8. Projects — `public.projects` 🆕 (P0 root entity)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| key | text NOT NULL UNIQUE | e.g. `ETB` — drives task refs |
-| name | text NOT NULL | |
-| description | text | |
-| client_id | uuid | → `clients(id)` SET NULL |
-| manager_id | uuid NOT NULL | → `profiles(id)` |
-| department_id | uuid | → `departments(id)` SET NULL |
-| priority | priority_level | default `medium` |
-| status | project_status | default `planning` |
-| health | project_health | default `healthy` |
-| start_date / end_date | date | |
-| color / icon | text | |
-| repository_url / figma_url / api_docs_url | text | |
-| environments | jsonb | `[{label,url}]` |
-| template_id | uuid | → `project_templates(id)` SET NULL |
-| favorite | boolean | (per-user favorite better as join — see note) |
-| archived_at / created_at / updated_at | timestamptz | |
+| Column                                    | Type                 | Notes                                         |
+| ----------------------------------------- | -------------------- | --------------------------------------------- |
+| id                                        | uuid PK              |                                               |
+| key                                       | text NOT NULL UNIQUE | e.g. `ETB` — drives task refs                 |
+| name                                      | text NOT NULL        |                                               |
+| description                               | text                 |                                               |
+| client_id                                 | uuid                 | → `clients(id)` SET NULL                      |
+| manager_id                                | uuid NOT NULL        | → `profiles(id)`                              |
+| department_id                             | uuid                 | → `departments(id)` SET NULL                  |
+| priority                                  | priority_level       | default `medium`                              |
+| status                                    | project_status       | default `planning`                            |
+| health                                    | project_health       | default `healthy`                             |
+| start_date / end_date                     | date                 |                                               |
+| color / icon                              | text                 |                                               |
+| repository_url / figma_url / api_docs_url | text                 |                                               |
+| environments                              | jsonb                | `[{label,url}]`                               |
+| template_id                               | uuid                 | → `project_templates(id)` SET NULL            |
+| favorite                                  | boolean              | (per-user favorite better as join — see note) |
+| archived_at / created_at / updated_at     | timestamptz          |                                               |
 
 - **Indexes**: `(status)`, `(manager_id)`, `(client_id)`, `(department_id)`,
   `(key)` unique, partial `(archived_at) WHERE archived_at IS NULL`.
@@ -264,15 +265,15 @@ One session per `(user_id, work_date)`; all transitions via SECURITY DEFINER RPC
 
 # 9. Project Members — `public.project_members` 🆕
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| project_id | uuid NOT NULL | → `projects(id)` CASCADE |
-| user_id | uuid NOT NULL | → `profiles(id)` CASCADE |
-| project_role | project_role NOT NULL | default `contributor` |
-| added_by | uuid | → profiles SET NULL |
-| created_at | timestamptz | |
-| | | UNIQUE `(project_id, user_id)` |
+| Column       | Type                  | Notes                          |
+| ------------ | --------------------- | ------------------------------ |
+| id           | uuid PK               |                                |
+| project_id   | uuid NOT NULL         | → `projects(id)` CASCADE       |
+| user_id      | uuid NOT NULL         | → `profiles(id)` CASCADE       |
+| project_role | project_role NOT NULL | default `contributor`          |
+| added_by     | uuid                  | → profiles SET NULL            |
+| created_at   | timestamptz           |                                |
+|              |                       | UNIQUE `(project_id, user_id)` |
 
 - **Indexes**: `(project_id)`, `(user_id)`.
 - **Helper**: `public.is_project_member(uid, project_id)` SECURITY DEFINER —
@@ -287,26 +288,26 @@ One session per `(user_id, work_date)`; all transitions via SECURITY DEFINER RPC
 Subtasks are tasks with non-null `parent_task_id` (self-referential), per the
 type doc.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| ref | text NOT NULL UNIQUE | `ETB-142`, from `next_task_ref(project_key)` RPC |
-| project_id | uuid NOT NULL | → `projects(id)` CASCADE |
-| parent_task_id | uuid | → `tasks(id)` CASCADE (subtask tree) |
-| epic_id | uuid | → `epics(id)` SET NULL |
-| milestone_id | uuid | → `task_milestones(id)` SET NULL |
-| sprint_id | uuid | → `sprints(id)` SET NULL |
-| title | text NOT NULL | |
-| description | text | markdown |
-| status | task_status | default `todo` |
-| priority | priority_level | default `medium` |
-| labels | text[] | small fixed vocab |
-| assignee_id | uuid | → profiles SET NULL |
-| reporter_id | uuid NOT NULL | → profiles |
-| start_date / due_date | date | |
-| estimated_hours / story_points | numeric | |
-| completed_at / archived_at / deleted_at | timestamptz | soft states |
-| created_at / updated_at | timestamptz | |
+| Column                                  | Type                 | Notes                                            |
+| --------------------------------------- | -------------------- | ------------------------------------------------ |
+| id                                      | uuid PK              |                                                  |
+| ref                                     | text NOT NULL UNIQUE | `ETB-142`, from `next_task_ref(project_key)` RPC |
+| project_id                              | uuid NOT NULL        | → `projects(id)` CASCADE                         |
+| parent_task_id                          | uuid                 | → `tasks(id)` CASCADE (subtask tree)             |
+| epic_id                                 | uuid                 | → `epics(id)` SET NULL                           |
+| milestone_id                            | uuid                 | → `task_milestones(id)` SET NULL                 |
+| sprint_id                               | uuid                 | → `sprints(id)` SET NULL                         |
+| title                                   | text NOT NULL        |                                                  |
+| description                             | text                 | markdown                                         |
+| status                                  | task_status          | default `todo`                                   |
+| priority                                | priority_level       | default `medium`                                 |
+| labels                                  | text[]               | small fixed vocab                                |
+| assignee_id                             | uuid                 | → profiles SET NULL                              |
+| reporter_id                             | uuid NOT NULL        | → profiles                                       |
+| start_date / due_date                   | date                 |                                                  |
+| estimated_hours / story_points          | numeric              |                                                  |
+| completed_at / archived_at / deleted_at | timestamptz          | soft states                                      |
+| created_at / updated_at                 | timestamptz          |                                                  |
 
 - **Indexes**: `(project_id)`, `(assignee_id)`, `(status)`, `(sprint_id)`,
   `(parent_task_id)`, `(due_date)`, partial `WHERE deleted_at IS NULL`; GIN on
@@ -335,18 +336,18 @@ type doc.
 One table serves Task, Dependency, and Project comments (unifies the three
 divergent mock shapes). Threaded via `parent_comment_id`.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| parent_type | comment_parent NOT NULL | `task` / `dependency` / `project` |
-| parent_id | uuid NOT NULL | logical FK (no hard cross-type FK) |
-| author_id | uuid NOT NULL | → profiles |
-| body | text NOT NULL | |
-| parent_comment_id | uuid | → `comments(id)` CASCADE (replies) |
-| mentions | uuid[] | profile ids → fan out to notifications |
-| is_status_update | boolean | default false |
-| edited_at / deleted_at | timestamptz | soft delete |
-| created_at | timestamptz | |
+| Column                 | Type                    | Notes                                  |
+| ---------------------- | ----------------------- | -------------------------------------- |
+| id                     | uuid PK                 |                                        |
+| parent_type            | comment_parent NOT NULL | `task` / `dependency` / `project`      |
+| parent_id              | uuid NOT NULL           | logical FK (no hard cross-type FK)     |
+| author_id              | uuid NOT NULL           | → profiles                             |
+| body                   | text NOT NULL           |                                        |
+| parent_comment_id      | uuid                    | → `comments(id)` CASCADE (replies)     |
+| mentions               | uuid[]                  | profile ids → fan out to notifications |
+| is_status_update       | boolean                 | default false                          |
+| edited_at / deleted_at | timestamptz             | soft delete                            |
+| created_at             | timestamptz             |                                        |
 
 - **Indexes**: `(parent_type, parent_id, created_at)`, `(parent_comment_id)`,
   GIN on `mentions`.
@@ -366,20 +367,20 @@ divergent mock shapes). Threaded via `parent_comment_id`.
 Unifies `TaskAttachment`, `ProjectFile`, `TaskFile`, and HR documents. Metadata in
 Postgres; bytes in Supabase **Storage** buckets.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| owner_type | attachment_owner NOT NULL | task / project / comment / hr_document / avatar |
-| owner_id | uuid NOT NULL | logical FK |
-| bucket | text NOT NULL | `task-files` / `project-files` / `hr-documents` / `avatars` |
-| path | text NOT NULL | storage object path |
-| file_name | text NOT NULL | |
-| mime_type | text | |
-| kind | text | image/pdf/doc/zip/code/design/spec/video/other |
-| size_bytes | bigint | |
-| uploaded_by | uuid NOT NULL | → profiles |
-| created_at / deleted_at | timestamptz | |
-| | | UNIQUE `(bucket, path)` |
+| Column                  | Type                      | Notes                                                       |
+| ----------------------- | ------------------------- | ----------------------------------------------------------- |
+| id                      | uuid PK                   |                                                             |
+| owner_type              | attachment_owner NOT NULL | task / project / comment / hr_document / avatar             |
+| owner_id                | uuid NOT NULL             | logical FK                                                  |
+| bucket                  | text NOT NULL             | `task-files` / `project-files` / `hr-documents` / `avatars` |
+| path                    | text NOT NULL             | storage object path                                         |
+| file_name               | text NOT NULL             |                                                             |
+| mime_type               | text                      |                                                             |
+| kind                    | text                      | image/pdf/doc/zip/code/design/spec/video/other              |
+| size_bytes              | bigint                    |                                                             |
+| uploaded_by             | uuid NOT NULL             | → profiles                                                  |
+| created_at / deleted_at | timestamptz               |                                                             |
+|                         |                           | UNIQUE `(bucket, path)`                                     |
 
 - **Indexes**: `(owner_type, owner_id)`, `(uploaded_by)`.
 - **Storage**: buckets above with **path-based Storage RLS** aligned to entity
@@ -394,17 +395,17 @@ Postgres; bytes in Supabase **Storage** buckets.
 
 Timer or manual entry; an open timer has `end_time IS NULL`.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| task_id | uuid NOT NULL | → `tasks(id)` CASCADE |
-| user_id | uuid NOT NULL | → profiles |
-| start_time | timestamptz NOT NULL | |
-| end_time | timestamptz | NULL while running |
-| duration_minutes | int | computed on stop |
-| description | text | |
-| source | time_log_source | timer / manual |
-| created_at / updated_at | timestamptz | |
+| Column                  | Type                 | Notes                 |
+| ----------------------- | -------------------- | --------------------- |
+| id                      | uuid PK              |                       |
+| task_id                 | uuid NOT NULL        | → `tasks(id)` CASCADE |
+| user_id                 | uuid NOT NULL        | → profiles            |
+| start_time              | timestamptz NOT NULL |                       |
+| end_time                | timestamptz          | NULL while running    |
+| duration_minutes        | int                  | computed on stop      |
+| description             | text                 |                       |
+| source                  | time_log_source      | timer / manual        |
+| created_at / updated_at | timestamptz          |                       |
 
 - **Indexes**: `(task_id)`, `(user_id, start_time DESC)`;
   **partial UNIQUE `(user_id) WHERE end_time IS NULL`** → enforces one active timer
@@ -421,16 +422,16 @@ Timer or manual entry; an open timer has `end_time IS NULL`.
 
 Sprints group tasks but never own them (tasks reference `sprint_id`).
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| project_id | uuid NOT NULL | → `projects(id)` CASCADE |
-| name | text NOT NULL | |
-| goal | text | |
-| status | sprint_status | default `planned` |
-| start_date / end_date | date | |
-| capacity | int | story points |
-| created_at / updated_at | timestamptz | |
+| Column                  | Type          | Notes                    |
+| ----------------------- | ------------- | ------------------------ |
+| id                      | uuid PK       |                          |
+| project_id              | uuid NOT NULL | → `projects(id)` CASCADE |
+| name                    | text NOT NULL |                          |
+| goal                    | text          |                          |
+| status                  | sprint_status | default `planned`        |
+| start_date / end_date   | date          |                          |
+| capacity                | int           | story points             |
+| created_at / updated_at | timestamptz   |                          |
 
 - **Indexes**: `(project_id, status)`, `(start_date)`.
 - **Constraint**: optional partial unique — at most one `active` sprint per project.
@@ -447,20 +448,20 @@ linked to the attendance `work_sessions` row. Submission via SECURITY DEFINER RP
 
 **`daily_checkins`** (morning)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| user_id | uuid NOT NULL | → profiles |
-| work_date | date NOT NULL | |
-| session_id | uuid | → `work_sessions(id)` SET NULL |
-| mood | text | enum-like (excellent…difficult) |
-| mood_note / main_goal | text | |
-| priorities | jsonb | `[{title,level,effort}]` |
-| task_ids | uuid[] | planned tasks |
-| blockers | jsonb | |
-| help_request | jsonb | |
-| submitted_at | timestamptz | |
-| | | UNIQUE `(user_id, work_date)` |
+| Column                | Type          | Notes                           |
+| --------------------- | ------------- | ------------------------------- |
+| id                    | uuid PK       |                                 |
+| user_id               | uuid NOT NULL | → profiles                      |
+| work_date             | date NOT NULL |                                 |
+| session_id            | uuid          | → `work_sessions(id)` SET NULL  |
+| mood                  | text          | enum-like (excellent…difficult) |
+| mood_note / main_goal | text          |                                 |
+| priorities            | jsonb         | `[{title,level,effort}]`        |
+| task_ids              | uuid[]        | planned tasks                   |
+| blockers              | jsonb         |                                 |
+| help_request          | jsonb         |                                 |
+| submitted_at          | timestamptz   |                                 |
+|                       |               | UNIQUE `(user_id, work_date)`   |
 
 **`midday_reports`** — `progress int`, `task_progress jsonb`, `current_focus text`,
 `blocker_links jsonb` (snapshots of dependency ids+titles), `outlook text`,
@@ -484,28 +485,28 @@ linked to the attendance `work_sessions` row. Submission via SECURITY DEFINER RP
 
 Cross-team request/blocker entity referenced by check-in/midday/eod.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| title | text NOT NULL | |
-| description | text | |
-| type | dependency_type | |
-| priority | priority_level | |
-| state | dependency_state | default `pending` |
-| requester_id | uuid NOT NULL | → profiles |
-| owner_id | uuid | → profiles SET NULL |
-| department_id | uuid | → departments SET NULL |
-| project_id | uuid | → `projects(id)` SET NULL |
-| related_task_id | uuid | → `tasks(id)` SET NULL |
-| tags | text[] | |
-| due_at / resolved_at | timestamptz | |
-| created_at / updated_at | timestamptz | |
+| Column                  | Type             | Notes                     |
+| ----------------------- | ---------------- | ------------------------- |
+| id                      | uuid PK          |                           |
+| title                   | text NOT NULL    |                           |
+| description             | text             |                           |
+| type                    | dependency_type  |                           |
+| priority                | priority_level   |                           |
+| state                   | dependency_state | default `pending`         |
+| requester_id            | uuid NOT NULL    | → profiles                |
+| owner_id                | uuid             | → profiles SET NULL       |
+| department_id           | uuid             | → departments SET NULL    |
+| project_id              | uuid             | → `projects(id)` SET NULL |
+| related_task_id         | uuid             | → `tasks(id)` SET NULL    |
+| tags                    | text[]           |                           |
+| due_at / resolved_at    | timestamptz      |                           |
+| created_at / updated_at | timestamptz      |                           |
 
 - **Indexes**: `(state)`, `(requester_id)`, `(owner_id)`, `(project_id)`,
   `(department_id)`, GIN on `tags`.
 - **State machine**: `set_dependency_state(id, new_state)` SECURITY DEFINER RPC
   validating allowed transitions; writes append to `dependency_activity
-  (dependency_id, actor_id, kind, meta jsonb, at)`. Comments reuse the polymorphic
+(dependency_id, actor_id, kind, meta jsonb, at)`. Comments reuse the polymorphic
   `comments` table (`parent_type='dependency'`).
 - **RLS**: requester, owner, same-department, or admins read; requester/owner +
   admins write.
@@ -515,28 +516,28 @@ Cross-team request/blocker entity referenced by check-in/midday/eod.
 
 # 17. Notifications — `public.notifications` 🆕 (P2)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| recipient_id | uuid NOT NULL | → profiles CASCADE |
-| type | notification_type | |
-| priority | notification_priority | default `normal` |
-| state | notification_state | default `unseen` |
-| title | text NOT NULL | |
-| body | text | |
-| category | text | preference category key |
-| event_name | text | source domain event |
-| payload | jsonb | structured context |
-| actions | jsonb | `[{label,href}]` |
-| entity_type / entity_id | text/uuid | deep-link target |
-| seen_at / read_at / dismissed_at | timestamptz | lifecycle |
-| created_at | timestamptz | |
+| Column                           | Type                  | Notes                   |
+| -------------------------------- | --------------------- | ----------------------- |
+| id                               | uuid PK               |                         |
+| recipient_id                     | uuid NOT NULL         | → profiles CASCADE      |
+| type                             | notification_type     |                         |
+| priority                         | notification_priority | default `normal`        |
+| state                            | notification_state    | default `unseen`        |
+| title                            | text NOT NULL         |                         |
+| body                             | text                  |                         |
+| category                         | text                  | preference category key |
+| event_name                       | text                  | source domain event     |
+| payload                          | jsonb                 | structured context      |
+| actions                          | jsonb                 | `[{label,href}]`        |
+| entity_type / entity_id          | text/uuid             | deep-link target        |
+| seen_at / read_at / dismissed_at | timestamptz           | lifecycle               |
+| created_at                       | timestamptz           |                         |
 
 - **Indexes**: `(recipient_id, created_at DESC)`,
   partial `(recipient_id) WHERE state = 'unseen'` (badge count).
 - **Companion**: `notification_preferences (user_id PK, channels jsonb)` — per-user,
   per-category channel matrix; `automation_rules (event_name, recipient_rule,
-  spec jsonb, enabled)` optional, to move the in-memory engine server-side.
+spec jsonb, enabled)` optional, to move the in-memory engine server-side.
 - **Generation**: DB triggers / Edge Functions translate domain events
   (task assigned, comment mention, dependency blocked, report submitted, leave
   request) into rows here.
@@ -550,17 +551,17 @@ Cross-team request/blocker entity referenced by check-in/midday/eod.
 
 Satisfies CLAUDE.md Security "Audit important actions". Immutable.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| actor_id | uuid | → auth.users SET NULL (preserve log if user deleted) |
-| action | audit_action NOT NULL | |
-| entity_type | text NOT NULL | table/domain |
-| entity_id | uuid | affected row |
-| summary | text | |
-| diff | jsonb | before/after where relevant |
-| ip / user_agent | text | |
-| created_at | timestamptz | |
+| Column          | Type                  | Notes                                                |
+| --------------- | --------------------- | ---------------------------------------------------- |
+| id              | uuid PK               |                                                      |
+| actor_id        | uuid                  | → auth.users SET NULL (preserve log if user deleted) |
+| action          | audit_action NOT NULL |                                                      |
+| entity_type     | text NOT NULL         | table/domain                                         |
+| entity_id       | uuid                  | affected row                                         |
+| summary         | text                  |                                                      |
+| diff            | jsonb                 | before/after where relevant                          |
+| ip / user_agent | text                  |                                                      |
+| created_at      | timestamptz           |                                                      |
 
 - **Indexes**: `(entity_type, entity_id, created_at DESC)`,
   `(actor_id, created_at DESC)`, `(action)`.
@@ -577,14 +578,14 @@ Satisfies CLAUDE.md Security "Audit important actions". Immutable.
 Singleton workspace settings already exist for Attendance; **extend in place** for
 the Workspace module rather than adding a table.
 
-| company_settings (✅ existing) | Type |
-| --- | --- |
-| id | boolean PK `= true` (singleton) |
-| work_start_time | time |
-| grace_period_minutes / expected_work_minutes / max_break_minutes | int |
-| timezone | text |
-| weekend_days | int[] |
-| created_at / updated_at | timestamptz |
+| company_settings (✅ existing)                                   | Type                            |
+| ---------------------------------------------------------------- | ------------------------------- |
+| id                                                               | boolean PK `= true` (singleton) |
+| work_start_time                                                  | time                            |
+| grace_period_minutes / expected_work_minutes / max_break_minutes | int                             |
+| timezone                                                         | text                            |
+| weekend_days                                                     | int[]                           |
+| created_at / updated_at                                          | timestamptz                     |
 
 🔁 **Add (Workspace)**: `company_name text`, `logo_initial text`,
 `working_days text[]`, `work_end_time time`, `languages text[]`,
@@ -607,7 +608,7 @@ Per CLAUDE.md performance + migration-plan guidance, computed numbers are views:
 - `time_log_totals` — minutes per task / per user / per day over `time_logs`.
 - `analytics_*` — scope KPIs / trends / benchmarks over `tasks`, `time_logs`,
   `work_sessions`, `daily_*`, `dependencies`. Only `saved_reports
-  (created_by, scope, filters jsonb)` is a real table; the rest are
+(created_by, scope, filters jsonb)` is a real table; the rest are
   views / materialized views refreshed on a schedule.
 
 ---
@@ -733,6 +734,6 @@ erDiagram
 5. **P3**: Company-Hub satellites, Workspace `company_settings` extension,
    saved_reports + analytics views.
 
-*Every table ships with `ENABLE ROW LEVEL SECURITY` + policies in the same
+_Every table ships with `ENABLE ROW LEVEL SECURITY` + policies in the same
 migration that creates it. Regenerate `src/integrations/supabase/types.ts` after
-each migration; never hand-edit it.*
+each migration; never hand-edit it._

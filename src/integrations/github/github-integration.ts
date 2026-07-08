@@ -176,10 +176,7 @@ export class GitHubIntegration extends BaseIntegration implements VcsActivityPor
     return this.vcs.listReleases(accountId, ref, params);
   }
 
-  getDeveloperActivity(
-    accountId: string,
-    query: VcsActivityQuery,
-  ): Promise<VcsDeveloperActivity> {
+  getDeveloperActivity(accountId: string, query: VcsActivityQuery): Promise<VcsDeveloperActivity> {
     return this.vcs.getDeveloperActivity(accountId, query);
   }
 }

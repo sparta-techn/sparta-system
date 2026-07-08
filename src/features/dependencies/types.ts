@@ -150,12 +150,10 @@ export const STATE_TONE: Record<
   closed: "neutral",
 };
 
-export const PRIORITY_TONE: Record<
-  DependencyPriority,
-  "neutral" | "info" | "warning" | "danger"
-> = {
-  low: "neutral",
-  medium: "info",
-  high: "warning",
-  critical: "danger",
-};
+export const PRIORITY_TONE: Record<DependencyPriority, "neutral" | "info" | "warning" | "danger"> =
+  {
+    low: "neutral",
+    medium: "info",
+    high: "warning",
+    critical: "danger",
+  };

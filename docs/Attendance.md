@@ -7,11 +7,11 @@ team visibility — read from this single source of truth.
 
 ## Surfaces
 
-| Path | Audience | Purpose |
-|---|---|---|
-| `/app` (dashboard widget) | All employees | Live "today" status card embedded in the dashboard. |
-| `/app/attendance` | All employees | Personal attendance page: today's status + paginated history. |
-| `/app/attendance/team` | Manager / Team Lead / HR / Owner | Real-time team view of who's working, on break, late, finished. |
+| Path                      | Audience                         | Purpose                                                         |
+| ------------------------- | -------------------------------- | --------------------------------------------------------------- |
+| `/app` (dashboard widget) | All employees                    | Live "today" status card embedded in the dashboard.             |
+| `/app/attendance`         | All employees                    | Personal attendance page: today's status + paginated history.   |
+| `/app/attendance/team`    | Manager / Team Lead / HR / Owner | Real-time team view of who's working, on break, late, finished. |
 
 The Team view is enforced **server-side** by RLS (`sessions_read_managers`).
 The link is hidden in the UI for non-privileged roles via `hasAnyRole(...)`.
@@ -20,14 +20,14 @@ The link is hidden in the UI for non-privileged roles via `hasAnyRole(...)`.
 
 All rules come from the singleton `public.company_settings` row:
 
-| Setting | Default | Used in |
-|---|---|---|
-| `work_start_time` | 09:00 | Late calculation, reminder schedule |
-| `grace_period_minutes` | 60 | Late/on-time classification |
-| `expected_work_minutes` | 480 | Progress, remaining, overtime |
-| `max_break_minutes` | 60 | Break-allowance warning |
-| `timezone` | Africa/Cairo | `current_work_date()` anchor |
-| `weekend_days` | {5,6} (Fri, Sat) | Weekend status (future) |
+| Setting                 | Default          | Used in                             |
+| ----------------------- | ---------------- | ----------------------------------- |
+| `work_start_time`       | 09:00            | Late calculation, reminder schedule |
+| `grace_period_minutes`  | 60               | Late/on-time classification         |
+| `expected_work_minutes` | 480              | Progress, remaining, overtime       |
+| `max_break_minutes`     | 60               | Break-allowance warning             |
+| `timezone`              | Africa/Cairo     | `current_work_date()` anchor        |
+| `weekend_days`          | {5,6} (Fri, Sat) | Weekend status (future)             |
 
 HR / Super Admin / Owner can change these. Changes propagate immediately
 to every running session card (TanStack Query refetch on stale).

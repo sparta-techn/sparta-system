@@ -7,15 +7,15 @@ Role-based access control is enforced at **two independent layers**:
 
 ## Roles
 
-| Role              | Stored as                | Notes |
-| ----------------- | ------------------------ | ----- |
-| Owner             | `owner`                  | Founders / executives. Full access. |
-| Super Admin       | `super_admin`            | Platform administrators. |
-| HR                | `hr`                     | Manage users, departments, teams, time-off. |
-| Project Manager   | `project_manager`        | Cross-team coordination. |
-| Team Lead         | `team_lead`              | Manage their team's dependencies / reports. |
-| Employee          | `employee`               | Default role on signup. |
-| Viewer            | `viewer`                 | Read-only stakeholder. |
+| Role            | Stored as         | Notes                                       |
+| --------------- | ----------------- | ------------------------------------------- |
+| Owner           | `owner`           | Founders / executives. Full access.         |
+| Super Admin     | `super_admin`     | Platform administrators.                    |
+| HR              | `hr`              | Manage users, departments, teams, time-off. |
+| Project Manager | `project_manager` | Cross-team coordination.                    |
+| Team Lead       | `team_lead`       | Manage their team's dependencies / reports. |
+| Employee        | `employee`        | Default role on signup.                     |
+| Viewer          | `viewer`          | Read-only stakeholder.                      |
 
 Roles are **additive** — a single user can hold multiple roles via multiple rows in `user_roles`.
 
@@ -72,15 +72,15 @@ HR can manage profiles, departments and teams, but **only Super Admin / Owner ca
 
 `src/features/auth/permissions.ts` flattens roles into permission keys used by the UI:
 
-| Permission        | Roles holding it |
-| ----------------- | ---------------- |
-| `users:read`      | every role |
-| `users:write`     | hr, super_admin, owner |
-| `roles:write`     | super_admin, owner |
-| `hr:access`       | hr, super_admin, owner |
-| `owner:access`    | owner |
-| `reports:read`    | hr, project_manager, team_lead, viewer, super_admin, owner |
-| `reports:write`   | employee, project_manager, team_lead, super_admin, owner |
+| Permission      | Roles holding it                                           |
+| --------------- | ---------------------------------------------------------- |
+| `users:read`    | every role                                                 |
+| `users:write`   | hr, super_admin, owner                                     |
+| `roles:write`   | super_admin, owner                                         |
+| `hr:access`     | hr, super_admin, owner                                     |
+| `owner:access`  | owner                                                      |
+| `reports:read`  | hr, project_manager, team_lead, viewer, super_admin, owner |
+| `reports:write` | employee, project_manager, team_lead, super_admin, owner   |
 
 ## Route gating
 
@@ -100,6 +100,7 @@ export const Route = createFileRoute("/_authenticated/_hr")({
 Inside already-gated pages, use `useAuth().hasPermission(...)` only to hide UI affordances. Any sensitive backend call must rely on RLS — never on the frontend check alone.
 
 ## Audit & rotation
+
 - Every role grant records `granted_by` and `granted_at`.
 - Add HR/Super-Admin role assignments to the audit log when that module ships.
 - Rotate Owner / Super Admin roles on offboarding; the `profile.status = offboarded` change is independent of role revocation — do both.

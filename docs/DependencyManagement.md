@@ -15,13 +15,13 @@ audit trail.
 
 ## Surfaces
 
-| Surface | Route | Purpose |
-|---|---|---|
-| List / Board / Table | `/app/dependencies` | Everyone's view, switchable view modes |
-| My Dependencies | `/app/dependencies` (tab "My") | Personal four-quadrant view |
-| Detail | `/app/dependencies/$id` | Full record, comments, timeline |
-| Manager view | `/app/dependencies/manager` | Aggregates, throughput, blocked projects |
-| Dashboard widget | `/app` | Waiting-on-me + waiting-on-others mini lists |
+| Surface              | Route                          | Purpose                                      |
+| -------------------- | ------------------------------ | -------------------------------------------- |
+| List / Board / Table | `/app/dependencies`            | Everyone's view, switchable view modes       |
+| My Dependencies      | `/app/dependencies` (tab "My") | Personal four-quadrant view                  |
+| Detail               | `/app/dependencies/$id`        | Full record, comments, timeline              |
+| Manager view         | `/app/dependencies/manager`    | Aggregates, throughput, blocked projects     |
+| Dashboard widget     | `/app`                         | Waiting-on-me + waiting-on-others mini lists |
 
 ## Views
 

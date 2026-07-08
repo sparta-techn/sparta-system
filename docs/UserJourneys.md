@@ -102,7 +102,7 @@ Each journey describes a real workflow, step-by-step, from the user's point of v
 2. The dependency appears on the DevOps team board with a 24-working-hour SLA.
 3. By 10:00 the next working day, it has not been acknowledged.
 4. The system escalates: the DevOps Team Lead and the requester's Project Manager are notified.
-5. Status changes to *Escalated* on dashboards and is reflected in the department's performance metrics.
+5. Status changes to _Escalated_ on dashboards and is reflected in the department's performance metrics.
 
 ---
 

@@ -23,7 +23,7 @@ Prepare before starting:
       accounts at once and verify cross-user visibility.
 - [ ] Access to the Supabase dashboard (Table Editor) for the project, to confirm rows
       actually land server-side.
-- [ ] Note the environment URL and record **Date / Tester / Build (git SHA): ____________**
+- [ ] Note the environment URL and record **Date / Tester / Build (git SHA): \*\***\_\_\_\_**\*\***
 
 ---
 
@@ -34,6 +34,7 @@ login page shows "Ask HR or an administrator to invite you"). It runs via the bo
 script and is then verified in the app.
 
 **Steps**
+
 1. From the project root, run the status check: `bun run bootstrap --status`.
 2. If `bootstrapped: false`, run the bootstrap with env vars set:
    `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… OWNER_EMAIL=owner@yourco.com OWNER_PASSWORD='…' COMPANY_NAME='Your Co' bun run bootstrap`
@@ -47,6 +48,7 @@ script and is then verified in the app.
 7. Reload the page.
 
 **Expected result**
+
 - [ ] Bootstrap reports `bootstrapped: true` and a company id.
 - [ ] Owner can sign in and reach the Admin Console.
 - [ ] The Organization tab shows the real company created at bootstrap.
@@ -58,6 +60,7 @@ script and is then verified in the app.
 ## 2. Employees can be invited and assigned roles
 
 **Steps (as Owner — Account O)**
+
 1. Sign in as **Account O**. Go to **HR** (`/app/hr`) → **Invitations** (`/app/hr/invitations`).
 2. Click **Invite** (invite-employee dialog). Enter **Account M**'s email, choose role
    **Project Manager**, pick a department, and send.
@@ -66,12 +69,11 @@ script and is then verified in the app.
 5. Open the invite email for each account (or the invite link) and follow it to
    `/auth/accept-invitation`; set a password and complete acceptance for both.
 
-**Steps (verify roles)**
-6. Sign in as **Account M**, then **Account E**, at `/auth`.
-7. As Owner, open **HR → Directory** (`/app/hr/employees`) and confirm both new employees
-   are listed with the correct role and department.
+**Steps (verify roles)** 6. Sign in as **Account M**, then **Account E**, at `/auth`. 7. As Owner, open **HR → Directory** (`/app/hr/employees`) and confirm both new employees
+are listed with the correct role and department.
 
 **Expected result**
+
 - [ ] Invitations send without error and show as Pending in the list.
 - [ ] Each invitee can accept via the link and set a password.
 - [ ] After acceptance, each account can sign in.
@@ -89,6 +91,7 @@ script and is then verified in the app.
 ## 3. Employees can log in securely
 
 **Steps**
+
 1. At `/auth`, sign in as **Account E** with correct credentials → expect success.
 2. Sign out. Sign in again with a **wrong password** → expect a clear error, no session.
 3. While signed out, directly visit a protected URL, e.g. `/app/tasks`.
@@ -99,6 +102,7 @@ script and is then verified in the app.
    `/auth/session-expired` scenario by removing the stored session).
 
 **Expected result**
+
 - [ ] Correct credentials sign in; wrong password is rejected with a friendly message.
 - [ ] Visiting a protected URL while signed out redirects to `/auth` (not a broken page).
 - [ ] Employee E is **denied** the owner-only Admin Console (redirected to `/unauthorized`).
@@ -113,6 +117,7 @@ Attendance is the work-session clock (Start work → breaks → Finish work). Do
 **Account E**.
 
 **Steps**
+
 1. Sign in as **Account E**. Go to **Attendance** (`/app/attendance`).
 2. On the "Today" card, click **Start work** (check in).
 3. Confirm the card switches to a running state and the **Worked** timer begins counting.
@@ -125,6 +130,7 @@ Attendance is the work-session clock (Start work → breaks → Finish work). Do
    today's rows for this user.
 
 **Expected result**
+
 - [ ] Start work begins a live-counting session; the state is correct after reload.
 - [ ] Breaks pause working time and are recorded; Resume continues the session.
 - [ ] Finish work closes the day and shows an accurate summary; the card shows "Day finished".
@@ -138,23 +144,20 @@ Attendance is the work-session clock (Start work → breaks → Finish work). Do
 Do all three as **Account E** on the same work date.
 
 **Morning check-in**
+
 1. Go to **Check-in** (`/app/check-in`). Complete the wizard (mood, main goal, planned
    priorities/tasks) and **Submit**.
 2. Reload; confirm the submitted check-in is shown as done for today (not an empty draft).
 
-**Midday**
-3. Go to **Midday** (`/app/midday`). Complete the midday update (progress, current focus,
-   blockers) and **Submit**. Reload and confirm it persists.
+**Midday** 3. Go to **Midday** (`/app/midday`). Complete the midday update (progress, current focus,
+blockers) and **Submit**. Reload and confirm it persists.
 
-**End-of-day**
-4. Go to **End-of-day** (`/app/eod`). Complete the EOD report and **Submit**.
-5. Open **EOD history** (`/app/eod/history`) and confirm today's submission appears.
-6. Verify persistence on a second device / after clearing the browser's localStorage and
-   reloading.
-7. In Supabase, confirm `daily_status_updates` has a `morning_checkin` and a `midday` row,
-   and `daily_reports` has today's row with status `submitted`.
+**End-of-day** 4. Go to **End-of-day** (`/app/eod`). Complete the EOD report and **Submit**. 5. Open **EOD history** (`/app/eod/history`) and confirm today's submission appears. 6. Verify persistence on a second device / after clearing the browser's localStorage and
+reloading. 7. In Supabase, confirm `daily_status_updates` has a `morning_checkin` and a `midday` row,
+and `daily_reports` has today's row with status `submitted`.
 
 **Expected result**
+
 - [ ] Each of the three submits without error and shows a submitted (not draft) state.
 - [ ] Submissions survive reload, a second device, and localStorage clear (draft may be
       local, but the **submitted** report must be server-backed).
@@ -172,6 +175,7 @@ Do all three as **Account E** on the same work date.
 Do this as **Account M** (Project Manager).
 
 **Steps**
+
 1. Sign in as **Account M**. Go to **Projects** (`/app/projects`) and click to create a
    new project (create-project dialog): name it, set color/icon, and save.
 2. Confirm the project appears in the list and open its detail page.
@@ -184,6 +188,7 @@ Do this as **Account M** (Project Manager).
    `tasks` row (with `assignee_id` = E, correct `project_id`) exist.
 
 **Expected result**
+
 - [ ] Manager can create a project; it persists and is visible on reload.
 - [ ] Manager can create a task, tie it to the project, and assign it to Employee E.
 - [ ] Task appears in list and Kanban views.
@@ -200,6 +205,7 @@ Do this as **Account M** (Project Manager).
 Do this as **Account E**, on the task created in Section 6.
 
 **Steps**
+
 1. Sign in as **Account E**. Go to **Tasks** (`/app/tasks`) → confirm the assigned task is
    visible (in list and/or **My tasks** / Kanban).
 2. Open the task detail (`/app/tasks/<id>`). Change its **status** (e.g. To do → In
@@ -210,6 +216,7 @@ Do this as **Account E**, on the task created in Section 6.
 5. In Supabase, confirm the `tasks` row reflects the latest `status` and edits.
 
 **Expected result**
+
 - [ ] Employee E sees the task assigned to them.
 - [ ] Status changes and field edits save and survive reload.
 - [ ] Kanban moves update the task status.
@@ -229,6 +236,7 @@ Do this as **Account O** and **Account M**, after Accounts E/M have generated re
 (Sections 4–7) **today**.
 
 **Steps**
+
 1. As **Account M**, open **Attendance → Team** (`/app/attendance/team`) and confirm
    today's real check-in/out status for Account E is shown.
 2. As **Account M** (or Owner), open the **Manager** dashboard (`/app/manager`) and the
@@ -241,6 +249,7 @@ Do this as **Account O** and **Account M**, after Accounts E/M have generated re
    against what you actually created.
 
 **Expected result**
+
 - [ ] Attendance → Team shows Account E's real session status for today.
 - [ ] Report reviews / Manager view lists the reports E actually submitted.
 - [ ] Dashboard figures match the real data you generated during this QA run.
@@ -260,6 +269,7 @@ This is a cross-cutting verification. Repeat the "persistence probe" for each in
 type below.
 
 **Persistence probe (per feature)**
+
 1. Create/modify the item as one account (see the relevant section above).
 2. **Second-account check:** open the intended second account (Owner/Manager/other) on a
    different device and confirm the item appears — proving it's shared server-side, not
@@ -269,6 +279,7 @@ type below.
 4. **Supabase check:** confirm the corresponding table has the row.
 
 **Run the probe against each in-MVP data type**
+
 - [ ] **Organization** (`companies`) — Section 1 edits persist after storage-clear and in Supabase.
 - [ ] **Employees & roles** (`profiles`, `user_roles`) — Section 2 users/roles visible to a second admin and in Supabase.
 - [ ] **Invitations** — pending/accepted state visible to a second admin and after storage-clear (not device-local).
@@ -280,6 +291,7 @@ type below.
 - [ ] **Notifications** (`notifications`) — task-assign / report-submit notifications arrive live and in Supabase.
 
 **Expected result**
+
 - [ ] Every in-MVP data type above survives the storage-clear reload, appears on a second
       account, and has a matching Supabase row.
 - [ ] ⚠️ **Known suspects to confirm are NOT relied on (from prior review):** main dashboard
@@ -294,4 +306,4 @@ type below.
 
 - [ ] All nine sections pass on a clean environment with real accounts.
 - [ ] Any ⚠️ watch-for that failed is logged with the section number and a screenshot.
-- [ ] Tester: ________________  Date: __________  Build (git SHA): ________________
+- [ ] Tester: **\*\***\_\_\_\_**\*\*** Date: \***\*\_\_\*\*** Build (git SHA): **\*\***\_\_\_\_**\*\***

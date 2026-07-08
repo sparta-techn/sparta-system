@@ -7,45 +7,47 @@ All color decisions live in `src/styles.css`. Components consume them through se
 OKLCH everywhere. OKLCH gives perceptual control over lightness, so light/dark counterparts stay visually balanced and contrast is predictable.
 
 ```css
---primary: oklch(0.55 0.21 268);   /* light theme */
-.dark { --primary: oklch(0.70 0.18 268); } /* dark theme, lifted lightness */
+--primary: oklch(0.55 0.21 268); /* light theme */
+.dark {
+  --primary: oklch(0.7 0.18 268);
+} /* dark theme, lifted lightness */
 ```
 
 ## 2. Semantic Roles
 
-| Role | Light | Dark | Use |
-|---|---|---|---|
-| `background` | near-white warm gray | near-black blue | app canvas |
-| `surface` | off-white | lifted black | sidebar/subtle sections |
-| `card` | pure white | one step above surface | content surfaces |
-| `popover` | white | further lifted | menus, dialogs |
-| `foreground` | near-black indigo | near-white | body text |
-| `muted-foreground` | mid-gray | warm light gray | secondary text |
-| `primary` | vivid indigo | brighter indigo | brand, primary CTAs |
-| `primary-soft` | tinted indigo | dim indigo | badge/pill backgrounds |
-| `secondary` | neutral surface | neutral surface | secondary buttons |
-| `accent` | muted indigo tint | dark indigo tint | hover surfaces |
-| `border` | cool gray | white/8% | hairlines |
-| `border-strong` | darker gray | white/16% | structural divides |
-| `input` | matches border | white/10% | form fields |
-| `ring` | primary | primary | focus rings |
-| `destructive` / `-foreground` / `-soft` | red | red | errors, deletions |
-| `success` / `-foreground` / `-soft` | green | green | positive states |
-| `warning` / `-foreground` / `-soft` | amber | amber | attention |
-| `info` / `-foreground` / `-soft` | blue | blue | informational |
-| `chart-1..5` | brand sequence | brand sequence | recharts series |
-| `sidebar*` | dedicated set | dedicated set | sidebar uses its own scope so theming the sidebar doesn't affect the page |
+| Role                                    | Light                | Dark                   | Use                                                                       |
+| --------------------------------------- | -------------------- | ---------------------- | ------------------------------------------------------------------------- |
+| `background`                            | near-white warm gray | near-black blue        | app canvas                                                                |
+| `surface`                               | off-white            | lifted black           | sidebar/subtle sections                                                   |
+| `card`                                  | pure white           | one step above surface | content surfaces                                                          |
+| `popover`                               | white                | further lifted         | menus, dialogs                                                            |
+| `foreground`                            | near-black indigo    | near-white             | body text                                                                 |
+| `muted-foreground`                      | mid-gray             | warm light gray        | secondary text                                                            |
+| `primary`                               | vivid indigo         | brighter indigo        | brand, primary CTAs                                                       |
+| `primary-soft`                          | tinted indigo        | dim indigo             | badge/pill backgrounds                                                    |
+| `secondary`                             | neutral surface      | neutral surface        | secondary buttons                                                         |
+| `accent`                                | muted indigo tint    | dark indigo tint       | hover surfaces                                                            |
+| `border`                                | cool gray            | white/8%               | hairlines                                                                 |
+| `border-strong`                         | darker gray          | white/16%              | structural divides                                                        |
+| `input`                                 | matches border       | white/10%              | form fields                                                               |
+| `ring`                                  | primary              | primary                | focus rings                                                               |
+| `destructive` / `-foreground` / `-soft` | red                  | red                    | errors, deletions                                                         |
+| `success` / `-foreground` / `-soft`     | green                | green                  | positive states                                                           |
+| `warning` / `-foreground` / `-soft`     | amber                | amber                  | attention                                                                 |
+| `info` / `-foreground` / `-soft`        | blue                 | blue                   | informational                                                             |
+| `chart-1..5`                            | brand sequence       | brand sequence         | recharts series                                                           |
+| `sidebar*`                              | dedicated set        | dedicated set          | sidebar uses its own scope so theming the sidebar doesn't affect the page |
 
 ## 3. Status Mapping
 
-| Operational state | Tone | Reason |
-|---|---|---|
-| Working, Approved, Resolved, Completed | success | positive |
-| Late, Pending | warning | needs attention |
-| Blocked, Rejected, Escalated | danger | blocking / negative |
-| On break, Acknowledged | info | neutral-positive |
-| Remote | primary | branded informational |
-| Offline, Cancelled | neutral | inactive |
+| Operational state                      | Tone    | Reason                |
+| -------------------------------------- | ------- | --------------------- |
+| Working, Approved, Resolved, Completed | success | positive              |
+| Late, Pending                          | warning | needs attention       |
+| Blocked, Rejected, Escalated           | danger  | blocking / negative   |
+| On break, Acknowledged                 | info    | neutral-positive      |
+| Remote                                 | primary | branded informational |
+| Offline, Cancelled                     | neutral | inactive              |
 
 All canonicalized in `src/components/status-badge.tsx` (`StatusKind`).
 

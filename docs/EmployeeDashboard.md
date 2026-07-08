@@ -28,12 +28,12 @@ The Employee Dashboard is the **landing surface after login** at `/app`. It is i
 
 ## Responsive Layout
 
-| Breakpoint | Layout |
-|---|---|
-| `< 640` (mobile) | Single column, vertical stack. |
-| `≥ 640` (sm) | KPIs become 2-up. |
-| `≥ 1024` (lg) | KPIs 3-up. |
-| `≥ 1280` (xl) | Multi-column grids activate (2/3 + 1/3 splits, 6-up KPIs). |
+| Breakpoint       | Layout                                                     |
+| ---------------- | ---------------------------------------------------------- |
+| `< 640` (mobile) | Single column, vertical stack.                             |
+| `≥ 640` (sm)     | KPIs become 2-up.                                          |
+| `≥ 1024` (lg)    | KPIs 3-up.                                                 |
+| `≥ 1280` (xl)    | Multi-column grids activate (2/3 + 1/3 splits, 6-up KPIs). |
 
 ## State Handling (UI only)
 

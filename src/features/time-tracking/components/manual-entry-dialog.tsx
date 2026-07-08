@@ -59,9 +59,7 @@ export function ManualEntryDialog({ open, onOpenChange, taskId }: Props) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Log time</DialogTitle>
-          <DialogDescription>
-            Add a manual time entry. Stored locally for now.
-          </DialogDescription>
+          <DialogDescription>Add a manual time entry. Stored locally for now.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -85,7 +83,9 @@ export function ManualEntryDialog({ open, onOpenChange, taskId }: Props) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs" htmlFor="te-date">Date</Label>
+              <Label className="text-xs" htmlFor="te-date">
+                Date
+              </Label>
               <Input
                 id="te-date"
                 type="date"
@@ -95,7 +95,9 @@ export function ManualEntryDialog({ open, onOpenChange, taskId }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs" htmlFor="te-hours">Hours</Label>
+              <Label className="text-xs" htmlFor="te-hours">
+                Hours
+              </Label>
               <Input
                 id="te-hours"
                 type="number"
@@ -108,7 +110,9 @@ export function ManualEntryDialog({ open, onOpenChange, taskId }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs" htmlFor="te-desc">Description (optional)</Label>
+            <Label className="text-xs" htmlFor="te-desc">
+              Description (optional)
+            </Label>
             <Textarea
               id="te-desc"
               rows={3}
@@ -120,8 +124,12 @@ export function ManualEntryDialog({ open, onOpenChange, taskId }: Props) {
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={!canSubmit} onClick={submit}>Log time</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!canSubmit} onClick={submit}>
+            Log time
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

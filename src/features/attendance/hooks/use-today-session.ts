@@ -30,7 +30,12 @@ export function useTodaySession(userId: string | null) {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "work_session_breaks", filter: `user_id=eq.${userId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "work_session_breaks",
+          filter: `user_id=eq.${userId}`,
+        },
         () => {
           void qc.invalidateQueries({ queryKey: attendanceKeys.today(userId) });
         },

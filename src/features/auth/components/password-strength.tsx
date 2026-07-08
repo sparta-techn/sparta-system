@@ -18,16 +18,13 @@ export function PasswordStrength({ value }: { value: string }) {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className={cn(
-              "h-1 rounded-full bg-muted transition-colors",
-              i < score && level.color,
-            )}
+            className={cn("h-1 rounded-full bg-muted transition-colors", i < score && level.color)}
           />
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        Strength: <span className="font-medium text-foreground">{level.label}</span> · use 10+
-        chars with upper, lower, number, and symbol.
+        Strength: <span className="font-medium text-foreground">{level.label}</span> · use 10+ chars
+        with upper, lower, number, and symbol.
       </p>
     </div>
   );

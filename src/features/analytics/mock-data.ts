@@ -35,7 +35,7 @@ export const personalAnalytics = {
     Array.from({ length: 12 }, (_, h) => {
       if (d >= 5) return 0;
       const peak = h >= 2 && h <= 9 ? 4 : 2;
-      return Math.max(0, Math.min(5, peak - Math.abs(5 - h) % 3 + (d % 2)));
+      return Math.max(0, Math.min(5, peak - (Math.abs(5 - h) % 3) + (d % 2)));
     }),
   ),
 };
@@ -141,10 +141,30 @@ export const executiveAnalytics = {
     { name: "Vega Insights", status: "On track", score: 90, blockers: 0 },
   ],
   operationalRisks: [
-    { id: "r1", title: "Helios Mobile has 4 unresolved blockers > 5d", severity: "high" as const, owner: "Engineering" },
-    { id: "r2", title: "Marketing report completion dropped to 71%", severity: "medium" as const, owner: "Marketing" },
-    { id: "r3", title: "Nimbus Data dependency backlog growing", severity: "high" as const, owner: "Data" },
-    { id: "r4", title: "Onboarding completion below target for May cohort", severity: "low" as const, owner: "People Ops" },
+    {
+      id: "r1",
+      title: "Helios Mobile has 4 unresolved blockers > 5d",
+      severity: "high" as const,
+      owner: "Engineering",
+    },
+    {
+      id: "r2",
+      title: "Marketing report completion dropped to 71%",
+      severity: "medium" as const,
+      owner: "Marketing",
+    },
+    {
+      id: "r3",
+      title: "Nimbus Data dependency backlog growing",
+      severity: "high" as const,
+      owner: "Data",
+    },
+    {
+      id: "r4",
+      title: "Onboarding completion below target for May cohort",
+      severity: "low" as const,
+      owner: "People Ops",
+    },
   ],
   dependencyTrend: WEEKS.map((label, i) => ({
     label,
@@ -158,28 +178,121 @@ export const executiveAnalytics = {
 // ──────────────────────────── INSIGHTS ────────────────────────────
 export const insightsByScope: Record<string, Insight[]> = {
   personal: [
-    { id: "p1", title: "Attendance steady at 96%", description: "Up from 92% last month — consistent start times this week.", intent: "positive", delta: "+4pp" },
-    { id: "p2", title: "Resolution time down 31%", description: "You resolved dependencies in 18h on average, down from 26h.", intent: "positive", delta: "-31%" },
-    { id: "p3", title: "Midday completion improved", description: "From 81% to 92% over the last 4 weeks.", intent: "positive", delta: "+11pp" },
-    { id: "p4", title: "Friday focus dips", description: "Working hours on Friday average 7.2h, ~10% below the weekly mean.", intent: "neutral" },
+    {
+      id: "p1",
+      title: "Attendance steady at 96%",
+      description: "Up from 92% last month — consistent start times this week.",
+      intent: "positive",
+      delta: "+4pp",
+    },
+    {
+      id: "p2",
+      title: "Resolution time down 31%",
+      description: "You resolved dependencies in 18h on average, down from 26h.",
+      intent: "positive",
+      delta: "-31%",
+    },
+    {
+      id: "p3",
+      title: "Midday completion improved",
+      description: "From 81% to 92% over the last 4 weeks.",
+      intent: "positive",
+      delta: "+11pp",
+    },
+    {
+      id: "p4",
+      title: "Friday focus dips",
+      description: "Working hours on Friday average 7.2h, ~10% below the weekly mean.",
+      intent: "neutral",
+    },
   ],
   team: [
-    { id: "t1", title: "Open dependencies down 26%", description: "23 open this week vs 31 last week. Resolution pace is outrunning new blockers.", intent: "positive", delta: "-26%" },
-    { id: "t2", title: "Avg blocker duration dropped to 22h", description: "Down from 29h. Engineering escalations were responded to faster.", intent: "positive", delta: "-24%" },
-    { id: "t3", title: "Workload imbalance: Diego", description: "Diego Ruiz holds 11 open dependencies — 2.5x team average.", intent: "warning" },
-    { id: "t4", title: "Report completion at 89%", description: "Up 5pp month-over-month, above 85% target.", intent: "positive", delta: "+5pp" },
+    {
+      id: "t1",
+      title: "Open dependencies down 26%",
+      description: "23 open this week vs 31 last week. Resolution pace is outrunning new blockers.",
+      intent: "positive",
+      delta: "-26%",
+    },
+    {
+      id: "t2",
+      title: "Avg blocker duration dropped to 22h",
+      description: "Down from 29h. Engineering escalations were responded to faster.",
+      intent: "positive",
+      delta: "-24%",
+    },
+    {
+      id: "t3",
+      title: "Workload imbalance: Diego",
+      description: "Diego Ruiz holds 11 open dependencies — 2.5x team average.",
+      intent: "warning",
+    },
+    {
+      id: "t4",
+      title: "Report completion at 89%",
+      description: "Up 5pp month-over-month, above 85% target.",
+      intent: "positive",
+      delta: "+5pp",
+    },
   ],
   hr: [
-    { id: "h1", title: "Attendance compliance at 97%", description: "Highest in 6 months. Late starts down 18%.", intent: "positive", delta: "+2pp" },
-    { id: "h2", title: "Invite conversion up to 82%", description: "Sent 64 invitations, 52 accepted within the window.", intent: "positive", delta: "+6pp" },
-    { id: "h3", title: "Vacation requests spiking", description: "18 vacation requests in Jun vs 14 in May — plan coverage early.", intent: "warning", delta: "+29%" },
-    { id: "h4", title: "Onboarding completion improving", description: "May cohort reached 86%, up from 79% in April.", intent: "positive", delta: "+7pp" },
+    {
+      id: "h1",
+      title: "Attendance compliance at 97%",
+      description: "Highest in 6 months. Late starts down 18%.",
+      intent: "positive",
+      delta: "+2pp",
+    },
+    {
+      id: "h2",
+      title: "Invite conversion up to 82%",
+      description: "Sent 64 invitations, 52 accepted within the window.",
+      intent: "positive",
+      delta: "+6pp",
+    },
+    {
+      id: "h3",
+      title: "Vacation requests spiking",
+      description: "18 vacation requests in Jun vs 14 in May — plan coverage early.",
+      intent: "warning",
+      delta: "+29%",
+    },
+    {
+      id: "h4",
+      title: "Onboarding completion improving",
+      description: "May cohort reached 86%, up from 79% in April.",
+      intent: "positive",
+      delta: "+7pp",
+    },
   ],
   executive: [
-    { id: "e1", title: "Company health at 86", description: "Composite score up 4 points QoQ across all departments except Marketing.", intent: "positive", delta: "+5%" },
-    { id: "e2", title: "Nimbus Data critical", description: "Health 51 and 6 unresolved blockers. Recommend exec review this week.", intent: "negative" },
-    { id: "e3", title: "Report compliance at 91%", description: "Highest since launch — automation reminders effective.", intent: "positive", delta: "+4pp" },
-    { id: "e4", title: "Open operational risks reduced", description: "From 8 to 5 quarter-over-quarter.", intent: "positive", delta: "-38%" },
+    {
+      id: "e1",
+      title: "Company health at 86",
+      description: "Composite score up 4 points QoQ across all departments except Marketing.",
+      intent: "positive",
+      delta: "+5%",
+    },
+    {
+      id: "e2",
+      title: "Nimbus Data critical",
+      description: "Health 51 and 6 unresolved blockers. Recommend exec review this week.",
+      intent: "negative",
+    },
+    {
+      id: "e3",
+      title: "Report compliance at 91%",
+      description: "Highest since launch — automation reminders effective.",
+      intent: "positive",
+      delta: "+4pp",
+    },
+    {
+      id: "e4",
+      title: "Open operational risks reduced",
+      description: "From 8 to 5 quarter-over-quarter.",
+      intent: "positive",
+      delta: "-38%",
+    },
   ],
 };
 

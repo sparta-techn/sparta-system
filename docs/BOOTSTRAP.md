@@ -17,14 +17,14 @@ no changes.
 
 When the database has not yet been bootstrapped, `runBootstrap` provisions:
 
-| # | Resource            | Where it lands                                   |
-|---|---------------------|--------------------------------------------------|
-| 1 | **Owner account**   | `auth.users` + `public.profiles` + `public.user_roles` (`owner`) |
-| 2 | **Company**         | `public.companies` (identity: name, slug, timezone, primary owner) |
-| 3 | **Default workspace** | `public.workspaces` (`is_default = true`, linked to the company) |
-| 4 | **Default departments** | `public.departments` (Engineering, Product, Design, Operations, People, Marketing, Sales, Finance) |
-| 5 | **Default roles**   | the `public.app_role` enum values (owner → viewer) |
-| 6 | **Default permissions** | `public.permissions` catalog + `public.role_permissions` matrix |
+| #   | Resource                | Where it lands                                                                                     |
+| --- | ----------------------- | -------------------------------------------------------------------------------------------------- |
+| 1   | **Owner account**       | `auth.users` + `public.profiles` + `public.user_roles` (`owner`)                                   |
+| 2   | **Company**             | `public.companies` (identity: name, slug, timezone, primary owner)                                 |
+| 3   | **Default workspace**   | `public.workspaces` (`is_default = true`, linked to the company)                                   |
+| 4   | **Default departments** | `public.departments` (Engineering, Product, Design, Operations, People, Marketing, Sales, Finance) |
+| 5   | **Default roles**       | the `public.app_role` enum values (owner → viewer)                                                 |
+| 6   | **Default permissions** | `public.permissions` catalog + `public.role_permissions` matrix                                    |
 
 Then it flips the platform singleton `public.system_settings`:
 
@@ -71,19 +71,19 @@ bun run bootstrap:status
 
 ### Environment variables
 
-| Variable | Required | Default | Purpose |
-|---|---|---|---|
-| `SUPABASE_URL` | ✅ | — | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | — | Service-role key (RLS bypass, server-only) |
-| `OWNER_EMAIL` | ✅ | — | Initial owner's email (auto-confirmed) |
-| `OWNER_PASSWORD` | ✅ | — | Initial owner's password |
-| `OWNER_NAME` | — | local-part of email | Owner display / full name |
-| `COMPANY_NAME` | — | `SpartaFlow` | Company name |
-| `COMPANY_SLUG` | — | slug of company name | Company slug (unique) |
-| `COMPANY_TIMEZONE` | — | `Africa/Cairo` | Company timezone |
-| `WORKSPACE_NAME` | — | `General` | Default workspace name |
-| `WORKSPACE_SLUG` | — | `<company>-<workspace>` | Default workspace slug (unique) |
-| `BOOTSTRAP_KEEP_PUBLIC_REGISTRATION` | — | unset | Set to `true` to leave public signup **enabled** after bootstrap |
+| Variable                             | Required | Default                 | Purpose                                                          |
+| ------------------------------------ | -------- | ----------------------- | ---------------------------------------------------------------- |
+| `SUPABASE_URL`                       | ✅       | —                       | Supabase project URL                                             |
+| `SUPABASE_SERVICE_ROLE_KEY`          | ✅       | —                       | Service-role key (RLS bypass, server-only)                       |
+| `OWNER_EMAIL`                        | ✅       | —                       | Initial owner's email (auto-confirmed)                           |
+| `OWNER_PASSWORD`                     | ✅       | —                       | Initial owner's password                                         |
+| `OWNER_NAME`                         | —        | local-part of email     | Owner display / full name                                        |
+| `COMPANY_NAME`                       | —        | `SpartaFlow`            | Company name                                                     |
+| `COMPANY_SLUG`                       | —        | slug of company name    | Company slug (unique)                                            |
+| `COMPANY_TIMEZONE`                   | —        | `Africa/Cairo`          | Company timezone                                                 |
+| `WORKSPACE_NAME`                     | —        | `General`               | Default workspace name                                           |
+| `WORKSPACE_SLUG`                     | —        | `<company>-<workspace>` | Default workspace slug (unique)                                  |
+| `BOOTSTRAP_KEEP_PUBLIC_REGISTRATION` | —        | unset                   | Set to `true` to leave public signup **enabled** after bootstrap |
 
 ---
 
@@ -118,14 +118,14 @@ await systemSettingsService.setPublicRegistration(true);
 
 ## How it's wired (code map)
 
-| Layer | File | Role |
-|---|---|---|
-| Migration | `supabase/migrations/20260702120000_bootstrap_org_registration.sql` | Creates `companies`, `workspaces`, `system_settings`; status helpers `is_bootstrapped()` / `public_registration_enabled()`; hardens `handle_new_user()` |
-| Orchestrator (server-only) | `src/repositories/bootstrap/bootstrap.server.ts` | `runBootstrap()` and `getBootstrapStatus()`, using the service-role admin client |
-| Seed constants | `src/repositories/bootstrap/constants.ts` | Default departments, permissions, role→permission matrix, roles |
-| Contracts | `src/repositories/bootstrap/types.ts` | `BootstrapInput`, `BootstrapStatus`, `BootstrapResult` |
-| Services | `src/services/organization/` | `companiesService`, `workspacesService`, `systemSettingsService` (the app-facing read/write API over the new tables) |
-| CLI | `scripts/bootstrap.ts` (`bun run bootstrap`) | Operator entrypoint |
+| Layer                      | File                                                                | Role                                                                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migration                  | `supabase/migrations/20260702120000_bootstrap_org_registration.sql` | Creates `companies`, `workspaces`, `system_settings`; status helpers `is_bootstrapped()` / `public_registration_enabled()`; hardens `handle_new_user()` |
+| Orchestrator (server-only) | `src/repositories/bootstrap/bootstrap.server.ts`                    | `runBootstrap()` and `getBootstrapStatus()`, using the service-role admin client                                                                        |
+| Seed constants             | `src/repositories/bootstrap/constants.ts`                           | Default departments, permissions, role→permission matrix, roles                                                                                         |
+| Contracts                  | `src/repositories/bootstrap/types.ts`                               | `BootstrapInput`, `BootstrapStatus`, `BootstrapResult`                                                                                                  |
+| Services                   | `src/services/organization/`                                        | `companiesService`, `workspacesService`, `systemSettingsService` (the app-facing read/write API over the new tables)                                    |
+| CLI                        | `scripts/bootstrap.ts` (`bun run bootstrap`)                        | Operator entrypoint                                                                                                                                     |
 
 `bootstrap.server.ts` is **server-only** and must be imported explicitly from a
 server entrypoint — it is intentionally not re-exported from

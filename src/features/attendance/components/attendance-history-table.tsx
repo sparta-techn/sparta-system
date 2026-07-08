@@ -105,12 +105,18 @@ export function AttendanceHistoryTable() {
 
       <div className="rounded-xl border border-border bg-card">
         {q.isPending ? (
-          <div className="p-4"><ListSkeleton rows={6} /></div>
+          <div className="p-4">
+            <ListSkeleton rows={6} />
+          </div>
         ) : q.isError ? (
           <ErrorState
             title="Couldn't load history"
             description={(q.error as Error)?.message ?? "Please try again."}
-            action={<Button variant="outline" onClick={() => q.refetch()}>Retry</Button>}
+            action={
+              <Button variant="outline" onClick={() => q.refetch()}>
+                Retry
+              </Button>
+            }
           />
         ) : visible.length === 0 ? (
           totalCount === 0 ? (

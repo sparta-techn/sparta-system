@@ -16,17 +16,17 @@
 
 ## 0. What we are deploying
 
-| Fact | Value | Source |
-|---|---|---|
-| App type | TanStack Start **SSR** app on **Nitro** | `vite.config.ts`, `src/server.ts` |
-| Package manager | **Bun** (lockfile `bun.lock`, `bunfig.toml`) | repo root |
-| Runtime | Node.js 20 LTS+ / Bun (build currently uses Node 26) | `node -v` |
-| Build output | `.output/` — `.output/server/index.mjs` (server) + `.output/public/` (static assets) | `.output/nitro.json` |
-| Current build preset | `cloudflare-module` ⚠️ | `.output/nitro.json` |
-| **Required preset for VPS** | **`node-server`** (see §7.1) | this plan |
-| Client env | `VITE_*` vars — **inlined into the browser bundle at build time** | `.env.example` |
-| Server env | `SUPABASE_*` (incl. **service-role key** — server-only) | `.env.example`, `client.server.ts` |
-| Backend | **Supabase** (managed Postgres + Auth + Storage + Realtime) | `src/integrations/supabase/` |
+| Fact                        | Value                                                                                | Source                             |
+| --------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------- |
+| App type                    | TanStack Start **SSR** app on **Nitro**                                              | `vite.config.ts`, `src/server.ts`  |
+| Package manager             | **Bun** (lockfile `bun.lock`, `bunfig.toml`)                                         | repo root                          |
+| Runtime                     | Node.js 20 LTS+ / Bun (build currently uses Node 26)                                 | `node -v`                          |
+| Build output                | `.output/` — `.output/server/index.mjs` (server) + `.output/public/` (static assets) | `.output/nitro.json`               |
+| Current build preset        | `cloudflare-module` ⚠️                                                               | `.output/nitro.json`               |
+| **Required preset for VPS** | **`node-server`** (see §7.1)                                                         | this plan                          |
+| Client env                  | `VITE_*` vars — **inlined into the browser bundle at build time**                    | `.env.example`                     |
+| Server env                  | `SUPABASE_*` (incl. **service-role key** — server-only)                              | `.env.example`, `client.server.ts` |
+| Backend                     | **Supabase** (managed Postgres + Auth + Storage + Realtime)                          | `src/integrations/supabase/`       |
 
 > ⚠️ **Critical prerequisite.** The checked-in `.output/` was built with the
 > `cloudflare-module` preset (Cloudflare Workers). It **will not run under Node on
@@ -39,12 +39,12 @@
 
 Four planes, each with a single responsibility:
 
-| Plane | Provider | Responsibility |
-|---|---|---|
-| **Source & CI/CD** | GitHub | Version control, CI (lint/typecheck/test/build), release trigger |
-| **Edge** | Cloudflare | DNS, global CDN, TLS termination, WAF, DDoS, caching, rate limiting |
+| Plane                | Provider               | Responsibility                                                        |
+| -------------------- | ---------------------- | --------------------------------------------------------------------- |
+| **Source & CI/CD**   | GitHub                 | Version control, CI (lint/typecheck/test/build), release trigger      |
+| **Edge**             | Cloudflare             | DNS, global CDN, TLS termination, WAF, DDoS, caching, rate limiting   |
 | **Origin / compute** | Hostinger VPS (Ubuntu) | Nginx reverse proxy → Nitro Node server (SSR), managed by systemd/PM2 |
-| **Backend / data** | Supabase | Postgres (RLS), Auth, Storage, Realtime, automated backups |
+| **Backend / data**   | Supabase               | Postgres (RLS), Auth, Storage, Realtime, automated backups            |
 
 ```
                          ┌───────────────────────────────────────────┐
@@ -120,12 +120,12 @@ SSR     ──HTTPS──► Supabase (service-role or RLS-scoped) (SUPABASE_URL
 
 ### 2.3 Ports & exposure
 
-| Port | Host | Exposure | Purpose |
-|---|---|---|---|
-| 443 / 80 | VPS | **Cloudflare IPs only** (UFW + Nginx allowlist) | Public HTTPS/HTTP (80 → 301 https) |
-| 3000 | VPS | **loopback only** (`127.0.0.1`) | Nitro Node server |
-| 22 | VPS | **admin IP allowlist / key-only** | SSH |
-| 443 | Supabase | public (managed) | Postgres/Auth/Storage/Realtime API |
+| Port     | Host     | Exposure                                        | Purpose                            |
+| -------- | -------- | ----------------------------------------------- | ---------------------------------- |
+| 443 / 80 | VPS      | **Cloudflare IPs only** (UFW + Nginx allowlist) | Public HTTPS/HTTP (80 → 301 https) |
+| 3000     | VPS      | **loopback only** (`127.0.0.1`)                 | Nitro Node server                  |
+| 22       | VPS      | **admin IP allowlist / key-only**               | SSH                                |
+| 443      | Supabase | public (managed)                                | Postgres/Auth/Storage/Realtime API |
 
 ---
 
@@ -136,23 +136,23 @@ Two classes, split by exposure. This split is load-bearing for security —
 
 ### 3.1 Server-side (secret — never in the browser bundle)
 
-| Var | Purpose | Notes |
-|---|---|---|
-| `SUPABASE_URL` | Supabase project API URL (server client) | |
-| `SUPABASE_PUBLISHABLE_KEY` | Publishable/anon key for RLS-scoped server client | |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Full RLS bypass.** Server-only admin client | **Secret.** Never `VITE_`, never commit, rotate on leak |
-| `SUPABASE_PROJECT_ID` | Project ref | |
-| `NODE_ENV` | `production` | |
-| `PORT` | `3000` | Nitro listen port (loopback) |
-| `HOST` | `127.0.0.1` | Bind loopback only |
+| Var                         | Purpose                                           | Notes                                                   |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| `SUPABASE_URL`              | Supabase project API URL (server client)          |                                                         |
+| `SUPABASE_PUBLISHABLE_KEY`  | Publishable/anon key for RLS-scoped server client |                                                         |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Full RLS bypass.** Server-only admin client     | **Secret.** Never `VITE_`, never commit, rotate on leak |
+| `SUPABASE_PROJECT_ID`       | Project ref                                       |                                                         |
+| `NODE_ENV`                  | `production`                                      |                                                         |
+| `PORT`                      | `3000`                                            | Nitro listen port (loopback)                            |
+| `HOST`                      | `127.0.0.1`                                       | Bind loopback only                                      |
 
 ### 3.2 Client-side (public — inlined into the bundle at **build** time)
 
-| Var | Purpose |
-|---|---|
-| `VITE_SUPABASE_URL` | Supabase API URL for browser client |
+| Var                             | Purpose                                               |
+| ------------------------------- | ----------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | Supabase API URL for browser client                   |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable key (safe to expose; RLS enforces access) |
-| `VITE_SUPABASE_PROJECT_ID` | Project ref |
+| `VITE_SUPABASE_PROJECT_ID`      | Project ref                                           |
 
 > **Build-time vs runtime.** `VITE_*` values are **baked into the artifact** by
 > Vite. Changing them requires a **rebuild + redeploy**, not just a process
@@ -185,13 +185,13 @@ Two classes, split by exposure. This split is load-bearing for security —
 Cloudflare is authoritative DNS for the apex zone. Suggested layout (adjust the
 zone to the real domain):
 
-| Hostname | Type | Proxied (orange cloud) | Points to | Purpose |
-|---|---|---|---|---|
-| `spartaflow.com` | A / AAAA | ✅ | VPS IP | Marketing / redirect to app |
-| `app.spartaflow.com` | A / AAAA | ✅ | VPS IP | **Production app (SSR origin)** |
-| `staging.spartaflow.com` | A / AAAA | ✅ | VPS IP (or 2nd VPS) | Staging / pre-prod |
-| `<ref>.supabase.co` | — | (managed) | Supabase | Backend API (not in our zone) |
-| `www.spartaflow.com` | CNAME | ✅ | `spartaflow.com` | Redirect (Cloudflare rule) → apex |
+| Hostname                 | Type     | Proxied (orange cloud) | Points to           | Purpose                           |
+| ------------------------ | -------- | ---------------------- | ------------------- | --------------------------------- |
+| `spartaflow.com`         | A / AAAA | ✅                     | VPS IP              | Marketing / redirect to app       |
+| `app.spartaflow.com`     | A / AAAA | ✅                     | VPS IP              | **Production app (SSR origin)**   |
+| `staging.spartaflow.com` | A / AAAA | ✅                     | VPS IP (or 2nd VPS) | Staging / pre-prod                |
+| `<ref>.supabase.co`      | —        | (managed)              | Supabase            | Backend API (not in our zone)     |
+| `www.spartaflow.com`     | CNAME    | ✅                     | `spartaflow.com`    | Redirect (Cloudflare rule) → apex |
 
 Rules:
 
@@ -381,7 +381,7 @@ WantedBy=multi-user.target
 ```
 
 > PM2 is an acceptable alternative (`pm2 start .output/server/index.mjs --name
-> spartaflow -i 1` + `pm2 save` + `pm2 startup`). systemd is preferred for a
+spartaflow -i 1` + `pm2 save` + `pm2 startup`). systemd is preferred for a
 > single-app VPS: simpler, no extra dependency, native journald logs.
 
 ### 7.3 Database migrations (Supabase)
@@ -407,10 +407,10 @@ WantedBy=multi-user.target
 
 ### 7.5 Environments
 
-| Env | Branch | Host | Supabase project |
-|---|---|---|---|
-| Production | `main` (tag/release) | `app.spartaflow.com` | prod project |
-| Staging | `staging` | `staging.spartaflow.com` | separate staging project |
+| Env        | Branch               | Host                     | Supabase project         |
+| ---------- | -------------------- | ------------------------ | ------------------------ |
+| Production | `main` (tag/release) | `app.spartaflow.com`     | prod project             |
+| Staging    | `staging`            | `staging.spartaflow.com` | separate staging project |
 
 Keep prod and staging on **separate Supabase projects** so migrations and seed
 data can be validated before prod.
@@ -442,7 +442,7 @@ previous copy and `systemctl restart` (no rebuild for server-side vars).
   release**, rolling the app back one version is safe against the newer schema —
   no DB rollback needed in the normal case.
 - A destructive migration must ship its own reverse migration and be treated as a
-  **separate, gated** change. Prefer roll-*forward* (a new fix migration) over
+  **separate, gated** change. Prefer roll-_forward_ (a new fix migration) over
   dropping columns to undo. Restore-from-backup (§9) is the last resort and loses
   data written since the snapshot.
 
@@ -456,16 +456,16 @@ revert the specific rule. Keep DNS + SSL changes small and logged.
 Aligns with the intent in [`docs/BackupStrategy.md`](./BackupStrategy.md);
 concretized for this stack.
 
-| What | Mechanism | Frequency | Retention | Location |
-|---|---|---|---|---|
-| **Supabase Postgres** | Managed daily backups **+ PITR** (Point-in-Time Recovery) — enable on the paid plan | Continuous WAL (PITR) + daily snapshot | ≥ 7 days PITR; 30-day snapshots | Supabase-managed, off-VPS |
-| **Logical DB dump** | `pg_dump` via CI cron (or Supabase CLI) to encrypted object storage | Daily | 30 days | Off-site bucket (e.g. R2/S3), encrypted |
-| **Supabase Storage (files)** | Bucket replication / periodic sync to off-site object storage | Daily | 30 days | Off-site bucket |
-| **Source of truth (code)** | GitHub (repo + tags/releases) | On push | Indefinite | GitHub |
-| **Migrations** | `supabase/migrations/` in Git — schema is reproducible | On change | Indefinite | GitHub |
-| **VPS config** | Nginx conf, systemd unit, `spartaflow.env` **template** (no secrets), UFW rules → infra repo / documented | On change | Indefinite | Git (secrets excluded) |
-| **Secrets** | Stored in a password manager / secrets vault + GitHub Actions secrets | On rotation | Current + previous | Vault |
-| **Release artifacts** | Last 5 releases retained on VPS | Per deploy | 5 releases | VPS `releases/` |
+| What                         | Mechanism                                                                                                 | Frequency                              | Retention                       | Location                                |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------- | --------------------------------------- |
+| **Supabase Postgres**        | Managed daily backups **+ PITR** (Point-in-Time Recovery) — enable on the paid plan                       | Continuous WAL (PITR) + daily snapshot | ≥ 7 days PITR; 30-day snapshots | Supabase-managed, off-VPS               |
+| **Logical DB dump**          | `pg_dump` via CI cron (or Supabase CLI) to encrypted object storage                                       | Daily                                  | 30 days                         | Off-site bucket (e.g. R2/S3), encrypted |
+| **Supabase Storage (files)** | Bucket replication / periodic sync to off-site object storage                                             | Daily                                  | 30 days                         | Off-site bucket                         |
+| **Source of truth (code)**   | GitHub (repo + tags/releases)                                                                             | On push                                | Indefinite                      | GitHub                                  |
+| **Migrations**               | `supabase/migrations/` in Git — schema is reproducible                                                    | On change                              | Indefinite                      | GitHub                                  |
+| **VPS config**               | Nginx conf, systemd unit, `spartaflow.env` **template** (no secrets), UFW rules → infra repo / documented | On change                              | Indefinite                      | Git (secrets excluded)                  |
+| **Secrets**                  | Stored in a password manager / secrets vault + GitHub Actions secrets                                     | On rotation                            | Current + previous              | Vault                                   |
+| **Release artifacts**        | Last 5 releases retained on VPS                                                                           | Per deploy                             | 5 releases                      | VPS `releases/`                         |
 
 Principles:
 
@@ -482,24 +482,24 @@ Principles:
 
 **Objectives (targets — confirm with stakeholders):**
 
-| Metric | Target |
-|---|---|
-| **RTO** (time to restore service) | ≤ 2 hours |
+| Metric                             | Target                                   |
+| ---------------------------------- | ---------------------------------------- |
+| **RTO** (time to restore service)  | ≤ 2 hours                                |
 | **RPO** (max acceptable data loss) | ≤ 15 min (PITR) / ≤ 24 h (snapshot-only) |
 
 ### 10.1 Failure scenarios & response
 
-| Scenario | Blast radius | Response |
-|---|---|---|
-| **Nitro process crash** | SSR down | `Restart=always` auto-recovers; alert if flapping |
-| **VPS reboot** | Brief outage | systemd `WantedBy=multi-user.target` auto-starts; Cloudflare serves cached assets meanwhile |
-| **VPS lost / corrupted** | Origin down | Provision new Hostinger VPS → run bootstrap (§10.2) → flip DNS/keep Cloudflare → restore config from Git. **No data restore needed** (state is in Supabase) |
-| **Bad release** | Errors in prod | Symlink rollback (§8) |
-| **Supabase outage** | App degraded/down (auth+data) | Wait on Supabase status; app shows error states ([`docs/ERROR_HANDLING.md`](./ERROR_HANDLING.md)); no local failover (managed dependency) |
-| **Supabase data loss / bad migration** | Data corruption | **PITR** restore to just before the event, or restore latest logical dump; then roll app forward |
-| **Cloudflare outage** | Edge down | Rare; optionally keep a documented "grey-cloud" (DNS-only) fallback to reach origin directly, accepting loss of WAF/CDN |
-| **Secret leak (service-role key)** | Full DB exposure risk | Rotate key in Supabase immediately (§3.4), restart service, audit access logs, review RLS |
-| **Domain/DNS compromise** | Traffic hijack | Cloudflare 2FA + scoped API tokens; registrar lock; recover via Cloudflare support |
+| Scenario                               | Blast radius                  | Response                                                                                                                                                    |
+| -------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nitro process crash**                | SSR down                      | `Restart=always` auto-recovers; alert if flapping                                                                                                           |
+| **VPS reboot**                         | Brief outage                  | systemd `WantedBy=multi-user.target` auto-starts; Cloudflare serves cached assets meanwhile                                                                 |
+| **VPS lost / corrupted**               | Origin down                   | Provision new Hostinger VPS → run bootstrap (§10.2) → flip DNS/keep Cloudflare → restore config from Git. **No data restore needed** (state is in Supabase) |
+| **Bad release**                        | Errors in prod                | Symlink rollback (§8)                                                                                                                                       |
+| **Supabase outage**                    | App degraded/down (auth+data) | Wait on Supabase status; app shows error states ([`docs/ERROR_HANDLING.md`](./ERROR_HANDLING.md)); no local failover (managed dependency)                   |
+| **Supabase data loss / bad migration** | Data corruption               | **PITR** restore to just before the event, or restore latest logical dump; then roll app forward                                                            |
+| **Cloudflare outage**                  | Edge down                     | Rare; optionally keep a documented "grey-cloud" (DNS-only) fallback to reach origin directly, accepting loss of WAF/CDN                                     |
+| **Secret leak (service-role key)**     | Full DB exposure risk         | Rotate key in Supabase immediately (§3.4), restart service, audit access logs, review RLS                                                                   |
+| **Domain/DNS compromise**              | Traffic hijack                | Cloudflare 2FA + scoped API tokens; registrar lock; recover via Cloudflare support                                                                          |
 
 ### 10.2 VPS rebuild runbook (origin lost)
 
@@ -557,7 +557,7 @@ Principles:
 
 ---
 
-*This plan operates the artifact as built. The single blocking change before the
+_This plan operates the artifact as built. The single blocking change before the
 first VPS deploy is switching the Nitro build preset from `cloudflare-module` to
 `node-server` (§7.1) — a build/CI configuration change, not an application code
-change.*
+change._

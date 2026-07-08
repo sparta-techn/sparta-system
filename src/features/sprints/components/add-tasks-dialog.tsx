@@ -39,9 +39,7 @@ export function AddTasksDialog({
           t.sprintId !== sprint.id,
       )
       .filter((t) =>
-        q
-          ? t.title.toLowerCase().includes(q) || t.ref.toLowerCase().includes(q)
-          : true,
+        q ? t.title.toLowerCase().includes(q) || t.ref.toLowerCase().includes(q) : true,
       )
       .slice(0, 80);
   }, [allTasks, search, sprint.id, sprint.projectId]);
@@ -69,7 +67,8 @@ export function AddTasksDialog({
         <DialogHeader>
           <DialogTitle>Add tasks to sprint</DialogTitle>
           <DialogDescription>
-            Pick existing tasks from <span className="font-medium">{sprint.name}</span>'s project backlog.
+            Pick existing tasks from <span className="font-medium">{sprint.name}</span>'s project
+            backlog.
           </DialogDescription>
         </DialogHeader>
 
@@ -86,7 +85,8 @@ export function AddTasksDialog({
         <div className="max-h-[420px] divide-y overflow-y-auto rounded-md border">
           {candidates.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
-              No matching tasks. Tasks belonging to other projects or already in this sprint are hidden.
+              No matching tasks. Tasks belonging to other projects or already in this sprint are
+              hidden.
             </div>
           ) : (
             candidates.map((t) => {
@@ -125,7 +125,9 @@ export function AddTasksDialog({
         <DialogFooter className="items-center sm:justify-between">
           <span className="text-xs text-muted-foreground">{selected.size} selected</span>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button disabled={!selected.size} onClick={submit}>
               Add {selected.size || ""} task{selected.size === 1 ? "" : "s"}
             </Button>

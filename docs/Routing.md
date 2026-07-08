@@ -21,16 +21,16 @@ Routes are organized into **public**, **authenticated**, and **role-gated** grou
 
 ## Public Routes
 
-| Path | Purpose |
-|---|---|
-| `/auth/sign-in` | Email/password + Google SSO. |
-| `/auth/sign-up` | Optional; usually invite-only. |
-| `/auth/forgot-password` | Send reset email. |
-| `/auth/reset-password` | Set new password from email link. |
-| `/auth/mfa` | MFA challenge step. |
-| `/auth/callback` | OAuth callback. |
-| `/legal/privacy`, `/legal/terms` | Static. |
-| `/health` | Health check (no auth). |
+| Path                             | Purpose                           |
+| -------------------------------- | --------------------------------- |
+| `/auth/sign-in`                  | Email/password + Google SSO.      |
+| `/auth/sign-up`                  | Optional; usually invite-only.    |
+| `/auth/forgot-password`          | Send reset email.                 |
+| `/auth/reset-password`           | Set new password from email link. |
+| `/auth/mfa`                      | MFA challenge step.               |
+| `/auth/callback`                 | OAuth callback.                   |
+| `/legal/privacy`, `/legal/terms` | Static.                           |
+| `/health`                        | Health check (no auth).           |
 
 Guard: must be signed-out **or** session-incomplete (MFA pending). Signed-in users are redirected to `/dashboard`.
 
@@ -38,21 +38,21 @@ Guard: must be signed-out **or** session-incomplete (MFA pending). Signed-in use
 
 ## Authenticated Routes (All Roles)
 
-| Path | Purpose |
-|---|---|
-| `/dashboard` | Personal landing. |
-| `/attendance` | Today's attendance + history. |
-| `/workflow/morning` | Morning check-in. |
-| `/workflow/midday` | Midday status. |
-| `/workflow/end-of-day` | EOD report. |
-| `/dependencies` | My dependencies (incoming + outgoing). |
-| `/dependencies/[id]` | Detail. |
-| `/announcements` | List + detail. |
-| `/notifications` | Notification center. |
-| `/directory` | Employee directory. |
-| `/directory/[userId]` | Employee profile. |
-| `/leaves` | My leaves. |
-| `/settings/*` | Profile, preferences, MFA, sessions. |
+| Path                   | Purpose                                |
+| ---------------------- | -------------------------------------- |
+| `/dashboard`           | Personal landing.                      |
+| `/attendance`          | Today's attendance + history.          |
+| `/workflow/morning`    | Morning check-in.                      |
+| `/workflow/midday`     | Midday status.                         |
+| `/workflow/end-of-day` | EOD report.                            |
+| `/dependencies`        | My dependencies (incoming + outgoing). |
+| `/dependencies/[id]`   | Detail.                                |
+| `/announcements`       | List + detail.                         |
+| `/notifications`       | Notification center.                   |
+| `/directory`           | Employee directory.                    |
+| `/directory/[userId]`  | Employee profile.                      |
+| `/leaves`              | My leaves.                             |
+| `/settings/*`          | Profile, preferences, MFA, sessions.   |
 
 Guard: authenticated session, MFA satisfied if required.
 
@@ -60,14 +60,14 @@ Guard: authenticated session, MFA satisfied if required.
 
 ## Manager Routes (Team Lead, PM)
 
-| Path | Roles |
-|---|---|
-| `/team/[teamId]` | Team Lead of that team, PM, HR, Owner. |
-| `/team/[teamId]/dependencies` | same |
-| `/team/[teamId]/reports` | same |
-| `/department/[deptId]` | PM, HR, Owner |
-| `/department/[deptId]/board` | same |
-| `/reports/projects/[projectId]` | PM of project, Owner |
+| Path                            | Roles                                  |
+| ------------------------------- | -------------------------------------- |
+| `/team/[teamId]`                | Team Lead of that team, PM, HR, Owner. |
+| `/team/[teamId]/dependencies`   | same                                   |
+| `/team/[teamId]/reports`        | same                                   |
+| `/department/[deptId]`          | PM, HR, Owner                          |
+| `/department/[deptId]/board`    | same                                   |
+| `/reports/projects/[projectId]` | PM of project, Owner                   |
 
 Guard: `hasRole('team_lead'|'pm') AND scopeMatches(teamId|deptId|projectId)`.
 
@@ -75,15 +75,15 @@ Guard: `hasRole('team_lead'|'pm') AND scopeMatches(teamId|deptId|projectId)`.
 
 ## HR Routes
 
-| Path |
-|---|
-| `/hr/overview` |
-| `/hr/attendance` |
-| `/hr/leaves` |
+| Path                |
+| ------------------- |
+| `/hr/overview`      |
+| `/hr/attendance`    |
+| `/hr/leaves`        |
 | `/hr/announcements` |
-| `/hr/onboarding` |
-| `/hr/directory` |
-| `/hr/exports` |
+| `/hr/onboarding`    |
+| `/hr/directory`     |
+| `/hr/exports`       |
 
 Guard: `hasAnyRole(['hr','owner','super_admin'])`.
 
@@ -91,12 +91,12 @@ Guard: `hasAnyRole(['hr','owner','super_admin'])`.
 
 ## Owner Routes
 
-| Path |
-|---|
-| `/owner/health` |
+| Path                 |
+| -------------------- |
+| `/owner/health`      |
 | `/owner/departments` |
-| `/owner/risks` |
-| `/owner/digest` |
+| `/owner/risks`       |
+| `/owner/digest`      |
 
 Guard: `hasRole('owner')`.
 
@@ -104,16 +104,16 @@ Guard: `hasRole('owner')`.
 
 ## Admin Routes
 
-| Path |
-|---|
-| `/admin/organization` |
-| `/admin/departments` |
-| `/admin/teams` |
-| `/admin/roles` |
+| Path                   |
+| ---------------------- |
+| `/admin/organization`  |
+| `/admin/departments`   |
+| `/admin/teams`         |
+| `/admin/roles`         |
 | `/admin/working-rules` |
 | `/admin/feature-flags` |
-| `/admin/integrations` |
-| `/admin/audit-logs` |
+| `/admin/integrations`  |
+| `/admin/audit-logs`    |
 
 Guard: `hasAnyRole(['super_admin','owner'])`.
 
@@ -121,14 +121,14 @@ Guard: `hasAnyRole(['super_admin','owner'])`.
 
 ## API Routes
 
-| Path | Auth |
-|---|---|
-| `/api/webhooks/clickup` | HMAC signature. |
-| `/api/webhooks/github` | HMAC signature. |
-| `/api/webhooks/slack` | Slack signing secret. |
+| Path                            | Auth                                  |
+| ------------------------------- | ------------------------------------- |
+| `/api/webhooks/clickup`         | HMAC signature.                       |
+| `/api/webhooks/github`          | HMAC signature.                       |
+| `/api/webhooks/slack`           | Slack signing secret.                 |
 | `/api/internal/notify-dispatch` | Service token (Edge Function caller). |
-| `/api/internal/reports-rollup` | Service token. |
-| `/api/health` | Public. |
+| `/api/internal/reports-rollup`  | Service token.                        |
+| `/api/health`                   | Public.                               |
 
 ---
 
@@ -163,6 +163,7 @@ Three enforcement layers, all must pass:
 ## Route Map Source of Truth
 
 A single typed `routeMap` lives in `shared/config/routes.ts` and is used by:
+
 - Sidebar / Topbar navigation.
 - Breadcrumbs.
 - RBAC matrix (`role → routes`).

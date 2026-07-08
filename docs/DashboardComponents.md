@@ -4,18 +4,18 @@ All widgets live in `src/features/dashboard/components/`. They consume props (or
 
 ## Inventory
 
-| Component | Purpose | Key primitives |
-|---|---|---|
-| `TodayStatusCard` | Live clock, work status, start/break/finish actions, working + break timers. | `Card`, `Button`, `StatusBadge` |
-| `QuickSummary` | Six KPI cards: today's tasks, completed, pending, dependencies, notifications, hours worked. | `StatCard` |
-| `CheckInCard` | Morning ritual preview (mood, focus, blockers) + CTA. | `Card`, `Button`, `StatusBadge` |
-| `CurrentTasks` | List of ClickUp-style tasks with status, priority, deadline, progress, assignee. | `Card`, `Progress`, `StatusBadge`, `Avatar` |
-| `DependenciesWidget` | Tabbed view: waiting vs blocking, with owner, department, priority. | `Tabs`, `Card`, `StatusBadge`, `Avatar`, `EmptyState` |
-| `MiddayStatusCard` | Progress %, blockers list, since-morning delta, submit CTA. | `Card`, `Progress`, `StatusBadge` |
-| `ActivityTimeline` | Today's events on a vertical timeline (clock-in → clock-out). | `Card`, ordered list with rail |
-| `TeamSnapshot` | Grid of teammate avatars with online dot + tooltip; counts per status. | `Avatar`, `Tooltip` |
-| `NotificationsWidget` | Latest notifications with kind icon, unread highlight, count badge. | `Card`, `Button` |
-| `QuickActions` | 6 primary call-to-actions in a 2-column grid. | `Button` |
+| Component             | Purpose                                                                                      | Key primitives                                        |
+| --------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `TodayStatusCard`     | Live clock, work status, start/break/finish actions, working + break timers.                 | `Card`, `Button`, `StatusBadge`                       |
+| `QuickSummary`        | Six KPI cards: today's tasks, completed, pending, dependencies, notifications, hours worked. | `StatCard`                                            |
+| `CheckInCard`         | Morning ritual preview (mood, focus, blockers) + CTA.                                        | `Card`, `Button`, `StatusBadge`                       |
+| `CurrentTasks`        | List of ClickUp-style tasks with status, priority, deadline, progress, assignee.             | `Card`, `Progress`, `StatusBadge`, `Avatar`           |
+| `DependenciesWidget`  | Tabbed view: waiting vs blocking, with owner, department, priority.                          | `Tabs`, `Card`, `StatusBadge`, `Avatar`, `EmptyState` |
+| `MiddayStatusCard`    | Progress %, blockers list, since-morning delta, submit CTA.                                  | `Card`, `Progress`, `StatusBadge`                     |
+| `ActivityTimeline`    | Today's events on a vertical timeline (clock-in → clock-out).                                | `Card`, ordered list with rail                        |
+| `TeamSnapshot`        | Grid of teammate avatars with online dot + tooltip; counts per status.                       | `Avatar`, `Tooltip`                                   |
+| `NotificationsWidget` | Latest notifications with kind icon, unread highlight, count badge.                          | `Card`, `Button`                                      |
+| `QuickActions`        | 6 primary call-to-actions in a 2-column grid.                                                | `Button`                                              |
 
 ## Conventions
 

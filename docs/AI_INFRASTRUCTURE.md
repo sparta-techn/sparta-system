@@ -74,7 +74,7 @@ A provider is a **thin translator**: neutral request in, neutral result out.
 
 ```ts
 interface AIProvider {
-  readonly id: AIProviderId;                 // "openai" | "anthropic" | "gemini" | "local"
+  readonly id: AIProviderId; // "openai" | "anthropic" | "gemini" | "local"
   readonly models: readonly AIModelDescriptor[];
   readonly supportsStreaming: boolean;
   generate(params: AIGenerateParams): Promise<AIGenerateResult>;
@@ -88,8 +88,8 @@ Neutral request / result:
 
 ```ts
 interface AIGenerateParams {
-  model: string;                 // resolved model id
-  system?: string;               // system prompt (from Prompt Builder)
+  model: string; // resolved model id
+  system?: string; // system prompt (from Prompt Builder)
   messages: AIProviderMessage[]; // { role: "user" | "assistant"; content }
   maxOutputTokens?: number;
   temperature?: number;
@@ -99,10 +99,10 @@ interface AIGenerateParams {
 
 interface AIGenerateResult {
   text: string;
-  usage: AIUsage;                // { inputTokens, outputTokens, totalTokens }
+  usage: AIUsage; // { inputTokens, outputTokens, totalTokens }
   provider: AIProviderId;
   model: string;
-  finishReason: AIFinishReason;  // stop | length | content_filter | tool_use | error
+  finishReason: AIFinishReason; // stop | length | content_filter | tool_use | error
 }
 ```
 
@@ -128,11 +128,11 @@ Concrete adapters implement only `generate` and `stream`.
 
 ### 4.2 Placeholder adapters
 
-| Adapter | id | Models | Status |
-| --- | --- | --- | --- |
+| Adapter             | id          | Models                                                            | Status                   |
+| ------------------- | ----------- | ----------------------------------------------------------------- | ------------------------ |
 | `AnthropicProvider` | `anthropic` | `claude-opus-4-8`, `claude-sonnet-5`, `claude-haiku-4-5-20251001` | **placeholder, default** |
-| `OpenAIProvider` | `openai` | `gpt-4.1`, `gpt-4.1-mini` | placeholder |
-| `GeminiProvider` | `gemini` | `gemini-2.5-pro`, `gemini-2.5-flash` | placeholder |
+| `OpenAIProvider`    | `openai`    | `gpt-4.1`, `gpt-4.1-mini`                                         | placeholder              |
+| `GeminiProvider`    | `gemini`    | `gemini-2.5-pro`, `gemini-2.5-flash`                              | placeholder              |
 
 Each `generate` / `stream` runs `assertValidRequest()` then calls
 `notImplemented(...)`, which throws `AIError("not_implemented")`. **No network
@@ -145,10 +145,10 @@ will work and which server-side secret supplies the key
 `registry.ts` maps an id → adapter and memoizes instances:
 
 ```ts
-getProvider();               // default → AnthropicProvider
-getProvider("openai");       // OpenAIProvider
-registeredProviders();       // ["anthropic", "openai", "gemini"]
-DEFAULT_PROVIDER_ID;         // "anthropic"
+getProvider(); // default → AnthropicProvider
+getProvider("openai"); // OpenAIProvider
+registeredProviders(); // ["anthropic", "openai", "gemini"]
+DEFAULT_PROVIDER_ID; // "anthropic"
 ```
 
 `local` is reserved in the catalog for a future OpenAI-compatible adapter (Ollama
@@ -259,7 +259,7 @@ That is the payoff of the neutral `AIProvider` interface.
 
 ---
 
-*This layer is intentionally inert (no API calls). It exists so the AI Assistant
+_This layer is intentionally inert (no API calls). It exists so the AI Assistant
 can be built against a stable, provider-agnostic surface. Wiring a provider and
 moving orchestration into a Supabase Edge Function are the next steps — see
-`docs/AI_ARCHITECTURE.md §12 (Edge Function)`.*
+`docs/AI_ARCHITECTURE.md §12 (Edge Function)`._

@@ -9,12 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  EFFORT_META,
-  type EffortEstimate,
-  type PriorityItem,
-  type PriorityLevel,
-} from "../types";
+import { EFFORT_META, type EffortEstimate, type PriorityItem, type PriorityLevel } from "../types";
 
 const MAX = 5;
 const LEVELS: PriorityLevel[] = ["low", "medium", "high", "urgent"];

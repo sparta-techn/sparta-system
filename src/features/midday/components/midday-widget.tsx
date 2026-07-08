@@ -3,13 +3,7 @@ import { AlertTriangle, ArrowRight, GaugeCircle, Pencil, Target } from "lucide-r
 
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 import { canEditMidday, useMinuteTick, useTodayMidday } from "../store";
@@ -75,9 +69,7 @@ export function MiddayWidget() {
           value={
             <span className="inline-flex items-start gap-1.5">
               <Target className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
-              <span className="line-clamp-2 text-foreground">
-                {submission.currentFocus || "—"}
-              </span>
+              <span className="line-clamp-2 text-foreground">{submission.currentFocus || "—"}</span>
             </span>
           }
         />

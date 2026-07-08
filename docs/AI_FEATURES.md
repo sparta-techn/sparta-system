@@ -34,32 +34,32 @@ point — `AIAssistantService` — which wires context → prompt → provider.
 
 ### Employee (`EMPLOYEE_FEATURES`)
 
-| Feature id | Title | Backing | Surface | Input |
-| --- | --- | --- | --- | --- |
-| `generate-morning-plan` | Generate Morning Plan | `morning-plan` template | `global` | `variables.date?` |
-| `improve-midday-report` | Improve Midday Report | inline | `reports` | `text` (draft, **required**) |
-| `generate-end-of-day-report` | Generate End-of-Day Report | `end-of-day-report` template | `reports` | `variables.date?` |
-| `rewrite-text` | Rewrite Text | inline | `null` | `text` (**required**), `instruction?` |
-| `summarize-tasks` | Summarize Tasks | inline | `tasks` | — |
+| Feature id                   | Title                      | Backing                      | Surface   | Input                                 |
+| ---------------------------- | -------------------------- | ---------------------------- | --------- | ------------------------------------- |
+| `generate-morning-plan`      | Generate Morning Plan      | `morning-plan` template      | `global`  | `variables.date?`                     |
+| `improve-midday-report`      | Improve Midday Report      | inline                       | `reports` | `text` (draft, **required**)          |
+| `generate-end-of-day-report` | Generate End-of-Day Report | `end-of-day-report` template | `reports` | `variables.date?`                     |
+| `rewrite-text`               | Rewrite Text               | inline                       | `null`    | `text` (**required**), `instruction?` |
+| `summarize-tasks`            | Summarize Tasks            | inline                       | `tasks`   | —                                     |
 
 ### Manager (`MANAGER_FEATURES`)
 
-| Feature id | Title | Backing | Surface | Input |
-| --- | --- | --- | --- | --- |
-| `summarize-team` | Summarize Team | `team-summary` template | `reports` | `variables.date?` |
-| `detect-blockers` | Detect Blockers | inline | `dependencies` | — |
-| `sprint-summary` | Sprint Summary | `sprint-review` template | `sprints` | `variables.sprint_name` (**required**) |
-| `missing-reports` | Missing Reports | `missing-reports` template | `reports` | `variables.date?` |
-| `workload-suggestions` | Workload Suggestions | `workload-analysis` template | `analytics` | — |
+| Feature id             | Title                | Backing                      | Surface        | Input                                  |
+| ---------------------- | -------------------- | ---------------------------- | -------------- | -------------------------------------- |
+| `summarize-team`       | Summarize Team       | `team-summary` template      | `reports`      | `variables.date?`                      |
+| `detect-blockers`      | Detect Blockers      | inline                       | `dependencies` | —                                      |
+| `sprint-summary`       | Sprint Summary       | `sprint-review` template     | `sprints`      | `variables.sprint_name` (**required**) |
+| `missing-reports`      | Missing Reports      | `missing-reports` template   | `reports`      | `variables.date?`                      |
+| `workload-suggestions` | Workload Suggestions | `workload-analysis` template | `analytics`    | —                                      |
 
 ### Owner (`OWNER_FEATURES`)
 
-| Feature id | Title | Backing | Surface | Input |
-| --- | --- | --- | --- | --- |
+| Feature id          | Title             | Backing                      | Surface     | Input               |
+| ------------------- | ----------------- | ---------------------------- | ----------- | ------------------- |
 | `executive-summary` | Executive Summary | `executive-summary` template | `analytics` | `variables.period?` |
-| `company-health` | Company Health | `company-health` template | `analytics` | `variables.date?` |
-| `risk-detection` | Risk Detection | inline | `analytics` | — |
-| `weekly-insights` | Weekly Insights | inline | `analytics` | — |
+| `company-health`    | Company Health    | `company-health` template    | `analytics` | `variables.date?`   |
+| `risk-detection`    | Risk Detection    | inline                       | `analytics` | —                   |
+| `weekly-insights`   | Weekly Insights   | inline                       | `analytics` | —                   |
 
 Template-backed features reuse the Prompt Library (`docs/PROMPTS.md`); inline
 features carry their own grounded prompt. Both paths reference the injected
@@ -79,20 +79,22 @@ import { aiAssistant } from "@/ai";
 const result = await aiAssistant.run("generate-morning-plan", {
   user: { id, displayName, roles },
   variables: { date: "2026-07-01" },
-  hints: { workDate: "2026-07-01" },   // forwarded to the Context Engine
+  hints: { workDate: "2026-07-01" }, // forwarded to the Context Engine
 });
 
-result.text;         // the completion
-result.provider;     // "mock"
-result.model;        // "mock-1"
-result.usage;        // { inputTokens, outputTokens, totalTokens }
+result.text; // the completion
+result.provider; // "mock"
+result.model; // "mock-1"
+result.usage; // { inputTokens, outputTokens, totalTokens }
 ```
 
 Input-driven features:
 
 ```ts
 await aiAssistant.run("rewrite-text", {
-  user, text: "we need fix the bug asap", instruction: "professional tone",
+  user,
+  text: "we need fix the bug asap",
+  instruction: "professional tone",
 });
 
 await aiAssistant.run("improve-midday-report", { user, text: draftMarkdown });
@@ -102,7 +104,7 @@ Streaming (deltas):
 
 ```ts
 for await (const chunk of aiAssistant.runStream("summarize-tasks", { user })) {
-  append(chunk.delta);           // final chunk also carries `usage` + `finishReason`
+  append(chunk.delta); // final chunk also carries `usage` + `finishReason`
 }
 ```
 
@@ -137,20 +139,20 @@ const assistant = new AIAssistantService(aiEngine, "anthropic"); // when impleme
 
 From `@/ai` (or `@/ai/features`):
 
-| Export | Description |
-| --- | --- |
-| `ALL_AI_FEATURES` | Every feature, declaration order |
-| `AI_FEATURES` | Features keyed by id |
-| `getFeature(id)` | Resolve one feature (throws `AIError` if unknown) |
-| `listFeatures(audience?)` | All, or by `employee`/`manager`/`owner` |
-| `EMPLOYEE_FEATURES` · `MANAGER_FEATURES` · `OWNER_FEATURES` | Per-role sets |
-| `aiAssistant` / `AIAssistantService` | The service features connect to |
+| Export                                                      | Description                                       |
+| ----------------------------------------------------------- | ------------------------------------------------- |
+| `ALL_AI_FEATURES`                                           | Every feature, declaration order                  |
+| `AI_FEATURES`                                               | Features keyed by id                              |
+| `getFeature(id)`                                            | Resolve one feature (throws `AIError` if unknown) |
+| `listFeatures(audience?)`                                   | All, or by `employee`/`manager`/`owner`           |
+| `EMPLOYEE_FEATURES` · `MANAGER_FEATURES` · `OWNER_FEATURES` | Per-role sets                                     |
+| `aiAssistant` / `AIAssistantService`                        | The service features connect to                   |
 
 Driving a role-scoped menu:
 
 ```ts
 import { listFeatures } from "@/ai";
-listFeatures(hasRole("owner") ? "owner" : "employee")   // → [{ id, title, description }]
+listFeatures(hasRole("owner") ? "owner" : "employee"); // → [{ id, title, description }]
 ```
 
 ---

@@ -23,6 +23,7 @@ Features are grouped into four releases. Each release is a coherent step toward 
 - **Basic reports** (attendance, report completion) with CSV export.
 
 **Exit criteria:**
+
 - ≥ 90% daily adoption across all departments within 30 days.
 - Daily flow completable in < 2 minutes.
 
@@ -83,13 +84,13 @@ Features are grouped into four releases. Each release is a coherent step toward 
 
 Each candidate feature is scored on:
 
-| Dimension | Weight |
-|---|---|
-| Solves a stated core problem | 30% |
-| Used daily by ≥ 50% of users | 25% |
-| Independent of other features (shippable alone) | 15% |
-| Effort vs. value | 20% |
-| Strategic alignment with vision | 10% |
+| Dimension                                       | Weight |
+| ----------------------------------------------- | ------ |
+| Solves a stated core problem                    | 30%    |
+| Used daily by ≥ 50% of users                    | 25%    |
+| Independent of other features (shippable alone) | 15%    |
+| Effort vs. value                                | 20%    |
+| Strategic alignment with vision                 | 10%    |
 
 Features scoring ≥ 75 are MVP; 60–74 are v1.1; 45–59 are v2; below 45 are Future.
 

@@ -13,7 +13,10 @@ const BUCKETS: Array<{ key: ManagerStatus | "weekend"; label: string; cls: strin
 
 export function AttendanceOverview() {
   const counts = managerEmployees.reduce(
-    (acc, e) => { acc[e.status] = (acc[e.status] ?? 0) + 1; return acc; },
+    (acc, e) => {
+      acc[e.status] = (acc[e.status] ?? 0) + 1;
+      return acc;
+    },
     {} as Record<ManagerStatus, number>,
   );
   const weekend = 0;
@@ -31,7 +34,14 @@ export function AttendanceOverview() {
             const value = b.key === "weekend" ? weekend : (counts[b.key as ManagerStatus] ?? 0);
             const w = (value / total) * 100;
             if (!w) return null;
-            return <div key={b.key} className={b.cls} style={{ width: `${w}%` }} aria-label={`${b.label}: ${value}`} />;
+            return (
+              <div
+                key={b.key}
+                className={b.cls}
+                style={{ width: `${w}%` }}
+                aria-label={`${b.label}: ${value}`}
+              />
+            );
           })}
         </div>
         <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">

@@ -25,19 +25,19 @@ The console (`src/features/admin/components/admin-console.tsx`) switches between
 sections client-side (no nested routes). Each reuses an existing surface or a
 thin admin panel:
 
-| Section | Component | Source |
-| --- | --- | --- |
-| Overview | `AdminOverview` | New — KPI tiles (users, pending invites, depts, teams, flags, audit count) + maintenance status |
-| Users | `EmployeeDirectory` | Reused — `features/hr` (create/edit/lifecycle, see [`EMPLOYEE_MANAGEMENT.md`](./EMPLOYEE_MANAGEMENT.md)) |
-| Roles | `RolesPanel` | New — enterprise roles, rank, permission counts (`ROLE_PERMISSIONS`) |
-| Permissions | `PermissionsPanel` | New — read-only role × permission matrix from `PERMISSION_CATALOG` |
-| Departments | `DepartmentsPanel` | New — read-only, from `hrQueries` |
-| Teams | `TeamsPanel` | New — read-only, from `hrQueries` |
-| Invitations | `InvitationsManager` | Reused — `features/hr` (see [`INVITATIONS.md`](./INVITATIONS.md)) |
-| Audit logs | `AuditLogView` | Reused — `features/audit` (see [`AUDIT_LOGS.md`](./AUDIT_LOGS.md)) |
-| System settings | `SystemSettingsPanel` | New — see §3 |
-| Feature flags | `FeatureFlagsPanel` | New — see §4 |
-| Maintenance | `MaintenancePanel` | New — see §5 |
+| Section         | Component             | Source                                                                                                   |
+| --------------- | --------------------- | -------------------------------------------------------------------------------------------------------- |
+| Overview        | `AdminOverview`       | New — KPI tiles (users, pending invites, depts, teams, flags, audit count) + maintenance status          |
+| Users           | `EmployeeDirectory`   | Reused — `features/hr` (create/edit/lifecycle, see [`EMPLOYEE_MANAGEMENT.md`](./EMPLOYEE_MANAGEMENT.md)) |
+| Roles           | `RolesPanel`          | New — enterprise roles, rank, permission counts (`ROLE_PERMISSIONS`)                                     |
+| Permissions     | `PermissionsPanel`    | New — read-only role × permission matrix from `PERMISSION_CATALOG`                                       |
+| Departments     | `DepartmentsPanel`    | New — read-only, from `hrQueries`                                                                        |
+| Teams           | `TeamsPanel`          | New — read-only, from `hrQueries`                                                                        |
+| Invitations     | `InvitationsManager`  | Reused — `features/hr` (see [`INVITATIONS.md`](./INVITATIONS.md))                                        |
+| Audit logs      | `AuditLogView`        | Reused — `features/audit` (see [`AUDIT_LOGS.md`](./AUDIT_LOGS.md))                                       |
+| System settings | `SystemSettingsPanel` | New — see §3                                                                                             |
+| Feature flags   | `FeatureFlagsPanel`   | New — see §4                                                                                             |
+| Maintenance     | `MaintenancePanel`    | New — see §5                                                                                             |
 
 Roles / Permissions / Departments / Teams are **read-only** here — they mirror
 the RBAC catalog and HR data. Editing lives in the HR workspace and the RBAC
@@ -88,17 +88,17 @@ the Audit Logs section automatically.
 
 ## 7. Files
 
-| File | Role |
-| --- | --- |
-| `src/routes/_authenticated/app/admin.tsx` | Owner-guarded route |
-| `src/features/admin/components/admin-console.tsx` | Section switcher + composition |
-| `src/features/admin/components/admin-overview.tsx` | Overview tiles |
-| `src/features/admin/components/roles-panel.tsx` · `permissions-panel.tsx` | RBAC views |
-| `src/features/admin/components/departments-panel.tsx` · `teams-panel.tsx` | Org views |
-| `src/features/admin/components/system-settings-panel.tsx` · `feature-flags-panel.tsx` · `maintenance-panel.tsx` | Platform controls |
-| `src/features/admin/components/maintenance-banner.tsx` | App-wide banner (AppShell) |
-| `src/features/admin/system-store.ts` · `types.ts` | Store + types |
-| `src/features/admin/system-store.test.ts` | Unit tests |
+| File                                                                                                            | Role                           |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `src/routes/_authenticated/app/admin.tsx`                                                                       | Owner-guarded route            |
+| `src/features/admin/components/admin-console.tsx`                                                               | Section switcher + composition |
+| `src/features/admin/components/admin-overview.tsx`                                                              | Overview tiles                 |
+| `src/features/admin/components/roles-panel.tsx` · `permissions-panel.tsx`                                       | RBAC views                     |
+| `src/features/admin/components/departments-panel.tsx` · `teams-panel.tsx`                                       | Org views                      |
+| `src/features/admin/components/system-settings-panel.tsx` · `feature-flags-panel.tsx` · `maintenance-panel.tsx` | Platform controls              |
+| `src/features/admin/components/maintenance-banner.tsx`                                                          | App-wide banner (AppShell)     |
+| `src/features/admin/system-store.ts` · `types.ts`                                                               | Store + types                  |
+| `src/features/admin/system-store.test.ts`                                                                       | Unit tests                     |
 
 ---
 

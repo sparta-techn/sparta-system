@@ -53,8 +53,8 @@ export function SprintReports({ sprint }: { sprint: Sprint }) {
       <BurndownMock sprint={sprint} />
 
       <Card className="p-5 text-xs text-muted-foreground">
-        Reports are intentionally placeholders. Real analytics will flow from the Analytics module once
-        sprint events (start, scope change, completion) are emitted to the event bus.
+        Reports are intentionally placeholders. Real analytics will flow from the Analytics module
+        once sprint events (start, scope change, completion) are emitted to the event bus.
       </Card>
     </div>
   );

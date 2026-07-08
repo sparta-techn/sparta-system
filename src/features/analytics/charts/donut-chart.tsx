@@ -10,7 +10,14 @@ interface DonutChartProps {
   ariaLabel?: string;
 }
 
-const PALETTE = ["fill-primary", "fill-success", "fill-warning", "fill-info", "fill-destructive", "fill-secondary"];
+const PALETTE = [
+  "fill-primary",
+  "fill-success",
+  "fill-warning",
+  "fill-info",
+  "fill-destructive",
+  "fill-secondary",
+];
 
 export function DonutChart({
   data,
@@ -21,13 +28,22 @@ export function DonutChart({
   centerValue,
   ariaLabel = "Donut chart",
 }: DonutChartProps) {
-  const total = Math.max(1, data.reduce((acc, d) => acc + d.value, 0));
+  const total = Math.max(
+    1,
+    data.reduce((acc, d) => acc + d.value, 0),
+  );
   const r = size / 2;
   const innerR = r - thickness;
   let angle = -Math.PI / 2;
   return (
     <div className={cn("flex items-center gap-4", className)}>
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} role="img" aria-label={ariaLabel}>
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        width={size}
+        height={size}
+        role="img"
+        aria-label={ariaLabel}
+      >
         {data.map((d, i) => {
           const slice = (d.value / total) * Math.PI * 2;
           const a0 = angle;
@@ -53,10 +69,20 @@ export function DonutChart({
         })}
         {(centerValue || centerLabel) && (
           <g>
-            <text x={r} y={r - 2} textAnchor="middle" className="fill-foreground font-display text-xl font-semibold tabular-nums">
+            <text
+              x={r}
+              y={r - 2}
+              textAnchor="middle"
+              className="fill-foreground font-display text-xl font-semibold tabular-nums"
+            >
               {centerValue}
             </text>
-            <text x={r} y={r + 16} textAnchor="middle" className="fill-muted-foreground text-[11px] uppercase tracking-wide">
+            <text
+              x={r}
+              y={r + 16}
+              textAnchor="middle"
+              className="fill-muted-foreground text-[11px] uppercase tracking-wide"
+            >
               {centerLabel}
             </text>
           </g>
@@ -65,9 +91,17 @@ export function DonutChart({
       <ul className="space-y-1.5 text-sm">
         {data.map((d, i) => (
           <li key={d.label} className="flex items-center gap-2">
-            <span className={cn("inline-block size-3 rounded-sm", (d.colorClass ?? PALETTE[i % PALETTE.length]).replace("fill-", "bg-"))} aria-hidden />
+            <span
+              className={cn(
+                "inline-block size-3 rounded-sm",
+                (d.colorClass ?? PALETTE[i % PALETTE.length]).replace("fill-", "bg-"),
+              )}
+              aria-hidden
+            />
             <span className="text-muted-foreground">{d.label}</span>
-            <span className="ml-auto font-medium tabular-nums text-foreground">{Math.round((d.value / total) * 100)}%</span>
+            <span className="ml-auto font-medium tabular-nums text-foreground">
+              {Math.round((d.value / total) * 100)}%
+            </span>
           </li>
         ))}
       </ul>

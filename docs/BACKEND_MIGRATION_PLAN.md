@@ -29,37 +29,37 @@ Tables that exist today (`supabase/migrations/`): `profiles`, `user_roles`,
 
 27 data files, ~5,344 LOC of seed + store logic:
 
-| Feature | mock-data.ts | store.ts | api/queries |
-| --- | ---: | ---: | --- |
-| tasks | 319 | 465 | — |
-| projects | 429 | 238 | — |
-| hr | 413 | — | — |
-| manager | 290 | — | — |
-| dependencies | 260 | 201 | — |
-| task-communication | 126 | 265 | — |
-| analytics | 221 | — | — |
-| dashboard | 261 | — | — |
-| eod | 203 | 198 | — |
-| notifications | 199 | 140 | — |
-| time-tracking | 96 | 188 | — |
-| sprints | 50 | 166 | — |
-| midday | 149 | 125 | — |
-| checkin | 76 | 136 | — |
-| kanban | — | 130 | — |
-| attendance | — | — | ✅ api.ts + queries.ts |
-| auth | — | — | ✅ auth-service.ts |
+| Feature            | mock-data.ts | store.ts | api/queries            |
+| ------------------ | -----------: | -------: | ---------------------- |
+| tasks              |          319 |      465 | —                      |
+| projects           |          429 |      238 | —                      |
+| hr                 |          413 |        — | —                      |
+| manager            |          290 |        — | —                      |
+| dependencies       |          260 |      201 | —                      |
+| task-communication |          126 |      265 | —                      |
+| analytics          |          221 |        — | —                      |
+| dashboard          |          261 |        — | —                      |
+| eod                |          203 |      198 | —                      |
+| notifications      |          199 |      140 | —                      |
+| time-tracking      |           96 |      188 | —                      |
+| sprints            |           50 |      166 | —                      |
+| midday             |          149 |      125 | —                      |
+| checkin            |           76 |      136 | —                      |
+| kanban             |            — |      130 | —                      |
+| attendance         |            — |        — | ✅ api.ts + queries.ts |
+| auth               |            — |        — | ✅ auth-service.ts     |
 
 ---
 
 ## Migration Priority Overview
 
-| Wave | Modules | Rationale |
-| --- | --- | --- |
-| **P0 — foundation** | Projects, Tasks | Almost everything references `projectId` / `taskId`. Nothing else can be correct until these are real. |
-| **P1 — core workflows** | Sprint, Time Tracking, Comments, Files | Direct children of Tasks/Projects; high daily-use. |
-| **P2 — daily ops** | Daily Reports, Notifications | Depend on Tasks + Dependencies + identity; high product value. |
-| **P3 — org & insight** | Company Hub, Workspace, Analytics | Company Hub is partly admin/HR; Analytics is derived and should come last (reads everything). |
-| ✅ Done | Authentication, Attendance | Already live. |
+| Wave                    | Modules                                | Rationale                                                                                              |
+| ----------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **P0 — foundation**     | Projects, Tasks                        | Almost everything references `projectId` / `taskId`. Nothing else can be correct until these are real. |
+| **P1 — core workflows** | Sprint, Time Tracking, Comments, Files | Direct children of Tasks/Projects; high daily-use.                                                     |
+| **P2 — daily ops**      | Daily Reports, Notifications           | Depend on Tasks + Dependencies + identity; high product value.                                         |
+| **P3 — org & insight**  | Company Hub, Workspace, Analytics      | Company Hub is partly admin/HR; Analytics is derived and should come last (reads everything).          |
+| ✅ Done                 | Authentication, Attendance             | Already live.                                                                                          |
 
 ---
 
@@ -164,7 +164,7 @@ Company/workspace-level settings panel.
 ## 6. Projects 🟡 Mock — **P0**
 
 - **Mock data location**: `features/projects/{store.ts (238), mock-data.ts (429),
-  types.ts}` — `Project`, `Client`, `ProjectTemplate`, `Milestone`, `ProjectFile`,
+types.ts}` — `Project`, `Client`, `ProjectTemplate`, `Milestone`, `ProjectFile`,
   `ActivityEvent`, `ProjectMember`. Routes `app/projects.*` (all, clients,
   templates, $id).
 - **Future API needed**: CRUD projects, members, clients, templates, milestones;
@@ -187,7 +187,7 @@ Company/workspace-level settings panel.
 ## 7. Tasks 🟡 Mock — **P0**
 
 - **Mock data location**: `features/tasks/{store.ts (465), mock-data.ts (319),
-  types.ts (298)}` — richest store in the app: `Task` (with subtasks via
+types.ts (298)}` — richest store in the app: `Task` (with subtasks via
   `parentTaskId`), `Epic`, `TaskMilestone`, `ChecklistItem`, `TaskRelation`,
   `TaskActivity`, `TaskComment`, `SavedFilter`, favorites. Plus
   `features/kanban/store.ts` (board column settings + per-column ordering; reads
@@ -211,7 +211,7 @@ Company/workspace-level settings panel.
 ## 8. Sprint 🟡 Mock — **P1**
 
 - **Mock data location**: `features/sprints/{store.ts (166), mock-data.ts (50),
-  types.ts}` — `Sprint` (planned/active/completed, goal, capacity). Sprint does
+types.ts}` — `Sprint` (planned/active/completed, goal, capacity). Sprint does
   **not** own tasks; tasks reference `sprintId`.
 - **Future API needed**: CRUD sprints; set status; assign/remove tasks
   (mutate `tasks.sprint_id`); burndown/progress aggregates.
@@ -225,7 +225,7 @@ Company/workspace-level settings panel.
 ## 9. Time Tracking 🟡 Mock — **P1**
 
 - **Mock data location**: `features/time-tracking/{store.ts (188),
-  mock-data.ts (96), types.ts}` — `TimeLog` (timer or manual, active when
+mock-data.ts (96), types.ts}` — `TimeLog` (timer or manual, active when
   `endTime === null`), `ManualEntryInput`. Floating active timer in `AppShell`.
 - **Future API needed**: start/stop timer (enforce one active timer per user),
   manual entry, edit/delete, list by task/user/range, aggregate totals per task
@@ -288,7 +288,7 @@ Threaded comments exist in three modules; consolidate the model.
 ## 12. Analytics 🔵 Mock — **P3**
 
 - **Mock data location**: `features/analytics/{mock-data.ts (221), types.ts,
-  filters-context.tsx}` (`AnalyticsScope`, `TrendPoint`, `Insight`, `SavedReport`,
+filters-context.tsx}` (`AnalyticsScope`, `TrendPoint`, `Insight`, `SavedReport`,
   `BenchmarkValue`); plus derived dashboards: `features/dashboard/mock-data.ts`
   (261), `features/manager/mock-data.ts` (290), `features/project-analytics/`
   (insights/utils). Routes `app/analytics.*` (executive, hr, team, saved).
@@ -296,9 +296,9 @@ Threaded comments exist in three modules; consolidate the model.
   per-scope KPIs), insight generation, **saved reports CRUD**. Most outputs are
   read-only aggregations over other modules' tables.
 - **Required tables**: minimal new storage — `saved_reports` (scope, filters,
-  created_by). Everything else should be **SQL views / materialized views /
-  Postgres functions** over `tasks`, `time_logs`, `work_sessions`, `daily_*`,
-  `dependencies`, `projects`. Avoid storing derived numbers.
+  created*by). Everything else should be **SQL views / materialized views /
+  Postgres functions** over `tasks`, `time_logs`, `work_sessions`, `daily*\*`,
+`dependencies`, `projects`. Avoid storing derived numbers.
 - **Service layer**: `features/analytics/api.ts` + `queries.ts` calling
   aggregate RPCs/views; keep `filters-context` as the client filter state.
 - **Dependencies**: **Everything** — Tasks, Time Tracking, Attendance, Daily
@@ -309,7 +309,7 @@ Threaded comments exist in three modules; consolidate the model.
 ## 13. Notifications 🟡 Mock — **P2**
 
 - **Mock data location**: `features/notifications/{store.ts (140),
-  mock-data.ts (199), types.ts}` plus an in-memory engine:
+mock-data.ts (199), types.ts}` plus an in-memory engine:
   `event-bus.ts`, `automation-engine.ts`, `rules.ts`, `channels.ts`,
   `preferences.ts`, `directory.ts`, `bootstrap.ts`. `AppNotification`,
   `DomainEvent`, `AutomationRule`, `NotificationPreferences`, `DeliveryChannel`.
@@ -374,5 +374,5 @@ P2  Dependencies ──► Daily Reports ──► Notifications
 P3  Company Hub, Workspace, Analytics (reads everything — last)
 ```
 
-*Authentication and Attendance are already live and act as the reference
-implementations for every wave above.*
+_Authentication and Attendance are already live and act as the reference
+implementations for every wave above._

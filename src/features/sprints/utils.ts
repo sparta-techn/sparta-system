@@ -72,7 +72,10 @@ export function sprintStats(tasks: Task[]): SprintStats {
   return stats;
 }
 
-export function buildBurndown(sprint: Sprint, stats: SprintStats): Array<{ day: number; ideal: number; actual: number }> {
+export function buildBurndown(
+  sprint: Sprint,
+  stats: SprintStats,
+): Array<{ day: number; ideal: number; actual: number }> {
   const totalDays = daysBetween(sprint.startDate, sprint.endDate);
   const total = stats.points || stats.total || 10;
   const elapsed = Math.min(

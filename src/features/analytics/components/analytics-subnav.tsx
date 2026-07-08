@@ -12,8 +12,10 @@ const NAV: { label: string; to: string; exact?: boolean; scope: string }[] = [
 
 export function AnalyticsSubnav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const active = NAV.find((n) => (n.exact ? pathname === n.to : pathname === n.to || pathname.startsWith(`${n.to}/`)))
-    ?? NAV[0];
+  const active =
+    NAV.find((n) =>
+      n.exact ? pathname === n.to : pathname === n.to || pathname.startsWith(`${n.to}/`),
+    ) ?? NAV[0];
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b">
       <nav className="-mx-1 flex gap-1 overflow-x-auto" aria-label="Analytics sections">
@@ -35,7 +37,9 @@ export function AnalyticsSubnav() {
           );
         })}
       </nav>
-      <div className="pb-2"><ExportMenu scope={active.scope} /></div>
+      <div className="pb-2">
+        <ExportMenu scope={active.scope} />
+      </div>
     </div>
   );
 }

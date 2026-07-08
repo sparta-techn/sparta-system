@@ -7,13 +7,7 @@
  */
 
 /** n8n execution status vocabulary. */
-export type N8nExecutionStatus =
-  | "new"
-  | "running"
-  | "success"
-  | "error"
-  | "canceled"
-  | "waiting";
+export type N8nExecutionStatus = "new" | "running" | "success" | "error" | "canceled" | "waiting";
 
 export interface N8nExecution {
   id: string;

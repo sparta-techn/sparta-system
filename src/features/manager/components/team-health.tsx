@@ -7,7 +7,11 @@ export function TeamHealth() {
   const items = [
     { label: "Attendance rate", value: Math.round(h.attendanceRate * 100), unit: "%" },
     { label: "Report completion", value: Math.round(h.reportCompletion * 100), unit: "%" },
-    { label: "Dependency resolution", value: Math.round(h.dependencyResolutionRate * 100), unit: "%" },
+    {
+      label: "Dependency resolution",
+      value: Math.round(h.dependencyResolutionRate * 100),
+      unit: "%",
+    },
   ];
   return (
     <Card>
@@ -15,10 +19,14 @@ export function TeamHealth() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base">Team health</CardTitle>
-            <CardDescription>Composite score across attendance, reporting, and flow.</CardDescription>
+            <CardDescription>
+              Composite score across attendance, reporting, and flow.
+            </CardDescription>
           </div>
           <div className="text-right">
-            <p className="font-display text-3xl font-semibold tabular-nums text-foreground">{h.overallScore}</p>
+            <p className="font-display text-3xl font-semibold tabular-nums text-foreground">
+              {h.overallScore}
+            </p>
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">/ 100</p>
           </div>
         </div>
@@ -28,7 +36,10 @@ export function TeamHealth() {
           <div key={i.label} className="space-y-1.5">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{i.label}</span>
-              <span className="font-medium tabular-nums text-foreground">{i.value}{i.unit}</span>
+              <span className="font-medium tabular-nums text-foreground">
+                {i.value}
+                {i.unit}
+              </span>
             </div>
             <Progress value={i.value} />
           </div>

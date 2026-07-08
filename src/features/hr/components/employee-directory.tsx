@@ -79,11 +79,13 @@ export function EmployeeDirectory() {
       if (status !== "all" && e.status !== status) return false;
       if (q) {
         const s = q.toLowerCase();
-        if (!(
-          e.name.toLowerCase().includes(s) ||
-          e.email.toLowerCase().includes(s) ||
-          e.jobTitle.toLowerCase().includes(s)
-        )) {
+        if (
+          !(
+            e.name.toLowerCase().includes(s) ||
+            e.email.toLowerCase().includes(s) ||
+            e.jobTitle.toLowerCase().includes(s)
+          )
+        ) {
           return false;
         }
       }

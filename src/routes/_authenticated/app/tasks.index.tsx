@@ -16,7 +16,10 @@ export const Route = createFileRoute("/_authenticated/app/tasks/")({
 
 function TasksOverviewPage() {
   const totals = useTasksState((s) => {
-    const open = applyFilters(s.tasks, { status: ["todo", "in_progress", "review", "qa"], topLevelOnly: true }).length;
+    const open = applyFilters(s.tasks, {
+      status: ["todo", "in_progress", "review", "qa"],
+      topLevelOnly: true,
+    }).length;
     const overdue = applyFilters(s.tasks, { overdueOnly: true, topLevelOnly: true }).length;
     const done = applyFilters(s.tasks, { status: ["done"], topLevelOnly: true }).length;
     const blocked = applyFilters(s.tasks, { status: ["blocked"], topLevelOnly: true }).length;

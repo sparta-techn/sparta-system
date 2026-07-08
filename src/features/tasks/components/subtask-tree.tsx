@@ -85,7 +85,11 @@ function SubtaskNode({ task, depth }: { task: Task; depth: number }) {
             className="grid size-5 place-items-center rounded text-muted-foreground hover:bg-muted"
             aria-label={expanded ? "Collapse" : "Expand"}
           >
-            {expanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+            {expanded ? (
+              <ChevronDown className="size-3.5" />
+            ) : (
+              <ChevronRight className="size-3.5" />
+            )}
           </button>
         ) : (
           <span className="size-5" aria-hidden />
@@ -106,7 +110,9 @@ function SubtaskNode({ task, depth }: { task: Task; depth: number }) {
           </span>
         ) : null}
         {task.dueDate ? (
-          <span className={cn("text-[11px]", overdue ? "text-destructive" : "text-muted-foreground")}>
+          <span
+            className={cn("text-[11px]", overdue ? "text-destructive" : "text-muted-foreground")}
+          >
             {formatDate(task.dueDate)}
           </span>
         ) : null}

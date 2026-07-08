@@ -30,11 +30,7 @@ import type {
 } from "../ports";
 import { BaseIntegration, type AuthenticatedIdentity } from "../providers/base-integration";
 import { notImplemented } from "../services/errors";
-import {
-  AutomationService,
-  InMemoryDeadLetterQueue,
-  InMemoryRetryQueue,
-} from "../automation";
+import { AutomationService, InMemoryDeadLetterQueue, InMemoryRetryQueue } from "../automation";
 import { ZapierClient } from "./zapier-client";
 import type { ZapierClientConfig } from "./types";
 

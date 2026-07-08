@@ -78,13 +78,13 @@ A Task belongs to **at most one** sprint at a time. Removing a task from a sprin
 
 Tabs:
 
-| Tab        | Purpose                                                                                            |
-| ---------- | -------------------------------------------------------------------------------------------------- |
-| Overview   | Goal, date range, status, completion bar, KPI grid (Total / Done / In progress / To do / Blocked). |
-| Tasks      | Filterable grid of `<TaskCard />` rows. **Add existing tasks** dialog + per-card remove.           |
-| Planning   | Two-column drag-and-drop board: project backlog ↔ sprint. Live capacity + workload indicator.      |
-| Progress   | Status-distribution bar, per-status counts, story-point capacity bar.                              |
-| Reports    | Velocity / completion rate / scope change placeholders + mock burndown SVG.                        |
+| Tab      | Purpose                                                                                            |
+| -------- | -------------------------------------------------------------------------------------------------- |
+| Overview | Goal, date range, status, completion bar, KPI grid (Total / Done / In progress / To do / Blocked). |
+| Tasks    | Filterable grid of `<TaskCard />` rows. **Add existing tasks** dialog + per-card remove.           |
+| Planning | Two-column drag-and-drop board: project backlog ↔ sprint. Live capacity + workload indicator.      |
+| Progress | Status-distribution bar, per-status counts, story-point capacity bar.                              |
+| Reports  | Velocity / completion rate / scope change placeholders + mock burndown SVG.                        |
 
 ### Sprint planning (UI only)
 

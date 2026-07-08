@@ -48,7 +48,12 @@ export class GoogleCalendarNotifierService implements NotifierPort {
       return skipped(request, "Google Calendar routes only calendar or user targets.");
     }
 
-    const event = toEvent(calendarId, request.notification, request.notification.meeting, request.dedupeKey);
+    const event = toEvent(
+      calendarId,
+      request.notification,
+      request.notification.meeting,
+      request.dedupeKey,
+    );
     const response = await this.client.createEvent(accountId, event);
     return {
       state: response.status === "cancelled" ? "failed" : "delivered",

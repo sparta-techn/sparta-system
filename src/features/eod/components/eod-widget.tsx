@@ -3,13 +3,7 @@ import { ArrowRight, CheckCircle2, ClipboardCheck, Pencil, Target } from "lucide
 
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 import { canEditEod, eodCompletionPct, getEodDraft, useMinuteTick, useTodayEod } from "../store";
@@ -33,7 +27,10 @@ export function EodWidget() {
               {hasDraft ? "Draft in progress." : "5 minutes. Daily handover."}
             </CardDescription>
           </div>
-          <StatusBadge tone={hasDraft ? "info" : "warning"} label={hasDraft ? "Draft" : "Pending"} />
+          <StatusBadge
+            tone={hasDraft ? "info" : "warning"}
+            label={hasDraft ? "Draft" : "Pending"}
+          />
         </CardHeader>
         <CardContent className="space-y-3">
           {hasDraft ? (

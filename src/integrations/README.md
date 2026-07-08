@@ -31,13 +31,13 @@ Import from the barrel (`@/integrations`), not sub-paths.
 
 ## The five core building blocks
 
-| Class | Location | Responsibility |
-|---|---|---|
-| **`IntegrationManager`** | `services/integration-manager.ts` | App-facing facade. Orchestrates connect / disconnect / sync / healthCheck and holds the reactive per-provider `ProviderStatus`. The only thing features/hooks call. |
-| **`IntegrationRegistry`** | `providers/integration-registry.ts` | Resolves an `IntegrationId` → a **memoized** adapter instance (built via the factory). Also lists the catalog and resolves by capability. Has a `reset()` test seam. |
-| **`ProviderFactory`** | `providers/provider-factory.ts` | The single table mapping each id → `{ metadata, create }`. **The one extension point** — add a provider here and nowhere else. |
-| **`ProviderStatus`** | `models/provider-status.ts` | Immutable runtime-status value object (`disconnected` → `connecting` → `connected` / `degraded` / `error` / `disabled`) with label/tone + `fromHealth()` derivation + serializable snapshot. |
-| **`SettingsManager`** | `services/settings-manager.ts` | Vendor-blind settings surface: fetch schema, validate a patch, persist a merged patch — uniform across providers. |
+| Class                     | Location                            | Responsibility                                                                                                                                                                               |
+| ------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`IntegrationManager`**  | `services/integration-manager.ts`   | App-facing facade. Orchestrates connect / disconnect / sync / healthCheck and holds the reactive per-provider `ProviderStatus`. The only thing features/hooks call.                          |
+| **`IntegrationRegistry`** | `providers/integration-registry.ts` | Resolves an `IntegrationId` → a **memoized** adapter instance (built via the factory). Also lists the catalog and resolves by capability. Has a `reset()` test seam.                         |
+| **`ProviderFactory`**     | `providers/provider-factory.ts`     | The single table mapping each id → `{ metadata, create }`. **The one extension point** — add a provider here and nowhere else.                                                               |
+| **`ProviderStatus`**      | `models/provider-status.ts`         | Immutable runtime-status value object (`disconnected` → `connecting` → `connected` / `degraded` / `error` / `disabled`) with label/tone + `fromHealth()` derivation + serializable snapshot. |
+| **`SettingsManager`**     | `services/settings-manager.ts`      | Vendor-blind settings surface: fetch schema, validate a patch, persist a merged patch — uniform across providers.                                                                            |
 
 Wired together as process singletons in `services/container.ts`
 (`getIntegrationManager()`).
@@ -109,9 +109,9 @@ const account = await mgr.connect("mock", {
   scope: "user",
   ownerId: userId,
   credential: { kind: "api_token", token },
-});           // returns a PublicIntegrationAccount — no credentialRef
+}); // returns a PublicIntegrationAccount — no credentialRef
 await mgr.sync({ accountId: account.id });
-const status = mgr.getStatus("mock");   // ProviderStatus
+const status = mgr.getStatus("mock"); // ProviderStatus
 ```
 
 ---
@@ -124,8 +124,8 @@ const status = mgr.getStatus("mock");   // ProviderStatus
 3. Flip `available: true` in its metadata once the real `*-client.ts` is wired.
 
 That's it — the `Integration` interface, registry, manager, hooks and every
-other adapter are untouched. This is the Open/Closed guarantee: *support future
-providers without changing existing code*.
+other adapter are untouched. This is the Open/Closed guarantee: _support future
+providers without changing existing code_.
 
 ---
 

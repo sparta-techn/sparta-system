@@ -2,13 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/states";
 import { StatCard } from "@/components/stat-card";
 import { Activity, Coffee, LogOut, Timer } from "lucide-react";
@@ -28,13 +22,9 @@ export function TeamTodayGrid() {
     // subscribed channel (see use-today-session.ts for the full explanation).
     const channel = supabase
       .channel(`attendance:team-today:${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "work_sessions" },
-        () => {
-          void qc.invalidateQueries({ queryKey: attendanceKeys.team() });
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "work_sessions" }, () => {
+        void qc.invalidateQueries({ queryKey: attendanceKeys.team() });
+      })
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
@@ -44,10 +34,7 @@ export function TeamTodayGrid() {
   if (q.isPending) return <ListSkeleton rows={6} />;
   if (q.isError) {
     return (
-      <ErrorState
-        title="Couldn't load team status"
-        description={(q.error as Error)?.message}
-      />
+      <ErrorState title="Couldn't load team status" description={(q.error as Error)?.message} />
     );
   }
   const rows = q.data ?? [];
@@ -73,9 +60,7 @@ export function TeamTodayGrid() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Team today</CardTitle>
-          <CardDescription>
-            Live view of work sessions across the company.
-          </CardDescription>
+          <CardDescription>Live view of work sessions across the company.</CardDescription>
         </CardHeader>
         <CardContent>
           {rows.length === 0 ? (
@@ -93,22 +78,15 @@ export function TeamTodayGrid() {
                   .map((s) => s[0]?.toUpperCase() ?? "")
                   .join("");
                 return (
-                  <li
-                    key={session.id}
-                    className="flex flex-wrap items-center gap-3 py-3"
-                  >
+                  <li key={session.id} className="flex flex-wrap items-center gap-3 py-3">
                     <Avatar className="size-9 shrink-0">
-                      {profile.avatar_url ? (
-                        <AvatarImage src={profile.avatar_url} alt="" />
-                      ) : null}
+                      {profile.avatar_url ? <AvatarImage src={profile.avatar_url} alt="" /> : null}
                       <AvatarFallback className="bg-muted text-xs font-semibold">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {name}
-                      </p>
+                      <p className="truncate text-sm font-medium text-foreground">{name}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {profile.job_title ?? "—"}
                       </p>

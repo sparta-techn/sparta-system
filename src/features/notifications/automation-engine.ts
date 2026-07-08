@@ -16,12 +16,7 @@ import { eventBus } from "./event-bus";
 import { isInQuietHours, preferences } from "./preferences";
 import { defaultRules } from "./rules";
 import { notificationStore } from "./store";
-import type {
-  AppNotification,
-  AutomationRule,
-  DomainEvent,
-  NotificationSpec,
-} from "./types";
+import type { AppNotification, AutomationRule, DomainEvent, NotificationSpec } from "./types";
 
 const rules: AutomationRule[] = [...defaultRules];
 
@@ -33,24 +28,18 @@ function nid() {
   return `ntf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function specToNotifications(
-  spec: NotificationSpec,
-  event: DomainEvent,
-): AppNotification[] {
+function specToNotifications(spec: NotificationSpec, event: DomainEvent): AppNotification[] {
   const prefs = preferences.get();
   if (prefs.categories[spec.category] === false) return [];
   // Per-recipient personalised notification.
   const recipients = resolveRecipients(spec.recipients);
-  const channels = (spec.channels ?? ["in_app"]).filter(
-    (c) => getChannel(c)?.enabled,
-  );
+  const channels = (spec.channels ?? ["in_app"]).filter((c) => getChannel(c)?.enabled);
   if (!channels.length) return [];
 
   const ttl = spec.ttlMinutes ?? 60 * 24 * 30;
   const expiresAt = new Date(Date.now() + ttl * 60_000).toISOString();
   const inQuiet = isInQuietHours(prefs);
-  const allowed =
-    !inQuiet || spec.priority === "critical" || spec.type === "critical";
+  const allowed = !inQuiet || spec.priority === "critical" || spec.type === "critical";
   if (!allowed) return [];
 
   return recipients.map((recipientId) => ({

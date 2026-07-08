@@ -30,7 +30,13 @@ export const MOCK_EMPLOYEES: MockEmployee[] = [
   { id: "u5", name: "Sara Khan", initials: "SK", role: "Product Manager", departmentId: "product" },
   { id: "u6", name: "Diego Ramos", initials: "DR", role: "Frontend Engineer", departmentId: "eng" },
   { id: "u7", name: "Yuki Tanaka", initials: "YT", role: "Data Engineer", departmentId: "eng" },
-  { id: "u8", name: "Noor Hassan", initials: "NH", role: "DevOps Engineer", departmentId: "devops" },
+  {
+    id: "u8",
+    name: "Noor Hassan",
+    initials: "NH",
+    role: "DevOps Engineer",
+    departmentId: "devops",
+  },
 ];
 
 /** Mocked "planned tasks" — future-proof for ClickUp integration. */

@@ -31,11 +31,7 @@ import type {
 } from "../ports";
 import { BaseIntegration, type AuthenticatedIdentity } from "../providers/base-integration";
 import { notImplemented } from "../services/errors";
-import {
-  AutomationService,
-  InMemoryDeadLetterQueue,
-  InMemoryRetryQueue,
-} from "../automation";
+import { AutomationService, InMemoryDeadLetterQueue, InMemoryRetryQueue } from "../automation";
 import { N8nClient } from "./n8n-client";
 import type { N8nClientConfig } from "./types";
 

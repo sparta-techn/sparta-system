@@ -31,7 +31,9 @@ export function ManagerQuickActions() {
                 <a.icon className="size-4" aria-hidden />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-medium text-foreground">{a.label}</span>
+                <span className="block truncate text-sm font-medium text-foreground">
+                  {a.label}
+                </span>
                 <span className="block truncate text-xs text-muted-foreground">{a.hint}</span>
               </span>
             </Button>

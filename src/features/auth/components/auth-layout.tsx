@@ -24,8 +24,8 @@ export function AuthLayout({ title, description, children, footer }: Props) {
             The operating system for a remote team.
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Sign in to share your day, unblock teammates, and keep work flowing — under two
-            minutes of friction, every morning.
+            Sign in to share your day, unblock teammates, and keep work flowing — under two minutes
+            of friction, every morning.
           </p>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -43,9 +43,7 @@ export function AuthLayout({ title, description, children, footer }: Props) {
             <span className="text-sm font-semibold tracking-tight">SpartaFlow Hub</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
-          {description ? (
-            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-          ) : null}
+          {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}
           <div className="mt-6">{children}</div>
           {footer ? (
             <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>

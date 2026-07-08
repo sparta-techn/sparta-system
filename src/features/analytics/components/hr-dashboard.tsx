@@ -8,7 +8,10 @@ export function HrDashboard() {
   const k = hrAnalytics.kpis;
   return (
     <div className="space-y-6">
-      <section aria-label="HR KPIs" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <section
+        aria-label="HR KPIs"
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+      >
         <TrendCard label="Attendance compliance" value={k.compliance} />
         <TrendCard label="Pending leave" value={k.pendingLeave} positiveIsDown />
         <TrendCard label="New hires (30d)" value={k.newHires30} />
@@ -17,11 +20,17 @@ export function HrDashboard() {
         <TrendCard label="Onboarding completion" value={k.onboardingCompletion} />
       </section>
 
-      <section><InsightGrid insights={insightsByScope.hr} /></section>
+      <section>
+        <InsightGrid insights={insightsByScope.hr} />
+      </section>
 
       <section aria-label="Trends" className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Attendance compliance" description="Last 6 months">
-          <LineChart data={hrAnalytics.attendanceCompliance} colorClass="stroke-success" formatValue={(n) => `${n}%`} />
+          <LineChart
+            data={hrAnalytics.attendanceCompliance}
+            colorClass="stroke-success"
+            formatValue={(n) => `${n}%`}
+          />
         </ChartCard>
         <ChartCard title="Leave trends" description="Sick · vacation · personal">
           <BarChart
@@ -38,7 +47,11 @@ export function HrDashboard() {
           <BarChart data={hrAnalytics.newHiresTrend} colorClasses={["fill-primary"]} />
         </ChartCard>
         <ChartCard title="Onboarding completion" description="By cohort">
-          <LineChart data={hrAnalytics.onboardingByCohort} colorClass="stroke-primary" formatValue={(n) => `${n}%`} />
+          <LineChart
+            data={hrAnalytics.onboardingByCohort}
+            colorClass="stroke-primary"
+            formatValue={(n) => `${n}%`}
+          />
         </ChartCard>
       </section>
 
@@ -55,8 +68,12 @@ export function HrDashboard() {
               return (
                 <div key={s.label} className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{i + 1}. {s.label}</span>
-                    <span className="font-medium tabular-nums text-foreground">{s.value} · {pct}%</span>
+                    <span className="text-muted-foreground">
+                      {i + 1}. {s.label}
+                    </span>
+                    <span className="font-medium tabular-nums text-foreground">
+                      {s.value} · {pct}%
+                    </span>
                   </div>
                   <div className="h-3 overflow-hidden rounded-full bg-muted">
                     <div className="h-full bg-primary" style={{ width: `${pct}%` }} aria-hidden />

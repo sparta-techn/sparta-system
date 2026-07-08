@@ -8,25 +8,18 @@ interface StatCardProps {
   value: string | number;
   hint?: string;
   icon?: LucideIcon;
-  trend?: { direction: "up" | "down" | "flat"; value: string; intent?: "positive" | "negative" | "neutral" };
+  trend?: {
+    direction: "up" | "down" | "flat";
+    value: string;
+    intent?: "positive" | "negative" | "neutral";
+  };
   className?: string;
 }
 
-export function StatCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  trend,
-  className,
-}: StatCardProps) {
+export function StatCard({ label, value, hint, icon: Icon, trend, className }: StatCardProps) {
   const trendIntent =
     trend?.intent ??
-    (trend?.direction === "up"
-      ? "positive"
-      : trend?.direction === "down"
-        ? "negative"
-        : "neutral");
+    (trend?.direction === "up" ? "positive" : trend?.direction === "down" ? "negative" : "neutral");
   const trendColor =
     trendIntent === "positive"
       ? "text-success"
@@ -34,11 +27,7 @@ export function StatCard({
         ? "text-destructive"
         : "text-muted-foreground";
   const TrendIcon =
-    trend?.direction === "up"
-      ? ArrowUpRight
-      : trend?.direction === "down"
-        ? ArrowDownRight
-        : Minus;
+    trend?.direction === "up" ? ArrowUpRight : trend?.direction === "down" ? ArrowDownRight : Minus;
 
   return (
     <Card className={cn("relative overflow-hidden", className)}>

@@ -1,24 +1,19 @@
 import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/states";
 import { mockDependencies, type MockDependency } from "../mock-data";
 
-const PRIORITY_TONE: Record<MockDependency["priority"], "neutral" | "info" | "warning" | "danger"> = {
-  low: "neutral",
-  medium: "info",
-  high: "warning",
-  urgent: "danger",
-};
+const PRIORITY_TONE: Record<MockDependency["priority"], "neutral" | "info" | "warning" | "danger"> =
+  {
+    low: "neutral",
+    medium: "info",
+    high: "warning",
+    urgent: "danger",
+  };
 
 export function DependenciesWidget() {
   const waiting = mockDependencies.filter((d) => d.direction === "waiting");

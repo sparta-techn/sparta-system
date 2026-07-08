@@ -11,18 +11,13 @@ const badgeStyles = cva(
   {
     variants: {
       tone: {
-        neutral:
-          "bg-muted text-foreground/80 ring-border",
-        success:
-          "bg-success-soft text-success ring-success/20 dark:text-success-foreground/90",
-        warning:
-          "bg-warning-soft text-warning ring-warning/25 dark:text-warning-foreground/90",
+        neutral: "bg-muted text-foreground/80 ring-border",
+        success: "bg-success-soft text-success ring-success/20 dark:text-success-foreground/90",
+        warning: "bg-warning-soft text-warning ring-warning/25 dark:text-warning-foreground/90",
         danger:
           "bg-destructive-soft text-destructive ring-destructive/25 dark:text-destructive-foreground/90",
-        info:
-          "bg-info-soft text-info ring-info/20 dark:text-info-foreground/90",
-        primary:
-          "bg-primary-soft text-primary ring-primary/20 dark:text-primary-foreground/90",
+        info: "bg-info-soft text-info ring-info/20 dark:text-info-foreground/90",
+        primary: "bg-primary-soft text-primary ring-primary/20 dark:text-primary-foreground/90",
       },
       size: {
         sm: "h-5 px-2 text-[11px]",

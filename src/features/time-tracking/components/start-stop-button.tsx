@@ -1,12 +1,7 @@
 import { Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  TIME_TRACKING_CURRENT_USER_ID,
-  startTimer,
-  stopTimer,
-  useTimeState,
-} from "../store";
+import { TIME_TRACKING_CURRENT_USER_ID, startTimer, stopTimer, useTimeState } from "../store";
 import { formatTimer, liveSeconds } from "../utils";
 import { useNow } from "../hooks/use-now";
 
@@ -19,8 +14,8 @@ interface Props {
 /** Single Start/Stop button bound to the current user's active timer. */
 export function StartStopButton({ taskId, variant = "default", className }: Props) {
   const userId = TIME_TRACKING_CURRENT_USER_ID;
-  const active = useTimeState((s) =>
-    s.logs.find((l) => l.userId === userId && l.endTime === null) ?? null,
+  const active = useTimeState(
+    (s) => s.logs.find((l) => l.userId === userId && l.endTime === null) ?? null,
   );
   const now = useNow(active ? 1000 : 30_000);
   const isThisTask = active?.taskId === taskId;

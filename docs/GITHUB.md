@@ -94,14 +94,14 @@ features and tests depend on) plus a **class** that delegates to `GitHubClient`.
 Per CLAUDE.md, all external communication goes through these service classes;
 components never touch the network directly.
 
-| Feature | Service interface | Class | Returns |
-|---|---|---|---|
-| Repositories | `RepositoriesService` | `GitHubRepositoriesService` | `GitHubRepository` |
-| Branches | `BranchesService` | `GitHubBranchesService` | `GitHubBranch` |
-| Commits | `CommitsService` | `GitHubCommitsService` | `GitHubCommit` |
-| Pull Requests | `PullRequestsService` | `GitHubPullRequestsService` | `GitHubPullRequest` |
-| Issues | `IssuesService` | `GitHubIssuesService` | `GitHubIssue` |
-| Releases | `ReleasesService` | `GitHubReleasesService` | `GitHubRelease` |
+| Feature            | Service interface          | Class                            | Returns                   |
+| ------------------ | -------------------------- | -------------------------------- | ------------------------- |
+| Repositories       | `RepositoriesService`      | `GitHubRepositoriesService`      | `GitHubRepository`        |
+| Branches           | `BranchesService`          | `GitHubBranchesService`          | `GitHubBranch`            |
+| Commits            | `CommitsService`           | `GitHubCommitsService`           | `GitHubCommit`            |
+| Pull Requests      | `PullRequestsService`      | `GitHubPullRequestsService`      | `GitHubPullRequest`       |
+| Issues             | `IssuesService`            | `GitHubIssuesService`            | `GitHubIssue`             |
+| Releases           | `ReleasesService`          | `GitHubReleasesService`          | `GitHubRelease`           |
 | Developer Activity | `DeveloperActivityService` | `GitHubDeveloperActivityService` | `GitHubDeveloperActivity` |
 
 Services hold **no network code** — they add account scoping/defaults around the
@@ -155,20 +155,20 @@ GITHUB_METADATA = {
   id: "github",
   displayName: "GitHub",
   category: "vcs",
-  scope: "user",                          // connected per developer, opt-in
+  scope: "user", // connected per developer, opt-in
   auth: "oauth2",
   capabilities: ["vcs.activity", "webhook.inbound"],
   supportsWebhooks: true,
-  available: false,                        // placeholder until the client is wired
-}
+  available: false, // placeholder until the client is wired
+};
 ```
 
 Settings fields (rendered by the Admin form via `SettingsSchema`):
 
-| Key | Type | Purpose |
-|---|---|---|
-| `org` | string (optional) | Restrict activity signals to one GitHub org. |
-| `includeReviews` | boolean (default `true`) | Count PR reviews toward developer activity. |
+| Key              | Type                     | Purpose                                      |
+| ---------------- | ------------------------ | -------------------------------------------- |
+| `org`            | string (optional)        | Restrict activity signals to one GitHub org. |
+| `includeReviews` | boolean (default `true`) | Count PR reviews toward developer activity.  |
 
 ---
 
@@ -198,7 +198,7 @@ if (provider && isVcsActivityPort(provider)) {
 }
 ```
 
-> `firstWithCapability` only returns *available* providers, so it yields GitHub
+> `firstWithCapability` only returns _available_ providers, so it yields GitHub
 > once `available` is flipped to `true`; until then, resolve by id as above.
 
 ---

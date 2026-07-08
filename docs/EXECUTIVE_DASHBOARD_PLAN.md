@@ -9,19 +9,19 @@
 ## 0. Context — what exists today
 
 The Executive Dashboard is **not greenfield**. It already ships as a mock-backed
-surface and must be *extended, not regenerated* (CLAUDE.md: "Never regenerate
+surface and must be _extended, not regenerated_ (CLAUDE.md: "Never regenerate
 completed modules").
 
-| Asset | Location |
-| --- | --- |
-| Component | `src/features/analytics/components/executive-dashboard.tsx` |
-| Route | `src/routes/_authenticated/app/analytics.executive.tsx` (`/app/analytics/executive`) |
-| Charts | `src/features/analytics/charts/` — `TrendCard`, `BarChart`, `LineChart`, `DonutChart`, `Heatmap`, `Timeline` |
-| Cards | `analytics/components/` — `ChartCard`, `InsightCard`/`InsightGrid`, `FiltersBar`, `ExportMenu`, `analytics-subnav` |
-| Filters | `analytics/filters-context.tsx` (`AnalyticsFiltersProvider` / `useAnalyticsFilters`) |
-| Types | `analytics/types.ts` (`AnalyticsScope`, `DateRange`, `BenchmarkPeriod`, `AnalyticsFilters`, `TrendPoint`, `Insight`, `BenchmarkValue`) |
-| Mock source | `analytics/mock-data.ts` (`executiveAnalytics`, `insightsByScope.executive`) |
-| Existing doc | `docs/ExecutiveDashboard.md` (the current 60-second-read spec) |
+| Asset        | Location                                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Component    | `src/features/analytics/components/executive-dashboard.tsx`                                                                            |
+| Route        | `src/routes/_authenticated/app/analytics.executive.tsx` (`/app/analytics/executive`)                                                   |
+| Charts       | `src/features/analytics/charts/` — `TrendCard`, `BarChart`, `LineChart`, `DonutChart`, `Heatmap`, `Timeline`                           |
+| Cards        | `analytics/components/` — `ChartCard`, `InsightCard`/`InsightGrid`, `FiltersBar`, `ExportMenu`, `analytics-subnav`                     |
+| Filters      | `analytics/filters-context.tsx` (`AnalyticsFiltersProvider` / `useAnalyticsFilters`)                                                   |
+| Types        | `analytics/types.ts` (`AnalyticsScope`, `DateRange`, `BenchmarkPeriod`, `AnalyticsFilters`, `TrendPoint`, `Insight`, `BenchmarkValue`) |
+| Mock source  | `analytics/mock-data.ts` (`executiveAnalytics`, `insightsByScope.executive`)                                                           |
+| Existing doc | `docs/ExecutiveDashboard.md` (the current 60-second-read spec)                                                                         |
 
 Today's surface covers **4 KPIs, department health, operational risks, dependency
 trend, report/attendance compliance, project health table**. This plan keeps that
@@ -29,6 +29,7 @@ skeleton and expands it into a true cross-module executive view over all ten
 domains, plus the live-data contract to replace the mock store.
 
 ### Design constraints inherited
+
 - **Composition over duplication** — reuse `analytics/charts`, `ui/` primitives,
   `stat-card`, `states`. No new chart or card primitives.
 - **60-second read** — scan KPIs → scan AI insights → drill into risks / tables.
@@ -59,18 +60,18 @@ the executive never edits operational data here.
 Ten domains feed the dashboard. Each maps to a live table/view from
 `DATABASE_DESIGN.md` and a mock store today.
 
-| # | Module | Source (target) | Feeds |
-| --- | --- | --- | --- |
-| 1 | **HR** | `profiles`, `employment`, `departments`, `teams` | Headcount, department rollups, new hires, offboarding, birthdays |
-| 2 | **Attendance** | `work_sessions`, `work_session_breaks`, `company_settings`, `holidays` | Present/late/absent, on-time %, overtime, attendance trend |
-| 3 | **Daily Reports** | `daily_checkins`, `midday_reports`, `eod_reports` | Report compliance %, sentiment/mood, help requests |
-| 4 | **Projects** | `projects`, `project_members`, `milestones`, `project_stats` view | Project count by status/health, progress, at-risk projects |
-| 5 | **Tasks** | `tasks`, `task_activity` | Open/overdue/completed counts, throughput, cycle time |
-| 6 | **Sprint** | `sprints`, `sprint_burndown` view | Active sprints, on-track vs at-risk, committed vs done |
-| 7 | **Time Tracking** | `time_logs`, `time_log_totals` view | Logged hours, utilization, billable split |
-| 8 | **Notifications** | `notifications` | Critical/unresolved signal count, escalations |
-| 9 | **AI** | `AIAssistantService` → `executive-summary`, `company-health` features | Narrative summary, generated insights, anomaly callouts |
-| 10 | **Analytics** | `analytics_*` views, `saved_reports` | Benchmarks (WoW/MoM/QoQ), trend series, saved exec reports |
+| #   | Module            | Source (target)                                                        | Feeds                                                            |
+| --- | ----------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1   | **HR**            | `profiles`, `employment`, `departments`, `teams`                       | Headcount, department rollups, new hires, offboarding, birthdays |
+| 2   | **Attendance**    | `work_sessions`, `work_session_breaks`, `company_settings`, `holidays` | Present/late/absent, on-time %, overtime, attendance trend       |
+| 3   | **Daily Reports** | `daily_checkins`, `midday_reports`, `eod_reports`                      | Report compliance %, sentiment/mood, help requests               |
+| 4   | **Projects**      | `projects`, `project_members`, `milestones`, `project_stats` view      | Project count by status/health, progress, at-risk projects       |
+| 5   | **Tasks**         | `tasks`, `task_activity`                                               | Open/overdue/completed counts, throughput, cycle time            |
+| 6   | **Sprint**        | `sprints`, `sprint_burndown` view                                      | Active sprints, on-track vs at-risk, committed vs done           |
+| 7   | **Time Tracking** | `time_logs`, `time_log_totals` view                                    | Logged hours, utilization, billable split                        |
+| 8   | **Notifications** | `notifications`                                                        | Critical/unresolved signal count, escalations                    |
+| 9   | **AI**            | `AIAssistantService` → `executive-summary`, `company-health` features  | Narrative summary, generated insights, anomaly callouts          |
+| 10  | **Analytics**     | `analytics_*` views, `saved_reports`                                   | Benchmarks (WoW/MoM/QoQ), trend series, saved exec reports       |
 
 > All ten already exist as mock stores under `src/features/*`. The AI owner
 > features `executive-summary` and `company-health` (surface `analytics`) are
@@ -118,14 +119,14 @@ value, % change vs previous period, comparison label, previous value hint. Each 
 a `BenchmarkValue` (`{ current, previous, unit?, format }`) driven by the selected
 `benchmark` (WoW/MoM/QoQ).
 
-| KPI | Definition | Format | Good direction | Source |
-| --- | --- | --- | --- | --- |
-| **Company health** | Composite 0–100 = weighted blend of attendance, report compliance, dependency flow, delivery, sentiment | number | up | AI `company-health` + `analytics_*` |
-| **Attendance compliance** | % expected sessions present & on-time | percent | up | `work_sessions` |
-| **Report compliance** | Avg of check-in / midday / EoD completion | percent | up | `daily_*` |
-| **Delivery** | % sprint-committed points completed (or on-time task completion %) | percent | up | `sprint_burndown`, `tasks` |
-| **Utilization** | Logged hours ÷ expected capacity | percent | up (band) | `time_log_totals` |
-| **Open operational risks** | Count of active risks (blockers + overdue + compliance gaps) | number | **down** (`positiveIsDown`) | rules over all modules |
+| KPI                        | Definition                                                                                              | Format  | Good direction              | Source                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- | ------- | --------------------------- | ----------------------------------- |
+| **Company health**         | Composite 0–100 = weighted blend of attendance, report compliance, dependency flow, delivery, sentiment | number  | up                          | AI `company-health` + `analytics_*` |
+| **Attendance compliance**  | % expected sessions present & on-time                                                                   | percent | up                          | `work_sessions`                     |
+| **Report compliance**      | Avg of check-in / midday / EoD completion                                                               | percent | up                          | `daily_*`                           |
+| **Delivery**               | % sprint-committed points completed (or on-time task completion %)                                      | percent | up                          | `sprint_burndown`, `tasks`          |
+| **Utilization**            | Logged hours ÷ expected capacity                                                                        | percent | up (band)                   | `time_log_totals`                   |
+| **Open operational risks** | Count of active risks (blockers + overdue + compliance gaps)                                            | number  | **down** (`positiveIsDown`) | rules over all modules              |
 
 Company-health composite (default weights, tunable in `company_settings`):
 
@@ -144,20 +145,20 @@ at 100; `sentiment` from check-in mood distribution.
 Reuse existing components where noted; new widgets follow the same
 `ChartCard` / `Card` + `states` pattern.
 
-| Widget | Reuses | Modules | Content |
-| --- | --- | --- | --- |
-| **KPI Grid** | `TrendCard` | all | 6 benchmarked KPIs (§4) |
-| **AI Executive Summary** | `Card` + `InsightGrid` | AI, Analytics | Narrative paragraph from `executive-summary`; 4 generated `Insight` cards (positive/negative/warning/neutral); "Regenerate" action |
-| **Department Health** | `Card` + `Progress` | HR, Attendance, Reports | Per-dept composite score + headcount bar list |
-| **Operational Risks** | `Card` + `Badge` | all (rules) | Severity-ranked (high/medium/low) risk list with owner + deep-link |
-| **Dependency Flow Trend** | `ChartCard` + `BarChart` | Dependencies | Opened vs resolved per week (grouped bars) |
-| **Report & Attendance Trend** | `ChartCard` + `LineChart` | Reports, Attendance | Two % line charts stacked |
-| **Delivery Throughput Trend** | `ChartCard` + `LineChart`/`BarChart` | Tasks, Sprint | Tasks completed per week / points burned |
-| **Utilization Trend** | `ChartCard` + `LineChart` | Time Tracking | Logged vs expected hours per week |
-| **Sprint Status Board** | `Card` + `Table`/`Badge` | Sprint | Active sprints, % complete, on-track/at-risk, days left |
-| **Project Health Table** | `Card` + `Table` + `Badge` | Projects, Tasks, Deps | Project · status · health · progress · open blockers · manager |
-| **HR Pulse Strip** | `stat-card` | HR | Headcount · new hires (30d) · offboarding · birthdays this week |
-| **Signal / Escalations** (optional, in Risks) | `Badge` | Notifications | Count of unresolved critical notifications feeding risk list |
+| Widget                                        | Reuses                               | Modules                 | Content                                                                                                                            |
+| --------------------------------------------- | ------------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **KPI Grid**                                  | `TrendCard`                          | all                     | 6 benchmarked KPIs (§4)                                                                                                            |
+| **AI Executive Summary**                      | `Card` + `InsightGrid`               | AI, Analytics           | Narrative paragraph from `executive-summary`; 4 generated `Insight` cards (positive/negative/warning/neutral); "Regenerate" action |
+| **Department Health**                         | `Card` + `Progress`                  | HR, Attendance, Reports | Per-dept composite score + headcount bar list                                                                                      |
+| **Operational Risks**                         | `Card` + `Badge`                     | all (rules)             | Severity-ranked (high/medium/low) risk list with owner + deep-link                                                                 |
+| **Dependency Flow Trend**                     | `ChartCard` + `BarChart`             | Dependencies            | Opened vs resolved per week (grouped bars)                                                                                         |
+| **Report & Attendance Trend**                 | `ChartCard` + `LineChart`            | Reports, Attendance     | Two % line charts stacked                                                                                                          |
+| **Delivery Throughput Trend**                 | `ChartCard` + `LineChart`/`BarChart` | Tasks, Sprint           | Tasks completed per week / points burned                                                                                           |
+| **Utilization Trend**                         | `ChartCard` + `LineChart`            | Time Tracking           | Logged vs expected hours per week                                                                                                  |
+| **Sprint Status Board**                       | `Card` + `Table`/`Badge`             | Sprint                  | Active sprints, % complete, on-track/at-risk, days left                                                                            |
+| **Project Health Table**                      | `Card` + `Table` + `Badge`           | Projects, Tasks, Deps   | Project · status · health · progress · open blockers · manager                                                                     |
+| **HR Pulse Strip**                            | `stat-card`                          | HR                      | Headcount · new hires (30d) · offboarding · birthdays this week                                                                    |
+| **Signal / Escalations** (optional, in Risks) | `Badge`                              | Notifications           | Count of unresolved critical notifications feeding risk list                                                                       |
 
 **Reuse-first note:** Department Health, Operational Risks, Dependency Trend,
 Report/Attendance Trend, and Project Health table already exist in
@@ -172,16 +173,16 @@ live queries.
 Only the existing chart library (`src/features/analytics/charts/`) is used — no new
 chart primitives (UI Rules: never duplicate components).
 
-| Chart | Primitive | Series | Format |
-| --- | --- | --- | --- |
-| Dependency flow | `BarChart` | opened (`fill-warning`), resolved (`fill-success`) | count |
-| Report compliance | `LineChart` (`stroke-primary`) | weekly % | percent |
-| Attendance compliance | `LineChart` (`stroke-success`) | weekly % | percent |
-| Delivery throughput | `LineChart`/`BarChart` | completed tasks / points | count |
-| Utilization | `LineChart` | logged vs expected hours | hours/percent |
-| Department distribution (optional) | `DonutChart` | headcount by dept | count |
-| Attendance heatmap (optional drill) | `Heatmap` | day × week presence | percent |
-| Activity/AI events (optional) | `Timeline` | recent exec-relevant events | — |
+| Chart                               | Primitive                      | Series                                             | Format        |
+| ----------------------------------- | ------------------------------ | -------------------------------------------------- | ------------- |
+| Dependency flow                     | `BarChart`                     | opened (`fill-warning`), resolved (`fill-success`) | count         |
+| Report compliance                   | `LineChart` (`stroke-primary`) | weekly %                                           | percent       |
+| Attendance compliance               | `LineChart` (`stroke-success`) | weekly %                                           | percent       |
+| Delivery throughput                 | `LineChart`/`BarChart`         | completed tasks / points                           | count         |
+| Utilization                         | `LineChart`                    | logged vs expected hours                           | hours/percent |
+| Department distribution (optional)  | `DonutChart`                   | headcount by dept                                  | count         |
+| Attendance heatmap (optional drill) | `Heatmap`                      | day × week presence                                | percent       |
+| Activity/AI events (optional)       | `Timeline`                     | recent exec-relevant events                        | —             |
 
 All series use the `TrendPoint[]` (`{ label, value }`) shape already defined in
 `analytics/types.ts`; grouped charts pass `series` as in the current component.
@@ -194,20 +195,20 @@ Reuse `AnalyticsFilters` + `AnalyticsFiltersProvider` + `FiltersBar` verbatim.
 The executive scope wraps its content in the provider (as the analytics section
 already does) and every query keys off the filter object.
 
-| Filter | Field | Values | Applies to |
-| --- | --- | --- | --- |
-| Date range | `range` | `7d` / `30d` / `qtd` / `ytd` / `custom` | all trends + KPIs |
-| Benchmark | `benchmark` | `wow` / `mom` / `qoq` | KPI deltas |
-| Department | `department?` | dept id | department/project/HR scoping |
-| Team | `team?` | team id | attendance/reports scoping |
-| Project | `project?` | project id | delivery/sprint/task scoping |
-| Role | `role?` | app_role | HR pulse (optional) |
+| Filter     | Field         | Values                                  | Applies to                    |
+| ---------- | ------------- | --------------------------------------- | ----------------------------- |
+| Date range | `range`       | `7d` / `30d` / `qtd` / `ytd` / `custom` | all trends + KPIs             |
+| Benchmark  | `benchmark`   | `wow` / `mom` / `qoq`                   | KPI deltas                    |
+| Department | `department?` | dept id                                 | department/project/HR scoping |
+| Team       | `team?`       | team id                                 | attendance/reports scoping    |
+| Project    | `project?`    | project id                              | delivery/sprint/task scoping  |
+| Role       | `role?`       | app_role                                | HR pulse (optional)           |
 
 - Executive scope **excludes** `employee` filter (no per-person drill — policy §0).
 - Export via existing `ExportMenu` (CSV/PNG of the current filtered view); exports
   are `audit_action = 'export'` audited (`DATABASE_DESIGN.md §18`).
 - Saved views persist through `saved_reports (created_by, scope='executive',
-  filters jsonb)`.
+filters jsonb)`.
 
 ---
 
@@ -232,14 +233,14 @@ Two-tier, DB-authoritative (`docs/ARCHITECTURE.md §12`).
 - **Audit:** exports and (if added) manual refreshes of materialized analytics log
   to `audit_events`.
 
-| Role | Executive dashboard |
-| --- | --- |
-| owner | Full |
-| super_admin | Full (ops) |
-| executive (future) | Full |
-| project_manager / team_lead | ❌ (use `/app/manager`) |
-| hr | ❌ (use `/app/analytics/hr`) |
-| employee / viewer | ❌ |
+| Role                        | Executive dashboard          |
+| --------------------------- | ---------------------------- |
+| owner                       | Full                         |
+| super_admin                 | Full (ops)                   |
+| executive (future)          | Full                         |
+| project_manager / team_lead | ❌ (use `/app/manager`)      |
+| hr                          | ❌ (use `/app/analytics/hr`) |
+| employee / viewer           | ❌                           |
 
 ---
 
@@ -257,14 +258,14 @@ analyticsKeys = {
 }
 ```
 
-| Data class | staleTime | refetch | Rationale |
-| --- | --- | --- | --- |
-| KPI benchmarks | 5 min | on focus + interval 5 min | Board-level, slow-moving |
-| Trend series | 10 min | on focus | Weekly buckets from views |
-| Department / project / sprint tables | 5 min | on focus | Rollups |
-| Operational risks | 2 min | interval 2 min | Time-sensitive |
-| AI Executive Summary | manual | **on demand** (button) | Expensive; never auto-poll |
-| HR pulse | 30 min | on focus | Rarely changes intraday |
+| Data class                           | staleTime | refetch                   | Rationale                  |
+| ------------------------------------ | --------- | ------------------------- | -------------------------- |
+| KPI benchmarks                       | 5 min     | on focus + interval 5 min | Board-level, slow-moving   |
+| Trend series                         | 10 min    | on focus                  | Weekly buckets from views  |
+| Department / project / sprint tables | 5 min     | on focus                  | Rollups                    |
+| Operational risks                    | 2 min     | interval 2 min            | Time-sensitive             |
+| AI Executive Summary                 | manual    | **on demand** (button)    | Expensive; never auto-poll |
+| HR pulse                             | 30 min    | on focus                  | Rarely changes intraday    |
 
 - **Realtime (selective):** subscribe only to high-signal, low-volume streams —
   `notifications` (critical count) and `dependencies` (state changes) — via the
@@ -349,5 +350,5 @@ src/features/analytics/
 
 ---
 
-*This document describes the target design. Update it as the analytics views land
-and the mock store is retired in favor of `analytics/api.ts` + `analytics/queries.ts`.*
+_This document describes the target design. Update it as the analytics views land
+and the mock store is retired in favor of `analytics/api.ts` + `analytics/queries.ts`._

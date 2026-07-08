@@ -1,7 +1,7 @@
 # SpartaFlow — Project Execution Implementation Plan
 
 > Planning document only. **No application code or migration is written by this
-> doc.** It specifies how to deliver *Project Execution* by **connecting the
+> doc.** It specifies how to deliver _Project Execution_ by **connecting the
 > modules that already exist** (Workspace, Projects, Tasks, Sprints, Kanban,
 > Analytics, Dependencies, Teams) — not by building parallel features. Derived
 > from `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE_DESIGN.md`, and the
@@ -12,7 +12,7 @@
 
 ## 1. Guiding principle
 
-> *Connect existing modules; never regenerate them.* (CLAUDE.md §Coding Principles)
+> _Connect existing modules; never regenerate them._ (CLAUDE.md §Coding Principles)
 
 Every feature below already has **types + store + components + routes** built and
 a **service + repository scaffolded**. The work is to (a) land the schema
@@ -28,16 +28,16 @@ time-logs, attendance) using the existing chart components and
 
 ## 2. Current-state audit
 
-| Module | Types | Store (mock) | Service / Repo | Routes | DB table? |
-| --- | --- | --- | --- | --- | --- |
-| **Projects** | `features/projects/types.ts` (Project, Client, Template, Milestone, Member, Workspace, Activity, File) | `projects/store.ts` (localStorage) | `services/projects` + `repositories/project.repository.ts` | `projects.*` (8 routes) | ❌ none |
-| **Tasks** | `features/tasks/types.ts` (Task, Epic, TaskMilestone, Relation, Checklist) | `tasks/store.ts` | `services/tasks` + `repositories/task.repository.ts` | `tasks.*` (6) | ❌ none |
-| **Sprints** | `features/sprints/types.ts` (Sprint) | `sprints/store.ts` | `services/sprints` + `repositories/sprint.repository.ts` | `sprints.*` (3) | ❌ none |
-| **Kanban** | `features/kanban/types.ts` (KanbanSettings, Filters) | `kanban/store.ts` (reads tasks) | — (reuses tasks) | `tasks.kanban.tsx` | ❌ none |
-| **Analytics** | `features/analytics/types.ts` + `project-analytics/{insights,utils}.ts` | `analytics/mock-data.ts` | `services/analytics` (RPC + `saved_reports`) | `analytics.*` (5) | ❌ none |
-| **Workspace** | `WorkspaceSettings` in projects/types | `projects/store.ts` (`getWorkspace`) | — | `projects.workspace.tsx` | 🔁 extend `company_settings` |
-| **Teams** | HR `teams` | — (live) | `services/hr/teams.service.ts` + `repositories/hr/team.repository.ts` | `hr.organization.tsx` | ✅ `teams` |
-| **Dependencies** | `features/dependencies/types.ts` | `dependencies/store.ts` | `services/reports/dependency-requests.service.ts` + `repositories/reports/dependency.repository.ts` | `dependencies.*` | ✅ `dependency_requests` |
+| Module           | Types                                                                                                  | Store (mock)                         | Service / Repo                                                                                      | Routes                   | DB table?                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------ | ---------------------------- |
+| **Projects**     | `features/projects/types.ts` (Project, Client, Template, Milestone, Member, Workspace, Activity, File) | `projects/store.ts` (localStorage)   | `services/projects` + `repositories/project.repository.ts`                                          | `projects.*` (8 routes)  | ❌ none                      |
+| **Tasks**        | `features/tasks/types.ts` (Task, Epic, TaskMilestone, Relation, Checklist)                             | `tasks/store.ts`                     | `services/tasks` + `repositories/task.repository.ts`                                                | `tasks.*` (6)            | ❌ none                      |
+| **Sprints**      | `features/sprints/types.ts` (Sprint)                                                                   | `sprints/store.ts`                   | `services/sprints` + `repositories/sprint.repository.ts`                                            | `sprints.*` (3)          | ❌ none                      |
+| **Kanban**       | `features/kanban/types.ts` (KanbanSettings, Filters)                                                   | `kanban/store.ts` (reads tasks)      | — (reuses tasks)                                                                                    | `tasks.kanban.tsx`       | ❌ none                      |
+| **Analytics**    | `features/analytics/types.ts` + `project-analytics/{insights,utils}.ts`                                | `analytics/mock-data.ts`             | `services/analytics` (RPC + `saved_reports`)                                                        | `analytics.*` (5)        | ❌ none                      |
+| **Workspace**    | `WorkspaceSettings` in projects/types                                                                  | `projects/store.ts` (`getWorkspace`) | —                                                                                                   | `projects.workspace.tsx` | 🔁 extend `company_settings` |
+| **Teams**        | HR `teams`                                                                                             | — (live)                             | `services/hr/teams.service.ts` + `repositories/hr/team.repository.ts`                               | `hr.organization.tsx`    | ✅ `teams`                   |
+| **Dependencies** | `features/dependencies/types.ts`                                                                       | `dependencies/store.ts`              | `services/reports/dependency-requests.service.ts` + `repositories/reports/dependency.repository.ts` | `dependencies.*`         | ✅ `dependency_requests`     |
 
 **Two systemic issues to fix while connecting:**
 
@@ -86,7 +86,7 @@ time-logs, attendance) using the existing chart components and
   `project-settings-tab`, `client-views`, `template-list`, `badges`,
   `projects-subnav`; `services/projects/projects.service.ts` +
   `repositories/project.repository.ts`; routes `projects.{index,all,$id,clients,
-  clients.$id,templates,workspace}.tsx`.
+clients.$id,templates,workspace}.tsx`.
 - **Database changes**: create `projects` (§8) + supporting `clients`,
   `project_templates`, `project_activity`, `project_favorites` (per-user
   favorite — replaces `Project.favorite` boolean). Derived counts
@@ -105,7 +105,7 @@ time-logs, attendance) using the existing chart components and
   `projectRepository`; `progress`/counts read from `projectStatsQuery`. Keep
   components.
 - **Permissions**: read if `is_project_member` OR `has_any_role(owner,
-  super_admin, project_manager)`; write if `manager_id = auth.uid()` OR
+super_admin, project_manager)`; write if `manager_id = auth.uid()` OR
   `projects:write`. Archive = managers/admins.
 - **Business rules**: `key` unique (`nextProjectKey` via counter RPC to avoid
   races); `manager_id` required; archive is soft (`status='archived'` +
@@ -145,7 +145,7 @@ time-logs, attendance) using the existing chart components and
   `repositories/hr/team.repository.ts`, `teams` table + `hr.organization.tsx`.
 - **Database changes**: none for teams themselves. For execution scoping, ensure
   `projects.department_id` (§8) and (optional) a `project_teams(project_id,
-  team_id)` link **only if** projects span multiple teams; otherwise reuse
+team_id)` link **only if** projects span multiple teams; otherwise reuse
   `project_members` (§Members). Recommend reusing `project_members` — no new table.
 - **APIs / Services / Repositories**: reuse `teamRepository.listActive()`,
   `listByDepartment`. No new code; Project Execution consumes teams for member
@@ -165,7 +165,7 @@ time-logs, attendance) using the existing chart components and
   types, `profiles` directory (`employeeRepository` / profiles read), `avatar`,
   `employee-chip`.
 - **Database changes**: create `project_members(project_id, user_id, project_role,
-  added_by)` UNIQUE `(project_id, user_id)` (§9) + `is_project_member` helper.
+added_by)` UNIQUE `(project_id, user_id)` (§9) + `is_project_member` helper.
   Replaces the embedded `Project.members[]` array.
 - **APIs**: `features/projects/api.ts` — `listMembers(projectId)`,
   `addMember(projectId, userId, role)`, `removeMember`, `setMemberRole`.
@@ -181,7 +181,7 @@ time-logs, attendance) using the existing chart components and
   RLS via `is_project_member`.
 - **Business rules**: unique `(project_id, user_id)`; manager auto-added as
   `lead`; removing the manager is disallowed; `project_role ∈ {lead, contributor,
-  reviewer, stakeholder}`.
+reviewer, stakeholder}`.
 
 ---
 
@@ -190,7 +190,7 @@ time-logs, attendance) using the existing chart components and
 - **Existing code to reuse**: `projects/Milestone` type + `project-detail`
   milestone UI + `store.milestonesFor`; `tasks/TaskMilestone` (to be unified).
 - **Database changes**: create one `milestones(project_id, name, due_date,
-  status, progress)` table (§8 supporting). Tasks reference it via
+status, progress)` table (§8 supporting). Tasks reference it via
   `tasks.milestone_id` (§10). Retire `tasks/TaskMilestone` as a separate concept.
 - **APIs**: `features/projects/api.ts` — `listMilestones(projectId)`,
   `createMilestone`, `updateMilestone`, `setMilestoneStatus`. `queries.ts`:
@@ -257,7 +257,7 @@ time-logs, attendance) using the existing chart components and
 
 ---
 
-## 11. Roadmap  *(composed view — no new table)*
+## 11. Roadmap _(composed view — no new table)_
 
 - **Existing code to reuse**: `analytics/charts/timeline.tsx`,
   `project-analytics/utils.ts` (`sprintProgressList`), milestones + sprints +
@@ -280,7 +280,7 @@ time-logs, attendance) using the existing chart components and
 
 ---
 
-## 12. Calendar  *(composed view — no new table)*
+## 12. Calendar _(composed view — no new table)_
 
 - **Existing code to reuse**: `manager/team-calendar.tsx`, `react-day-picker`
   (`components/ui/calendar`), live `holidays` table, milestones/sprint/task dates.
@@ -300,7 +300,7 @@ time-logs, attendance) using the existing chart components and
 
 ---
 
-## 13. Workload  *(composed view — no new table)*
+## 13. Workload _(composed view — no new table)_
 
 - **Existing code to reuse**: `manager/workload-distribution.tsx`,
   `project-analytics/utils.ts` (`tasksPerUser`, `projectTimeLogs`, `totalHours`),
@@ -309,9 +309,9 @@ time-logs, attendance) using the existing chart components and
   hours. Expose a `time_log_totals` **view** (§20) (minutes per user/task/day) and
   reuse `tasks(assignee_id, estimated_hours, story_points)`.
 - **APIs**: `features/project-analytics/api.ts` — `getWorkload({projectId|teamId,
-  from,to})` returning per-assignee task counts + estimated vs logged hours.
+from,to})` returning per-assignee task counts + estimated vs logged hours.
 - **Services / Repositories**: read-only — compose `tasksService.listByProject`
-  + `time_log_totals` view; or an `analytics`-scoped repository method.
+  - `time_log_totals` view; or an `analytics`-scoped repository method.
 - **UI changes**: `workload-distribution.tsx` + `heatmap` read the workload query
   instead of mock; group by user/team. Keep components.
 - **Permissions**: managers/leads/owner read team workload
@@ -322,7 +322,7 @@ time-logs, attendance) using the existing chart components and
 
 ---
 
-## 14. Risk Management  *(composed register — derive first)*
+## 14. Risk Management _(composed register — derive first)_
 
 - **Existing code to reuse**: `project-analytics/insights.ts`
   (`calcProjectHealth`, `generateInsights`), `dependencyInsights`,
@@ -332,9 +332,9 @@ time-logs, attendance) using the existing chart components and
 - **Database changes**: **none required** to start — compute a risk register from
   existing signals via a `project_risk_signals` **view** (overdue tasks, blocked
   tasks, open critical dependencies, at-risk health, sprint behind schedule).
-  *Only if* mitigation/ownership must be persisted, add a minimal
+  _Only if_ mitigation/ownership must be persisted, add a minimal
   `project_risks(project_id, title, severity, likelihood, status, owner_id,
-  mitigation)` table — flag as decision (§16), default to derive.
+mitigation)` table — flag as decision (§16), default to derive.
 - **APIs**: `features/project-analytics/api.ts` — `getRiskRegister(projectId)`
   returning derived risks (+ CRUD if the optional table is chosen).
 - **Services / Repositories**: read-only composition reusing `insights.ts`;
@@ -372,16 +372,16 @@ time-logs, attendance) using the existing chart components and
 
 ## 16. Permissions matrix
 
-| Action | Roles |
-| --- | --- |
-| Read project / tasks / sprints / milestones / epics | `is_project_member` OR owner/super_admin/project_manager |
-| Create/edit project | `manager_id = auth.uid()` OR `projects:write` (owner/super_admin/project_manager) |
-| Manage members | project lead/manager + owner/super_admin |
-| Create/edit task, set status, assign | project member with edit rights or assignee/reporter (`tasks:write`) |
-| Manage sprint / milestone / epic | project manager/lead + admins |
-| Raise/own dependency | any authenticated (requester) / owner / admins |
-| Edit workspace settings | owner/super_admin/hr |
-| Read roadmap/calendar/workload/risk | project member (views inherit base RLS via `security_invoker`) |
+| Action                                              | Roles                                                                             |
+| --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Read project / tasks / sprints / milestones / epics | `is_project_member` OR owner/super_admin/project_manager                          |
+| Create/edit project                                 | `manager_id = auth.uid()` OR `projects:write` (owner/super_admin/project_manager) |
+| Manage members                                      | project lead/manager + owner/super_admin                                          |
+| Create/edit task, set status, assign                | project member with edit rights or assignee/reporter (`tasks:write`)              |
+| Manage sprint / milestone / epic                    | project manager/lead + admins                                                     |
+| Raise/own dependency                                | any authenticated (requester) / owner / admins                                    |
+| Edit workspace settings                             | owner/super_admin/hr                                                              |
+| Read roadmap/calendar/workload/risk                 | project member (views inherit base RLS via `security_invoker`)                    |
 
 Keep `features/auth/permissions.ts` in lockstep with the seeded `role_permissions`.
 
@@ -416,6 +416,6 @@ Keep `features/auth/permissions.ts` in lockstep with the seeded `role_permission
 
 ---
 
-*Derived from the live code and `docs/DATABASE_DESIGN.md` (§8 projects, §9
+_Derived from the live code and `docs/DATABASE_DESIGN.md` (§8 projects, §9
 project_members, §10 tasks/epics/milestones, §14 sprints, §16 dependencies, §19
-workspace settings, §20 views). It changes no application code.*
+workspace settings, §20 views). It changes no application code._

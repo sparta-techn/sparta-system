@@ -6,10 +6,7 @@ import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { PasswordStrength } from "@/features/auth/components/password-strength";
-import {
-  resetPasswordSchema,
-  type ResetPasswordInput,
-} from "@/features/auth/validation";
+import { resetPasswordSchema, type ResetPasswordInput } from "@/features/auth/validation";
 import { updatePassword, signOut } from "@/features/auth/auth-service";
 import { mapAuthError } from "@/features/auth/errors";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,9 +48,7 @@ function ResetPasswordPage() {
       const { data } = await supabase.auth.getSession();
       if (cancelled) return;
       if (!data.session) {
-        setLinkError(
-          "This reset link is invalid or has expired. Request a new one to continue.",
-        );
+        setLinkError("This reset link is invalid or has expired. Request a new one to continue.");
       }
       setChecking(false);
     })();

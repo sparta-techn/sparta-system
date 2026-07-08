@@ -2,13 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Pencil, Sparkles, Target } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 
 import { canEditSubmission, useMinuteTick, useTodaySubmission } from "../store";
@@ -25,12 +19,9 @@ export function CheckInWidget() {
         <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="size-4 text-primary" aria-hidden /> Morning
-              check-in
+              <Sparkles className="size-4 text-primary" aria-hidden /> Morning check-in
             </CardTitle>
-            <CardDescription>
-              Plan your day in under 2 minutes.
-            </CardDescription>
+            <CardDescription>Plan your day in under 2 minutes.</CardDescription>
           </div>
           <StatusBadge tone="warning" label="Not submitted" />
         </CardHeader>
@@ -59,8 +50,7 @@ export function CheckInWidget() {
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
         <div className="min-w-0">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="size-4 text-primary" aria-hidden /> Morning
-            check-in
+            <Sparkles className="size-4 text-primary" aria-hidden /> Morning check-in
           </CardTitle>
           <CardDescription>Submitted at {submittedAtStr}</CardDescription>
         </div>
@@ -85,9 +75,7 @@ export function CheckInWidget() {
           value={
             <span className="inline-flex items-start gap-1.5">
               <Target className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
-              <span className="line-clamp-2 text-foreground">
-                {submission.mainGoal}
-              </span>
+              <span className="line-clamp-2 text-foreground">{submission.mainGoal}</span>
             </span>
           }
         />
@@ -109,9 +97,7 @@ export function CheckInWidget() {
             </Link>
           </Button>
         ) : (
-          <p className="text-[11px] text-muted-foreground">
-            Editing window closed.
-          </p>
+          <p className="text-[11px] text-muted-foreground">Editing window closed.</p>
         )}
       </CardContent>
     </Card>

@@ -5,12 +5,7 @@
 
 import type { StatusKind } from "@/components/status-badge";
 
-export type WorkStatus =
-  | "not_started"
-  | "working"
-  | "on_break"
-  | "late"
-  | "finished";
+export type WorkStatus = "not_started" | "working" | "on_break" | "late" | "finished";
 
 export const WORK_STATUS_META: Record<
   WorkStatus,
@@ -192,9 +187,26 @@ export const mockDependencies: MockDependency[] = [
 export const mockActivity: MockActivity[] = [
   { id: "a1", kind: "clock_in", title: "Clocked in", detail: "4 min late", time: "09:04" },
   { id: "a2", kind: "status_update", title: "Submitted morning check-in", time: "09:12" },
-  { id: "a3", kind: "task_started", title: "Started T-1042", detail: "Onboarding wizard", time: "09:18" },
-  { id: "a4", kind: "dependency_created", title: "Requested brand palette tokens from Lena V.", time: "10:42" },
-  { id: "a5", kind: "task_completed", title: "Completed T-1020", detail: "Weekly digest", time: "11:30" },
+  {
+    id: "a3",
+    kind: "task_started",
+    title: "Started T-1042",
+    detail: "Onboarding wizard",
+    time: "09:18",
+  },
+  {
+    id: "a4",
+    kind: "dependency_created",
+    title: "Requested brand palette tokens from Lena V.",
+    time: "10:42",
+  },
+  {
+    id: "a5",
+    kind: "task_completed",
+    title: "Completed T-1020",
+    detail: "Weekly digest",
+    time: "11:30",
+  },
   { id: "a6", kind: "break", title: "Started break", time: "12:20" },
 ];
 

@@ -7,11 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { EmployeeChip } from "@/features/tasks/components/employee-chip";
 import { employeeById } from "@/features/tasks/utils";
@@ -89,9 +85,7 @@ export function CommentItem({
                       <button
                         key={e}
                         type="button"
-                        onClick={() =>
-                          commStore.toggleReaction(comment.id, e, CURRENT_USER_ID)
-                        }
+                        onClick={() => commStore.toggleReaction(comment.id, e, CURRENT_USER_ID)}
                         className="rounded p-1 text-lg hover:bg-accent"
                       >
                         {e}
@@ -122,9 +116,7 @@ export function CommentItem({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => setEditing(true)}>
-                      Edit
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setEditing(true)}>Edit</DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
                       onSelect={() => commStore.deleteComment(comment.id)}
@@ -139,9 +131,7 @@ export function CommentItem({
         </div>
 
         {isDeleted ? (
-          <p className="mt-2 text-sm italic text-muted-foreground">
-            This comment was deleted.
-          </p>
+          <p className="mt-2 text-sm italic text-muted-foreground">This comment was deleted.</p>
         ) : editing ? (
           <div className="mt-2">
             <CommentComposer
@@ -170,18 +160,14 @@ export function CommentItem({
                 <button
                   key={r.emoji}
                   type="button"
-                  onClick={() =>
-                    commStore.toggleReaction(comment.id, r.emoji, CURRENT_USER_ID)
-                  }
+                  onClick={() => commStore.toggleReaction(comment.id, r.emoji, CURRENT_USER_ID)}
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs",
                     mine
                       ? "border-primary/40 bg-primary/10 text-primary"
                       : "bg-muted/40 text-muted-foreground",
                   )}
-                  title={r.userIds
-                    .map((id) => employeeById(id)?.name ?? id)
-                    .join(", ")}
+                  title={r.userIds.map((id) => employeeById(id)?.name ?? id).join(", ")}
                 >
                   <span>{r.emoji}</span>
                   <span className="tabular-nums">{r.userIds.length}</span>
@@ -216,12 +202,7 @@ export function CommentItem({
       {replies.length > 0 ? (
         <ul className="space-y-2">
           {replies.map((r) => (
-            <CommentItem
-              key={r.id}
-              comment={r}
-              replies={[]}
-              depth={depth + 1}
-            />
+            <CommentItem key={r.id} comment={r} replies={[]} depth={depth + 1} />
           ))}
         </ul>
       ) : null}

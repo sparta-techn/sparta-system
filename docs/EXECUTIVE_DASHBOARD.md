@@ -15,17 +15,17 @@ sections** from reusable widgets. Every KPI is **computed** by
 `executiveKpiService.computeAll(...)` from one snapshot — the dashboard file only
 assembles sections; it does no arithmetic.
 
-| Section | Sources | Key widgets |
-| --- | --- | --- |
-| **Overview** | all groups + AI summary | `StatCard` highlight strip · AI summary card |
-| **Company KPIs** | HR, Attendance | `KpiCard` × 5 |
-| **Projects** | Projects, Tasks | `KpiCard` × 4 · `LineChart` throughput · health `Table` |
-| **Engineering** | Sprint, Tasks, Time Tracking, Dependencies | `KpiCard` × 4 · `BarChart` velocity · workload `Progress` bars |
-| **HR** | HR | `StatCard` × 4 · `DonutChart` by department |
-| **Attendance** | Attendance | `StatCard` × 4 · `LineChart` on-time trend |
-| **AI Insights** | AI, Analytics | `InsightGrid` · Regenerate action |
-| **Activity Timeline** | cross-module events | `Timeline` |
-| **Upcoming Risks** | rules across all modules | severity-ranked `Badge` cards |
+| Section               | Sources                                    | Key widgets                                                    |
+| --------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| **Overview**          | all groups + AI summary                    | `StatCard` highlight strip · AI summary card                   |
+| **Company KPIs**      | HR, Attendance                             | `KpiCard` × 5                                                  |
+| **Projects**          | Projects, Tasks                            | `KpiCard` × 4 · `LineChart` throughput · health `Table`        |
+| **Engineering**       | Sprint, Tasks, Time Tracking, Dependencies | `KpiCard` × 4 · `BarChart` velocity · workload `Progress` bars |
+| **HR**                | HR                                         | `StatCard` × 4 · `DonutChart` by department                    |
+| **Attendance**        | Attendance                                 | `StatCard` × 4 · `LineChart` on-time trend                     |
+| **AI Insights**       | AI, Analytics                              | `InsightGrid` · Regenerate action                              |
+| **Activity Timeline** | cross-module events                        | `Timeline`                                                     |
+| **Upcoming Risks**    | rules across all modules                   | severity-ranked `Badge` cards                                  |
 
 ---
 
@@ -152,6 +152,6 @@ Route registered by the router plugin at `/_authenticated/app/executive`
 
 ---
 
-*Next: gate the route on `owner:access`, wire the AI Insights "Regenerate" to the
+_Next: gate the route on `owner:access`, wire the AI Insights "Regenerate" to the
 `executive-summary` AI feature, and add the live snapshot adapter + TanStack Query
-refresh (`docs/EXECUTIVE_DASHBOARD_PLAN.md §9`).*
+refresh (`docs/EXECUTIVE_DASHBOARD_PLAN.md §9`)._

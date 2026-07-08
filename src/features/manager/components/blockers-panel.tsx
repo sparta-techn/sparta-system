@@ -6,9 +6,13 @@ import { EmptyState } from "@/components/states";
 import { cn } from "@/lib/utils";
 import { managerBlockers, type ManagerBlocker } from "../mock-data";
 
-const PRIORITY_TONE: Record<ManagerBlocker["priority"], "neutral" | "info" | "warning" | "danger"> = {
-  low: "neutral", medium: "info", high: "warning", urgent: "danger",
-};
+const PRIORITY_TONE: Record<ManagerBlocker["priority"], "neutral" | "info" | "warning" | "danger"> =
+  {
+    low: "neutral",
+    medium: "info",
+    high: "warning",
+    urgent: "danger",
+  };
 
 export function BlockersPanel() {
   const blockers = [...managerBlockers].sort((a, b) => b.ageHours - a.ageHours);
@@ -20,13 +24,20 @@ export function BlockersPanel() {
             <AlertTriangle className="size-4 text-destructive" aria-hidden />
             Blockers
           </CardTitle>
-          <CardDescription>What's stuck, who owns it, and how long it's been waiting.</CardDescription>
+          <CardDescription>
+            What's stuck, who owns it, and how long it's been waiting.
+          </CardDescription>
         </div>
-        <Button variant="outline" size="sm">View all</Button>
+        <Button variant="outline" size="sm">
+          View all
+        </Button>
       </CardHeader>
       <CardContent>
         {blockers.length === 0 ? (
-          <EmptyState title="No active blockers" description="Nothing on the critical path right now." />
+          <EmptyState
+            title="No active blockers"
+            description="Nothing on the critical path right now."
+          />
         ) : (
           <ul className="space-y-2">
             {blockers.map((b) => (
@@ -42,11 +53,17 @@ export function BlockersPanel() {
                     <p className="truncate text-sm font-medium text-foreground">{b.title}</p>
                     <p className="line-clamp-1 text-xs text-muted-foreground">{b.reason}</p>
                     <p className="text-xs text-muted-foreground">
-                      <span className="text-foreground">{b.employee}</span> waiting on <span className="text-foreground">{b.owner}</span> · {b.department}
+                      <span className="text-foreground">{b.employee}</span> waiting on{" "}
+                      <span className="text-foreground">{b.owner}</span> · {b.department}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <StatusBadge tone={PRIORITY_TONE[b.priority]} label={b.priority.toUpperCase()} size="sm" withDot={false} />
+                    <StatusBadge
+                      tone={PRIORITY_TONE[b.priority]}
+                      label={b.priority.toUpperCase()}
+                      size="sm"
+                      withDot={false}
+                    />
                     <span className="inline-flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground">
                       <Clock className="size-3" aria-hidden /> {b.ageHours}h
                     </span>
@@ -54,8 +71,20 @@ export function BlockersPanel() {
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <StatusBadge
-                    tone={b.status === "escalated" ? "danger" : b.status === "blocked" ? "warning" : "info"}
-                    label={b.status === "escalated" ? "Escalated" : b.status === "blocked" ? "Blocked" : "Pending"}
+                    tone={
+                      b.status === "escalated"
+                        ? "danger"
+                        : b.status === "blocked"
+                          ? "warning"
+                          : "info"
+                    }
+                    label={
+                      b.status === "escalated"
+                        ? "Escalated"
+                        : b.status === "blocked"
+                          ? "Blocked"
+                          : "Pending"
+                    }
                     size="sm"
                   />
                   <Button variant="ghost" size="sm" className="gap-1 text-xs">

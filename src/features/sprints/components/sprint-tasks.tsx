@@ -2,7 +2,13 @@ import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TaskCard } from "@/features/tasks/components/task-card";
 import { useTasksState } from "@/features/tasks/store";
 import { TASK_STATUSES, type TaskStatus } from "@/features/tasks/types";
@@ -16,27 +22,32 @@ export function SprintTasks({ sprint }: { sprint: Sprint }) {
   const [adding, setAdding] = useState(false);
 
   const sprintTasks = useMemo(
-    () =>
-      allTasks.filter(
-        (t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt,
-      ),
+    () => allTasks.filter((t) => t.sprintId === sprint.id && !t.parentTaskId && !t.deletedAt),
     [allTasks, sprint.id],
   );
 
   const filtered = useMemo(
-    () => (statusFilter === "all" ? sprintTasks : sprintTasks.filter((t) => t.status === statusFilter)),
+    () =>
+      statusFilter === "all" ? sprintTasks : sprintTasks.filter((t) => t.status === statusFilter),
     [sprintTasks, statusFilter],
   );
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}>
-          <SelectTrigger className="w-full sm:w-[200px]"><SelectValue /></SelectTrigger>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}
+        >
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             {TASK_STATUSES.map((s) => (
-              <SelectItem key={s} value={s} className="capitalize">{s.replace("_", " ")}</SelectItem>
+              <SelectItem key={s} value={s} className="capitalize">
+                {s.replace("_", " ")}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -49,10 +60,13 @@ export function SprintTasks({ sprint }: { sprint: Sprint }) {
       {filtered.length === 0 ? (
         <Card className="flex flex-col items-center gap-2 p-10 text-center">
           <div className="text-sm font-medium">
-            {sprintTasks.length === 0 ? "No tasks in this sprint yet" : "No tasks match this filter"}
+            {sprintTasks.length === 0
+              ? "No tasks in this sprint yet"
+              : "No tasks match this filter"}
           </div>
           <p className="max-w-sm text-xs text-muted-foreground">
-            Tasks live in the Tasks module. Add existing ones to plan this sprint — nothing is created here.
+            Tasks live in the Tasks module. Add existing ones to plan this sprint — nothing is
+            created here.
           </p>
           {sprintTasks.length === 0 ? (
             <Button size="sm" className="mt-2 gap-2" onClick={() => setAdding(true)}>

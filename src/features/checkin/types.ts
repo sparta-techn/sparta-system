@@ -7,7 +7,12 @@
 
 export type Mood = "excellent" | "good" | "okay" | "stressed" | "difficult";
 
-export const MOOD_OPTIONS: { value: Mood; emoji: string; label: string; tone: "success" | "primary" | "neutral" | "warning" | "danger" }[] = [
+export const MOOD_OPTIONS: {
+  value: Mood;
+  emoji: string;
+  label: string;
+  tone: "success" | "primary" | "neutral" | "warning" | "danger";
+}[] = [
   { value: "excellent", emoji: "😁", label: "Excellent", tone: "success" },
   { value: "good", emoji: "😊", label: "Good", tone: "primary" },
   { value: "okay", emoji: "😐", label: "Okay", tone: "neutral" },

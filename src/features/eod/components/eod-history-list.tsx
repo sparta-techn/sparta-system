@@ -8,13 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -76,13 +70,18 @@ export function EodHistoryList() {
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarDays className="size-4 text-primary" aria-hidden /> Filter reports
           </CardTitle>
-          <CardDescription>Search across summaries, completed work and tomorrow plans.</CardDescription>
+          <CardDescription>
+            Search across summaries, completed work and tomorrow plans.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
           <div className="space-y-1.5">
             <Label htmlFor="eod-search">Search</Label>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Search
+                className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
               <Input
                 id="eod-search"
                 value={search}
@@ -108,7 +107,12 @@ export function EodHistoryList() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="eod-from">From</Label>
-            <Input id="eod-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <Input
+              id="eod-from"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="eod-to">To</Label>
@@ -157,7 +161,10 @@ export function EodHistoryList() {
                           size="sm"
                           withDot={false}
                         />
-                        <ChevronDown className="size-4 shrink-0 text-muted-foreground transition group-data-[state=open]:rotate-180" aria-hidden />
+                        <ChevronDown
+                          className="size-4 shrink-0 text-muted-foreground transition group-data-[state=open]:rotate-180"
+                          aria-hidden
+                        />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
@@ -200,7 +207,9 @@ function ReportDetail({ s }: { s: EodSubmission }) {
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
       <div className="rounded-md border bg-card p-3 text-foreground">{children}</div>
     </div>
   );

@@ -56,6 +56,7 @@ Task
 ```
 
 ### Side tables
+
 - `TaskComment { id, taskId, authorId, body, createdAt }`
 - `TaskActivity { id, taskId, at, actorId, kind, summary, meta? }`
 - `Epic { id, projectId, name, color, ownerId }`
@@ -63,6 +64,7 @@ Task
 - `SavedFilter { id, name, pinned, filters, sort?, createdBy, createdAt }`
 
 ### Cross-feature references
+
 - **Project** — `task.projectId → Project.id`. Ref `XYZ-123` is derived
   from project key. Reassigning the project triggers a new ref on
   creation, kept stable on updates.
@@ -74,11 +76,11 @@ Task
 
 ## 3. Routes
 
-| Route | Purpose |
-|---|---|
-| `/app/tasks` | Overview: KPIs + dashboard widgets. |
+| Route            | Purpose                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| `/app/tasks`     | Overview: KPIs + dashboard widgets.                           |
 | `/app/tasks/all` | Full list with filters, sorting, view switcher, bulk actions. |
-| `/app/tasks/$id` | Task detail with tabs and side panel. |
+| `/app/tasks/$id` | Task detail with tabs and side panel.                         |
 
 The route layout `/app/tasks` provides the page header, top tab nav, and
 the global "New task" entry point. Detail page reuses the same shell.
@@ -107,6 +109,7 @@ Header: project chip, ref, title, status / priority / label chips,
 favorite star, row actions (duplicate, archive, delete).
 
 Tabs:
+
 1. **Overview** — description editor (markdown today, rich text later)
    and comments.
 2. **Checklist** — add/check/remove inline items with progress bar.
@@ -167,13 +170,13 @@ detail. Future Supabase shape: `task_favorites (user_id, task_id)`.
 Exposed from `src/features/tasks/components/dashboard-widgets.tsx` for
 reuse on dashboards:
 
-| Widget | Filter |
-|---|---|
-| `MyTasksWidget` | assigneeIds = current, status ∈ open set |
-| `OverdueTasksWidget` | overdueOnly, topLevelOnly |
-| `TodayTasksWidget` | dueDate within today |
-| `RecentlyUpdatedWidget` | sort updated desc |
-| `AssignedToMeWidget` | assigneeIds = current |
+| Widget                  | Filter                                   |
+| ----------------------- | ---------------------------------------- |
+| `MyTasksWidget`         | assigneeIds = current, status ∈ open set |
+| `OverdueTasksWidget`    | overdueOnly, topLevelOnly                |
+| `TodayTasksWidget`      | dueDate within today                     |
+| `RecentlyUpdatedWidget` | sort updated desc                        |
+| `AssignedToMeWidget`    | assigneeIds = current                    |
 
 Each widget composes the canonical `<TaskRow>` mini-card, so visuals
 stay consistent across the product.
@@ -182,16 +185,16 @@ stay consistent across the product.
 
 ## 10. RBAC
 
-| Action | employee | team_lead | project_manager | hr | admin/owner |
-|---|---|---|---|---|---|
-| View tasks in their projects | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create tasks in their projects | ✅ | ✅ | ✅ | — | ✅ |
-| Edit assignee / status of own tasks | ✅ | ✅ | ✅ | — | ✅ |
-| Bulk update | — | ✅ | ✅ | — | ✅ |
-| Archive / restore | — | ✅ | ✅ | — | ✅ |
-| Delete | — | — | ✅ | — | ✅ |
-| Manage saved filters (personal) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Manage saved filters (shared) | — | — | ✅ | — | ✅ |
+| Action                              | employee | team_lead | project_manager | hr  | admin/owner |
+| ----------------------------------- | -------- | --------- | --------------- | --- | ----------- |
+| View tasks in their projects        | ✅       | ✅        | ✅              | ✅  | ✅          |
+| Create tasks in their projects      | ✅       | ✅        | ✅              | —   | ✅          |
+| Edit assignee / status of own tasks | ✅       | ✅        | ✅              | —   | ✅          |
+| Bulk update                         | —        | ✅        | ✅              | —   | ✅          |
+| Archive / restore                   | —        | ✅        | ✅              | —   | ✅          |
+| Delete                              | —        | —         | ✅              | —   | ✅          |
+| Manage saved filters (personal)     | ✅       | ✅        | ✅              | ✅  | ✅          |
+| Manage saved filters (shared)       | —        | —         | ✅              | —   | ✅          |
 
 UI gating is UX only; future RLS policies are the source of truth.
 

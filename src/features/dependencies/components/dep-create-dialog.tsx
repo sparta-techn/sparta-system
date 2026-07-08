@@ -78,7 +78,10 @@ export function DepCreateDialog({
       project,
       relatedTaskRef: relatedTaskRef.trim() || null,
       dueAt: dueAt ? new Date(dueAt).toISOString() : null,
-      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+      tags: tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
       asDraft,
     });
     toast.success(asDraft ? "Saved as draft" : `Created ${dep.id}`);
@@ -88,7 +91,13 @@ export function DepCreateDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) reset();
+        onOpenChange(v);
+      }}
+    >
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>New dependency</DialogTitle>
@@ -133,10 +142,14 @@ export function DepCreateDialog({
             <div className="grid gap-1.5">
               <Label>Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as DependencyType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {DEPENDENCY_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{TYPE_LABEL[t]}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {TYPE_LABEL[t]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -144,17 +157,26 @@ export function DepCreateDialog({
             <div className="grid gap-1.5">
               <Label>Priority</Label>
               <Select value={priority} onValueChange={(v) => setPriority(v as DependencyPriority)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {DEPENDENCY_PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>{PRIORITY_LABEL[p]}</SelectItem>
+                    <SelectItem key={p} value={p}>
+                      {PRIORITY_LABEL[p]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="dep-due">Due date</Label>
-              <Input id="dep-due" type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+              <Input
+                id="dep-due"
+                type="date"
+                value={dueAt}
+                onChange={(e) => setDueAt(e.target.value)}
+              />
             </div>
           </div>
 
@@ -162,10 +184,14 @@ export function DepCreateDialog({
             <div className="grid gap-1.5">
               <Label>Department</Label>
               <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {DEPARTMENTS.map((d) => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -173,7 +199,9 @@ export function DepCreateDialog({
             <div className="grid gap-1.5">
               <Label>Assigned employee</Label>
               <Select value={ownerId} onValueChange={setOwnerId}>
-                <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Unassigned" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Unassigned</SelectItem>
                   {PEOPLE.filter((p) => p.id !== "u-me").map((p) => (
@@ -190,10 +218,14 @@ export function DepCreateDialog({
             <div className="grid gap-1.5">
               <Label>Related project</Label>
               <Select value={project} onValueChange={setProject}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {PROJECTS.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

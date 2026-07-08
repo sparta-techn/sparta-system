@@ -63,9 +63,7 @@ function toEmail(
   }
 
   const text = lines.join("\n");
-  const html = lines
-    .map((line) => (line === "" ? "<br/>" : `<p>${escapeHtml(line)}</p>`))
-    .join("");
+  const html = lines.map((line) => (line === "" ? "<br/>" : `<p>${escapeHtml(line)}</p>`)).join("");
 
   return {
     to: [{ address }],

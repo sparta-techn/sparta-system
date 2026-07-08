@@ -17,7 +17,7 @@ Workspace  ─→  Clients  ─→  Projects  ─→  (Milestones · Members · 
 
 ## Lifecycle (status)
 
-`planning → active → on_hold → completed → archived`  (or `cancelled` at any point)
+`planning → active → on_hold → completed → archived` (or `cancelled` at any point)
 
 Status is editable from project settings. Archiving hides the project from the active list but preserves all data; a future "Show archived" toggle on the list view surfaces them again.
 
@@ -41,17 +41,17 @@ Health is independent of status — an `active` project can be `at_risk`. It wil
 
 The Projects detail page exposes nine tabs:
 
-| Tab | Phase | Notes |
-| --- | --- | --- |
-| Overview | shipped | Progress, KPIs, milestones, recent activity, info, resources, files |
-| Tasks | next | Disabled placeholder — built on the Task layer |
-| Milestones | next | Disabled placeholder |
-| Epics | next | Disabled placeholder |
-| Files | shipped | Table of attachments with kind, owner, size |
-| Members | shipped | Roles, workload, add/remove |
-| Reports | shipped (stub) | Wired to UI; live aggregations land with the Task layer |
-| Activity | shipped | Chronological event log |
-| Settings | shipped | Rename, change manager, manage links, duplicate, archive |
+| Tab        | Phase          | Notes                                                               |
+| ---------- | -------------- | ------------------------------------------------------------------- |
+| Overview   | shipped        | Progress, KPIs, milestones, recent activity, info, resources, files |
+| Tasks      | next           | Disabled placeholder — built on the Task layer                      |
+| Milestones | next           | Disabled placeholder                                                |
+| Epics      | next           | Disabled placeholder                                                |
+| Files      | shipped        | Table of attachments with kind, owner, size                         |
+| Members    | shipped        | Roles, workload, add/remove                                         |
+| Reports    | shipped (stub) | Wired to UI; live aggregations land with the Task layer             |
+| Activity   | shipped        | Chronological event log                                             |
+| Settings   | shipped        | Rename, change manager, manage links, duplicate, archive            |
 
 ## Create flow — under 60 seconds
 
@@ -72,13 +72,13 @@ Only **name** and **key** are required. Sensible defaults cover everything else.
 The store is a thin facade over `localStorage` with the exact shape future Supabase repositories will expose:
 
 ```ts
-listProjects() / getProject(id)
-createProject(input) / updateProject(id, patch)
-toggleFavorite(id) / archiveProject(id) / duplicateProject(id)
-listClients() / getClient(id) / createClient(input)
-listTemplates() / getTemplate(id) / createTemplate(input)
-getWorkspace() / updateWorkspace(patch)
-activityFor(projectId) / milestonesFor(projectId) / filesFor(projectId)
+listProjects() / getProject(id);
+createProject(input) / updateProject(id, patch);
+toggleFavorite(id) / archiveProject(id) / duplicateProject(id);
+listClients() / getClient(id) / createClient(input);
+listTemplates() / getTemplate(id) / createTemplate(input);
+getWorkspace() / updateWorkspace(patch);
+activityFor(projectId) / milestonesFor(projectId) / filesFor(projectId);
 ```
 
 `useProjectsState(selector)` is a `useSyncExternalStore` hook that lets components subscribe to slices without a global context. Swapping the store for TanStack Query backed by Supabase will not touch any component.

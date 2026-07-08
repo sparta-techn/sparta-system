@@ -26,14 +26,18 @@ export function Heatmap({
           <tr>
             <th aria-hidden />
             {colLabels.map((c) => (
-              <th key={c} className="px-1 font-normal">{c}</th>
+              <th key={c} className="px-1 font-normal">
+                {c}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {data.map((row, r) => (
             <tr key={rowLabels[r]}>
-              <th scope="row" className="pr-2 text-right font-medium text-foreground">{rowLabels[r]}</th>
+              <th scope="row" className="pr-2 text-right font-medium text-foreground">
+                {rowLabels[r]}
+              </th>
               {row.map((v, c) => {
                 const intensity = v / m;
                 return (
@@ -41,9 +45,10 @@ export function Heatmap({
                     <div
                       className="size-6 rounded-sm"
                       style={{
-                        backgroundColor: v === 0
-                          ? "hsl(var(--muted))"
-                          : `color-mix(in oklab, hsl(var(--primary)) ${20 + intensity * 70}%, transparent)`,
+                        backgroundColor:
+                          v === 0
+                            ? "hsl(var(--muted))"
+                            : `color-mix(in oklab, hsl(var(--primary)) ${20 + intensity * 70}%, transparent)`,
                       }}
                       title={`${rowLabels[r]} ${colLabels[c]}: ${v}`}
                       aria-label={`${rowLabels[r]} ${colLabels[c]} ${v}`}

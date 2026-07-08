@@ -1,25 +1,14 @@
 import { Clock, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTimeState } from "../store";
-import {
-  formatHours,
-  formatRelative,
-  liveDurationMinutes,
-  sumMinutes,
-} from "../utils";
+import { formatHours, formatRelative, liveDurationMinutes, sumMinutes } from "../utils";
 import { useNow } from "../hooks/use-now";
 
 /**
  * Compact time chip for a task — total hours, last worked, active indicator.
  * Use in task cards, rows, and detail headers.
  */
-export function TaskTimeSummary({
-  taskId,
-  className,
-}: {
-  taskId: string;
-  className?: string;
-}) {
+export function TaskTimeSummary({ taskId, className }: { taskId: string; className?: string }) {
   const logs = useTimeState((s) => s.logs.filter((l) => l.taskId === taskId));
   const now = useNow(logs.some((l) => l.endTime === null) ? 1000 : 60_000);
 
@@ -28,9 +17,7 @@ export function TaskTimeSummary({
   const last =
     logs
       .filter((l) => l.endTime !== null)
-      .sort(
-        (a, b) => new Date(b.endTime!).getTime() - new Date(a.endTime!).getTime(),
-      )[0] ?? null;
+      .sort((a, b) => new Date(b.endTime!).getTime() - new Date(a.endTime!).getTime())[0] ?? null;
 
   if (total === 0 && !active) return null;
 

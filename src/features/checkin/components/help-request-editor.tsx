@@ -35,9 +35,7 @@ export function HelpRequestEditor({ value, onChange }: Props) {
           <Label htmlFor="help-toggle" className="text-sm font-medium">
             I need help today
           </Label>
-          <p className="text-xs text-muted-foreground">
-            Route a request to a teammate. Optional.
-          </p>
+          <p className="text-xs text-muted-foreground">Route a request to a teammate. Optional.</p>
         </div>
         <Switch
           id="help-toggle"
@@ -69,10 +67,7 @@ export function HelpRequestEditor({ value, onChange }: Props) {
 
           <div className="space-y-1.5">
             <Label htmlFor="help-emp">Person</Label>
-            <Select
-              value={value.employeeId ?? ""}
-              onValueChange={(v) => patch({ employeeId: v })}
-            >
+            <Select value={value.employeeId ?? ""} onValueChange={(v) => patch({ employeeId: v })}>
               <SelectTrigger id="help-emp">
                 <SelectValue placeholder="Select teammate" />
               </SelectTrigger>

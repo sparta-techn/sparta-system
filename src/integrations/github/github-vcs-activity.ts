@@ -24,11 +24,7 @@ import type {
   VcsRepository,
   VcsRepositoryRef,
 } from "../ports";
-import type {
-  GitHubIssueState,
-  GitHubPullRequestState,
-  GitHubRepoRef,
-} from "./types";
+import type { GitHubIssueState, GitHubPullRequestState, GitHubRepoRef } from "./types";
 import type {
   BranchesService,
   CommitsService,
@@ -175,8 +171,6 @@ function toGitHubPrState(
   return "closed"; // "merged" is a closed PR on GitHub's side
 }
 
-function toGitHubIssueState(
-  state: VcsIssueQuery["state"],
-): GitHubIssueState | "all" | undefined {
+function toGitHubIssueState(state: VcsIssueQuery["state"]): GitHubIssueState | "all" | undefined {
   return state;
 }

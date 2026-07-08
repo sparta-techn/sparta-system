@@ -9,16 +9,16 @@
 
 ## 1. Scope
 
-| Concern | Status |
-| --- | --- |
-| Login (email + password) | **Live** — Supabase Auth |
-| Logout | **Live** — Supabase Auth |
-| Session bootstrap & persistence | **Live** — Supabase Auth (`localStorage`) |
-| Session refresh / expiry | **Live** — Supabase auto-refresh + `onAuthStateChange` |
-| Route protection | **Live** — `getUser()` guard on `_authenticated` |
-| Password reset / update | **Live** — Supabase Auth email flow |
-| Profile & roles (RBAC) | **Live** reads from `profiles` / `user_roles` |
-| All other feature data | **Mock** — unchanged `mock-data.ts` per feature |
+| Concern                         | Status                                                 |
+| ------------------------------- | ------------------------------------------------------ |
+| Login (email + password)        | **Live** — Supabase Auth                               |
+| Logout                          | **Live** — Supabase Auth                               |
+| Session bootstrap & persistence | **Live** — Supabase Auth (`localStorage`)              |
+| Session refresh / expiry        | **Live** — Supabase auto-refresh + `onAuthStateChange` |
+| Route protection                | **Live** — `getUser()` guard on `_authenticated`       |
+| Password reset / update         | **Live** — Supabase Auth email flow                    |
+| Profile & roles (RBAC)          | **Live** reads from `profiles` / `user_roles`          |
+| All other feature data          | **Mock** — unchanged `mock-data.ts` per feature        |
 
 **No UI was changed.** The login form, layouts, password screens and route tree
 are exactly as they were; only the data path underneath them is real.
@@ -40,6 +40,7 @@ integrations/supabase/client.ts   The single Supabase client (real)
 ```
 
 ### `integrations/supabase/client.ts`
+
 The real `@supabase/supabase-js` client (lazy, proxied singleton). Configured for
 browser sessions:
 
@@ -55,19 +56,21 @@ Reads `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` (see `.env`). The
 publishable key is the only key shipped to the client; no service key is exposed.
 
 ### `features/auth/auth-service.ts` — credential & identity calls
+
 Thin, single-purpose wrappers over Supabase. This is where login/logout/session
 verbs live:
 
-| Function | Supabase call |
-| --- | --- |
-| `signInWithPassword(email, pw)` | `auth.signInWithPassword` |
-| `signOut()` | `auth.signOut` |
-| `requestPasswordReset(email)` | `auth.resetPasswordForEmail` (→ `/auth/reset-password`) |
-| `updatePassword(pw, metadata?)` | `auth.updateUser` |
-| `fetchProfile(userId)` | `from("profiles").select(...)` |
-| `fetchRoles(userId)` | `from("user_roles").select("role")` |
+| Function                        | Supabase call                                           |
+| ------------------------------- | ------------------------------------------------------- |
+| `signInWithPassword(email, pw)` | `auth.signInWithPassword`                               |
+| `signOut()`                     | `auth.signOut`                                          |
+| `requestPasswordReset(email)`   | `auth.resetPasswordForEmail` (→ `/auth/reset-password`) |
+| `updatePassword(pw, metadata?)` | `auth.updateUser`                                       |
+| `fetchProfile(userId)`          | `from("profiles").select(...)`                          |
+| `fetchRoles(userId)`            | `from("user_roles").select("role")`                     |
 
 ### `features/auth/auth-context.tsx` — session state for the app
+
 `AuthProvider` (mounted in `routes/__root.tsx`) owns the live session:
 
 1. **Subscribe first, then read.** Registers `onAuthStateChange` before calling
@@ -77,19 +80,21 @@ verbs live:
    the Supabase deadlock on re-entrant calls).
 3. **SIGNED_OUT** clears profile/roles immediately.
 4. Exposes `{ user, profile, roles, loading, initialized, isAuthenticated,
-   hasRole, hasAnyRole, hasPermission, hasAnyPermission, refresh, signOut }` via
+hasRole, hasAnyRole, hasPermission, hasAnyPermission, refresh, signOut }` via
    `useAuth()`.
 
 Permissions are derived from roles through `features/auth/permissions.ts`
 (`permissionsForRoles`), giving RBAC checks to any component.
 
 ### Route protection — `routes/_authenticated/route.tsx`
+
 A pathless layout guarding everything under `_authenticated/`. `beforeLoad` calls
 `supabase.auth.getUser()`; on no user / error it redirects to `/auth` with the
 intended `redirect` preserved. SSR is disabled here because the session lives in
 `localStorage`.
 
 ### Server RPC token attachment — `integrations/supabase/auth-attacher.ts`
+
 Registered as a global `functionMiddleware` in `src/start.ts`. Attaches the
 current `access_token` as a bearer header to server-function RPCs so the session
 flows through to the server side.
@@ -99,6 +104,7 @@ flows through to the server side.
 ## 3. The three required flows
 
 ### Login
+
 1. `routes/auth/index.tsx` validates input with `loginSchema` (Zod).
 2. Calls `signInWithPassword(email, password)` → Supabase establishes a session
    and writes it to `localStorage`.
@@ -107,6 +113,7 @@ flows through to the server side.
    `redirect ?? "/app"`. Errors are surfaced via `mapAuthError`.
 
 ### Logout
+
 1. Any consumer calls `useAuth().signOut()`.
 2. That calls `auth-service.signOut()` → `supabase.auth.signOut()`, clearing the
    stored session, then resets local `user/profile/roles`.
@@ -114,6 +121,7 @@ flows through to the server side.
    protected navigations back to `/auth`.
 
 ### Session handling
+
 - **Bootstrap:** `getSession()` on app start restores an existing session.
 - **Persistence:** `persistSession + localStorage` survives reloads.
 - **Refresh:** `autoRefreshToken` renews access tokens silently.
@@ -144,6 +152,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
 Backend expectations (Supabase project):
+
 - Email/password auth enabled.
 - `profiles` row per user (`id` = auth user id) and a `user_roles` table
   (`user_id`, `role`) for RBAC — both protected by RLS.

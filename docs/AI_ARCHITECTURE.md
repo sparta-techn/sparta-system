@@ -14,15 +14,15 @@
 
 The AI boundary is partially built. This design extends it in place:
 
-| Artifact | Status | Role |
-| --- | --- | --- |
-| `src/services/ai/types.ts` | ✅ exists | `AiRole`, `AiMessage`, `AiConversation`, `AiCompletionRequest`, `AiCompletionResponse` |
-| `src/services/ai/ai.service.ts` | ✅ exists | `AiService extends BaseService<AiConversation>` — CRUD on `ai_conversations`, `listMessages`, `ask()` |
-| `AiService.ask()` | ✅ exists | Invokes the **`ai-assistant` Edge Function**; keys never reach the browser |
-| `ai_conversations` table | 🆕 to add | Bound by `AiService.table` |
-| `ai_messages` table | 🆕 to add | Read by `AiService.listMessages()` |
-| `ai-assistant` Edge Function | 🆕 to add | Where **all** provider-agnostic logic lives |
-| `ai_token_usage`, `ai_settings`, `ai_provider_config` | 🆕 to add | This document |
+| Artifact                                              | Status    | Role                                                                                                  |
+| ----------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| `src/services/ai/types.ts`                            | ✅ exists | `AiRole`, `AiMessage`, `AiConversation`, `AiCompletionRequest`, `AiCompletionResponse`                |
+| `src/services/ai/ai.service.ts`                       | ✅ exists | `AiService extends BaseService<AiConversation>` — CRUD on `ai_conversations`, `listMessages`, `ask()` |
+| `AiService.ask()`                                     | ✅ exists | Invokes the **`ai-assistant` Edge Function**; keys never reach the browser                            |
+| `ai_conversations` table                              | 🆕 to add | Bound by `AiService.table`                                                                            |
+| `ai_messages` table                                   | 🆕 to add | Read by `AiService.listMessages()`                                                                    |
+| `ai-assistant` Edge Function                          | 🆕 to add | Where **all** provider-agnostic logic lives                                                           |
+| `ai_token_usage`, `ai_settings`, `ai_provider_config` | 🆕 to add | This document                                                                                         |
 
 **Design invariant already set by the code:** the browser only ever calls
 `aiService`. The model call is delegated server-side. Every new component below
@@ -30,6 +30,7 @@ respects that boundary — provider SDKs, keys, prompt assembly and context
 fetching all live in the Edge Function, never in the client bundle.
 
 ### Legend
+
 ✅ exists · 🆕 new · 🔁 extend existing.
 
 ---
@@ -43,8 +44,8 @@ fetching all live in the Edge Function, never in the client bundle.
   Per CLAUDE.md ("Never expose service keys") and the existing `ask()` contract.
 - **One boundary.** Components → `aiService` → Edge Function → provider. No
   component ever imports a provider SDK or builds a prompt (CLAUDE.md API Rules).
-- **RBAC-scoped grounding.** The Context Builder only ever reads rows the *asking
-  user* is allowed to see. AI never becomes a privilege-escalation path.
+- **RBAC-scoped grounding.** The Context Builder only ever reads rows the _asking
+  user_ is allowed to see. AI never becomes a privilege-escalation path.
 - **Auditable & metered.** Every completion records token usage and (for
   sensitive surfaces) an audit event.
 - **Default to the best Claude models, stay swappable.** The default adapter is
@@ -107,13 +108,13 @@ export interface AiProviderMessage {
 
 /** Neutral generation request — no vendor-specific fields. */
 export interface AiGenerateParams {
-  model: string;                 // resolved model id for the chosen provider
-  system: string;                // system prompt (PromptBuilder output)
+  model: string; // resolved model id for the chosen provider
+  system: string; // system prompt (PromptBuilder output)
   messages: AiProviderMessage[]; // ordered conversation turns
   maxOutputTokens: number;
   temperature?: number;
   stopSequences?: string[];
-  signal?: AbortSignal;          // for cancellation / timeouts
+  signal?: AbortSignal; // for cancellation / timeouts
 }
 
 /** Provider-normalized token accounting. */
@@ -122,8 +123,7 @@ export interface AiUsage {
   outputTokens: number;
 }
 
-export type AiFinishReason =
-  | "stop" | "length" | "content_filter" | "tool_use" | "error";
+export type AiFinishReason = "stop" | "length" | "content_filter" | "tool_use" | "error";
 
 export interface AiGenerateResult {
   text: string;
@@ -136,15 +136,15 @@ export interface AiGenerateResult {
 /** One streamed delta. */
 export interface AiStreamChunk {
   delta: string;
-  usage?: AiUsage;          // final chunk carries usage
+  usage?: AiUsage; // final chunk carries usage
   finishReason?: AiFinishReason;
 }
 
 /** Static description of a model a provider exposes. */
 export interface AiModelDescriptor {
-  id: string;               // e.g. "claude-opus-4-8"
-  label: string;            // human-facing
-  contextWindow: number;    // input token budget
+  id: string; // e.g. "claude-opus-4-8"
+  label: string; // human-facing
+  contextWindow: number; // input token budget
   maxOutputTokens: number;
   inputCostPerMTok: number; // USD per 1M input tokens (for cost estimates)
   outputCostPerMTok: number;
@@ -158,20 +158,18 @@ export interface AiProvider {
   generate(params: AiGenerateParams): Promise<AiGenerateResult>;
   stream(params: AiGenerateParams): AsyncIterable<AiStreamChunk>;
   /** Optional pre-flight token estimate; falls back to a heuristic if absent. */
-  countTokens?(
-    params: Pick<AiGenerateParams, "model" | "system" | "messages">,
-  ): Promise<number>;
+  countTokens?(params: Pick<AiGenerateParams, "model" | "system" | "messages">): Promise<number>;
 }
 ```
 
 ### 3.1 Adapters
 
-| Adapter | File | Notes |
-| --- | --- | --- |
+| Adapter             | File                     | Notes                                                                                                                                                                               |
+| ------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AnthropicProvider` | `providers/anthropic.ts` | **Default.** Maps `system` → top-level `system`, `messages` → Messages API. Models: `claude-opus-4-8`, `claude-sonnet-5`, `claude-haiku-4-5-20251001`. Usage from `response.usage`. |
-| `OpenAiProvider` | `providers/openai.ts` | Prepends `system` as a `role:"system"` message (Chat Completions / Responses API). Usage from `usage.prompt_tokens` / `completion_tokens`. |
-| `GeminiProvider` | `providers/google.ts` | Maps `system` → `systemInstruction`, roles `assistant`→`model`. Usage from `usageMetadata`. |
-| `LocalProvider` | `providers/local.ts` | **Future.** OpenAI-compatible endpoint (Ollama / vLLM / LM Studio) at a configurable base URL; usage estimated if the endpoint omits it. |
+| `OpenAiProvider`    | `providers/openai.ts`    | Prepends `system` as a `role:"system"` message (Chat Completions / Responses API). Usage from `usage.prompt_tokens` / `completion_tokens`.                                          |
+| `GeminiProvider`    | `providers/google.ts`    | Maps `system` → `systemInstruction`, roles `assistant`→`model`. Usage from `usageMetadata`.                                                                                         |
+| `LocalProvider`     | `providers/local.ts`     | **Future.** OpenAI-compatible endpoint (Ollama / vLLM / LM Studio) at a configurable base URL; usage estimated if the endpoint omits it.                                            |
 
 Each adapter reads its own key from Edge Function secrets
 (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `LOCAL_LLM_BASE_URL`)
@@ -184,9 +182,9 @@ instantiated.
 // providers/registry.ts
 const factories: Record<AiProviderId, () => AiProvider> = {
   anthropic: () => new AnthropicProvider(env("ANTHROPIC_API_KEY")),
-  openai:    () => new OpenAiProvider(env("OPENAI_API_KEY")),
-  google:    () => new GeminiProvider(env("GOOGLE_API_KEY")),
-  local:     () => new LocalProvider(env("LOCAL_LLM_BASE_URL")),
+  openai: () => new OpenAiProvider(env("OPENAI_API_KEY")),
+  google: () => new GeminiProvider(env("GOOGLE_API_KEY")),
+  local: () => new LocalProvider(env("LOCAL_LLM_BASE_URL")),
 };
 
 /** Resolve the active provider from ai_provider_config (never hard-coded). */
@@ -198,7 +196,7 @@ export function resolveProvider(cfg: AiProviderConfig): AiProvider {
 ```
 
 Model selection resolves through the config too: an incoming request may name a
-*tier* (`fast` | `balanced` | `deep`) rather than a raw model id, and the config
+_tier_ (`fast` | `balanced` | `deep`) rather than a raw model id, and the config
 maps each tier to a concrete model for the active provider. This keeps feature
 code from ever hard-coding `claude-...` strings.
 
@@ -214,12 +212,12 @@ no provider knowledge. Lives in `ai-assistant/prompt/`.
 
 ```ts
 export interface PromptInput {
-  surface: string | null;          // "tasks" | "analytics" | null (global)
+  surface: string | null; // "tasks" | "analytics" | null (global)
   user: { id: string; displayName: string; roles: string[] };
-  context: ContextBlock;           // from Context Builder (§5)
-  history: AiProviderMessage[];    // prior turns (windowed)
-  prompt: string;                  // the new user message
-  settings: ResolvedAiSettings;    // persona, verbosity, language
+  context: ContextBlock; // from Context Builder (§5)
+  history: AiProviderMessage[]; // prior turns (windowed)
+  prompt: string; // the new user message
+  settings: ResolvedAiSettings; // persona, verbosity, language
 }
 
 export interface BuiltPrompt {
@@ -244,7 +242,7 @@ Responsibilities:
 - **Localization** — honors `settings.language` (from AI Settings / profile
   locale).
 - **PII / injection hygiene** — strips known secret patterns and neutralizes
-  obvious prompt-injection markers from *context* rows before they reach `system`.
+  obvious prompt-injection markers from _context_ rows before they reach `system`.
 
 The Prompt Builder never talks to a provider; it emits a neutral `BuiltPrompt`
 that any adapter can consume.
@@ -259,13 +257,13 @@ authorized to see**. This is the security-critical layer.
 ```ts
 export interface ContextRequest {
   surface: string | null;
-  hints: Record<string, unknown>;   // AiCompletionRequest.context (entity ids, filters)
+  hints: Record<string, unknown>; // AiCompletionRequest.context (entity ids, filters)
   userId: string;
 }
 
 export interface ContextBlock {
-  summary: string;                  // short natural-language framing
-  entities: ContextEntity[];        // structured, cited rows
+  summary: string; // short natural-language framing
+  entities: ContextEntity[]; // structured, cited rows
   truncated: boolean;
 }
 ```
@@ -279,14 +277,14 @@ Rules:
 - **Surface resolvers.** A registry maps `surface` → a resolver that knows which
   tables to read and how to summarize them:
 
-  | Surface | Reads (RLS-scoped) | Produces |
-  | --- | --- | --- |
-  | `tasks` | `tasks`, `task_activity`, `comments` | current task + thread summary |
-  | `projects` | `projects`, `project_stats` view, `milestones` | health/progress digest |
-  | `analytics` | `analytics_*` views, `time_log_totals` | KPI snapshot |
-  | `reports` | `daily_checkins`, `midday_reports`, `eod_reports` | the user's own reports |
-  | `dependencies` | `dependencies`, `dependency_activity` | blocker state |
-  | `null` (global) | lightweight profile + assigned work | personal digest |
+  | Surface         | Reads (RLS-scoped)                                | Produces                      |
+  | --------------- | ------------------------------------------------- | ----------------------------- |
+  | `tasks`         | `tasks`, `task_activity`, `comments`              | current task + thread summary |
+  | `projects`      | `projects`, `project_stats` view, `milestones`    | health/progress digest        |
+  | `analytics`     | `analytics_*` views, `time_log_totals`            | KPI snapshot                  |
+  | `reports`       | `daily_checkins`, `midday_reports`, `eod_reports` | the user's own reports        |
+  | `dependencies`  | `dependencies`, `dependency_activity`             | blocker state                 |
+  | `null` (global) | lightweight profile + assigned work               | personal digest               |
 
 - **Bounded.** Each resolver caps rows/tokens and sets `truncated` so the Prompt
   Builder can note omissions. Never dumps whole tables.
@@ -356,7 +354,7 @@ Responsibilities per `ask()` call:
    prompt, e.g. first ~48 chars; `surface` from the request).
 2. **Load history** — `ai_messages` for the conversation, oldest-first, windowed
    for the model budget (delegated to the Prompt Builder).
-3. **Persist the user turn** — insert the user `ai_message` *before* calling the
+3. **Persist the user turn** — insert the user `ai_message` _before_ calling the
    provider (so a provider failure still records the question).
 4. **Persist the assistant turn** — after `generate()`/`stream()` completes, insert
    the assistant `ai_message` (with `model`, `provider`, `finishReason` in
@@ -414,12 +412,12 @@ context" consent toggles, personal token cap.
 
 ```ts
 export interface ResolvedAiSettings {
-  providerId: AiProviderId;      // from workspace config
-  model: string;                 // resolved tier → model
+  providerId: AiProviderId; // from workspace config
+  model: string; // resolved tier → model
   temperature: number;
   maxOutputTokens: number;
   persona: "concise" | "balanced" | "detailed";
-  language: string;              // BCP-47, defaults to profile locale
+  language: string; // BCP-47, defaults to profile locale
   streaming: boolean;
   contextConsent: { reports: boolean; tasks: boolean; analytics: boolean };
   quota: { userCap: number | null; workspaceCap: number | null };
@@ -477,15 +475,15 @@ to `authenticated`/`service_role` only (never `anon`), soft-delete via
 
 ### 11.1 `ai_conversations` 🆕 (bound by `AiService.table`)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | `gen_random_uuid()` |
-| "userId" | uuid NOT NULL | → `auth.users(id)` CASCADE |
-| title | text NOT NULL | derived from first prompt |
-| surface | text | feature that opened the assistant; nullable = global |
-| "archivedAt" | timestamptz | soft archive |
-| "createdAt" | timestamptz NOT NULL | default `now()` |
-| "updatedAt" | timestamptz NOT NULL | trigger-maintained (drives recent-first list) |
+| Column       | Type                 | Notes                                                |
+| ------------ | -------------------- | ---------------------------------------------------- |
+| id           | uuid PK              | `gen_random_uuid()`                                  |
+| "userId"     | uuid NOT NULL        | → `auth.users(id)` CASCADE                           |
+| title        | text NOT NULL        | derived from first prompt                            |
+| surface      | text                 | feature that opened the assistant; nullable = global |
+| "archivedAt" | timestamptz          | soft archive                                         |
+| "createdAt"  | timestamptz NOT NULL | default `now()`                                      |
+| "updatedAt"  | timestamptz NOT NULL | trigger-maintained (drives recent-first list)        |
 
 - **Indexes**: `("userId", "updatedAt" DESC)`, partial `("userId") WHERE "archivedAt" IS NULL`.
 - **RLS**: `USING ("userId" = auth.uid())` for select/insert/update/delete
@@ -494,15 +492,15 @@ to `authenticated`/`service_role` only (never `anon`), soft-delete via
 
 ### 11.2 `ai_messages` 🆕 (read by `AiService.listMessages`)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| "conversationId" | uuid NOT NULL | → `ai_conversations(id)` CASCADE |
-| "userId" | uuid NOT NULL | denormalized owner (cheap RLS, per DB convention) |
-| role | text NOT NULL | `user` \| `assistant` \| `system` (`AiRole`) |
-| content | text NOT NULL | |
-| context | jsonb | UI grounding hints / `{ model, provider, finishReason, requestId }` |
-| "createdAt" | timestamptz NOT NULL | ordered oldest-first by `listMessages` |
+| Column           | Type                 | Notes                                                               |
+| ---------------- | -------------------- | ------------------------------------------------------------------- |
+| id               | uuid PK              |                                                                     |
+| "conversationId" | uuid NOT NULL        | → `ai_conversations(id)` CASCADE                                    |
+| "userId"         | uuid NOT NULL        | denormalized owner (cheap RLS, per DB convention)                   |
+| role             | text NOT NULL        | `user` \| `assistant` \| `system` (`AiRole`)                        |
+| content          | text NOT NULL        |                                                                     |
+| context          | jsonb                | UI grounding hints / `{ model, provider, finishReason, requestId }` |
+| "createdAt"      | timestamptz NOT NULL | ordered oldest-first by `listMessages`                              |
 
 - **Indexes**: `("conversationId", "createdAt")`; partial unique
   `("userId", (context->>'requestId')) WHERE context ? 'requestId'` for retry idempotency.
@@ -513,20 +511,20 @@ to `authenticated`/`service_role` only (never `anon`), soft-delete via
 
 ### 11.3 `ai_token_usage` 🆕 (append-only)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| "userId" | uuid NOT NULL | → `auth.users(id)` SET NULL on delete (preserve metering) |
-| "conversationId" | uuid | → `ai_conversations(id)` SET NULL |
-| "messageId" | uuid | → `ai_messages(id)` SET NULL |
-| provider | text NOT NULL | `AiProviderId` |
-| model | text NOT NULL | resolved model id |
-| surface | text | for per-feature cost analytics |
-| "inputTokens" | int NOT NULL | |
-| "outputTokens" | int NOT NULL | |
-| "estimatedCostUsd" | numeric(10,6) | from model catalog at call time |
-| "finishReason" | text | |
-| "createdAt" | timestamptz NOT NULL | |
+| Column             | Type                 | Notes                                                     |
+| ------------------ | -------------------- | --------------------------------------------------------- |
+| id                 | uuid PK              |                                                           |
+| "userId"           | uuid NOT NULL        | → `auth.users(id)` SET NULL on delete (preserve metering) |
+| "conversationId"   | uuid                 | → `ai_conversations(id)` SET NULL                         |
+| "messageId"        | uuid                 | → `ai_messages(id)` SET NULL                              |
+| provider           | text NOT NULL        | `AiProviderId`                                            |
+| model              | text NOT NULL        | resolved model id                                         |
+| surface            | text                 | for per-feature cost analytics                            |
+| "inputTokens"      | int NOT NULL         |                                                           |
+| "outputTokens"     | int NOT NULL         |                                                           |
+| "estimatedCostUsd" | numeric(10,6)        | from model catalog at call time                           |
+| "finishReason"     | text                 |                                                           |
+| "createdAt"        | timestamptz NOT NULL |                                                           |
 
 - **Indexes**: `("userId", "createdAt" DESC)`, `(provider, model, "createdAt")`.
 - **Write path**: service-role only (Edge Function). **No UPDATE/DELETE grants** —
@@ -536,16 +534,16 @@ to `authenticated`/`service_role` only (never `anon`), soft-delete via
 
 ### 11.4 `ai_settings` 🆕 (per user)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| "userId" | uuid PK | → `auth.users(id)` CASCADE (one row per user) |
-| persona | text | `concise` \| `balanced` \| `detailed` (default `balanced`) |
-| language | text | BCP-47; falls back to `profiles.locale` |
-| "modelTier" | text | `fast` \| `balanced` \| `deep` (constrained by workspace) |
-| streaming | boolean | default true |
-| "contextConsent" | jsonb | `{ reports, tasks, analytics }` booleans |
-| "monthlyTokenCap" | int | nullable personal quota |
-| "createdAt" / "updatedAt" | timestamptz | trigger |
+| Column                    | Type        | Notes                                                      |
+| ------------------------- | ----------- | ---------------------------------------------------------- |
+| "userId"                  | uuid PK     | → `auth.users(id)` CASCADE (one row per user)              |
+| persona                   | text        | `concise` \| `balanced` \| `detailed` (default `balanced`) |
+| language                  | text        | BCP-47; falls back to `profiles.locale`                    |
+| "modelTier"               | text        | `fast` \| `balanced` \| `deep` (constrained by workspace)  |
+| streaming                 | boolean     | default true                                               |
+| "contextConsent"          | jsonb       | `{ reports, tasks, analytics }` booleans                   |
+| "monthlyTokenCap"         | int         | nullable personal quota                                    |
+| "createdAt" / "updatedAt" | timestamptz | trigger                                                    |
 
 - **RLS**: `USING ("userId" = auth.uid())` — self read/write only.
 
@@ -553,17 +551,17 @@ to `authenticated`/`service_role` only (never `anon`), soft-delete via
 
 Mirrors the `company_settings` singleton pattern (`DATABASE_DESIGN.md §19`).
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | boolean PK `= true` | singleton |
-| "providerId" | text NOT NULL | active `AiProviderId` (default `anthropic`) |
-| "tierModels" | jsonb NOT NULL | `{ fast, balanced, deep }` → model ids per provider |
-| temperature | numeric | default `0.3` |
-| "maxOutputTokens" | int NOT NULL | default `2048` |
-| "enabledSurfaces" | text[] | which features may open the assistant |
-| "monthlyTokenCap" | int | workspace quota, nullable |
-| "retentionDays" | int | `ai_messages` retention window |
-| "createdAt" / "updatedAt" | timestamptz | trigger |
+| Column                    | Type                | Notes                                               |
+| ------------------------- | ------------------- | --------------------------------------------------- |
+| id                        | boolean PK `= true` | singleton                                           |
+| "providerId"              | text NOT NULL       | active `AiProviderId` (default `anthropic`)         |
+| "tierModels"              | jsonb NOT NULL      | `{ fast, balanced, deep }` → model ids per provider |
+| temperature               | numeric             | default `0.3`                                       |
+| "maxOutputTokens"         | int NOT NULL        | default `2048`                                      |
+| "enabledSurfaces"         | text[]              | which features may open the assistant               |
+| "monthlyTokenCap"         | int                 | workspace quota, nullable                           |
+| "retentionDays"           | int                 | `ai_messages` retention window                      |
+| "createdAt" / "updatedAt" | timestamptz         | trigger                                             |
 
 - **RLS**: read for all `authenticated` (clients need enabled tiers/surfaces);
   write only `owner`/`super_admin`. **API keys are NOT stored here** — they live
@@ -608,7 +606,7 @@ supabase/functions/ai-assistant/
   client `askStream()` consumes deltas. Non-streaming path returns the existing
   JSON `AiCompletionResponse` shape (backward compatible with today's `ask()`).
 - **Tool use / actions (future):** a guarded tool-call path can let the assistant
-  *propose* SpartaFlow mutations (create task, update status). Every tool executes
+  _propose_ SpartaFlow mutations (create task, update status). Every tool executes
   through the **existing domain services / RPCs** (RLS + validation reused), never
   raw SQL, and each action is `audit_events`-logged and requires the user's role.
   Out of scope for v1; the provider interface's `finishReason:"tool_use"` reserves
@@ -673,8 +671,8 @@ schema. That is the payoff of the neutral interface.
 
 ---
 
-*Design derived from the existing `src/services/ai/` code and the established
+_Design derived from the existing `src/services/ai/` code and the established
 Supabase/RLS conventions. When implemented, regenerate
 `src/integrations/supabase/types.ts` after each migration; never hand-edit it.
 Update `docs/SERVICES.md` §AI and `docs/ARCHITECTURE.md` §5 to reference the live
-AI boundary.*
+AI boundary._

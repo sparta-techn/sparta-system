@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HrKpiGrid } from "@/features/hr/components/hr-kpi-grid";
 import {
-  AnniversariesWidget, AttendanceAlertsWidget, BirthdaysWidget, NewEmployeesWidget,
-  PendingInvitationsWidget, PolicyAcknowledgementsWidget, UpcomingLeaveWidget,
+  AnniversariesWidget,
+  AttendanceAlertsWidget,
+  BirthdaysWidget,
+  NewEmployeesWidget,
+  PendingInvitationsWidget,
+  PolicyAcknowledgementsWidget,
+  UpcomingLeaveWidget,
 } from "@/features/hr/components/dashboard-widgets";
 
 export const Route = createFileRoute("/_authenticated/app/hr/")({
@@ -13,7 +18,9 @@ export const Route = createFileRoute("/_authenticated/app/hr/")({
 function HrOverview() {
   return (
     <div className="space-y-6">
-      <section aria-label="HR KPIs"><HrKpiGrid /></section>
+      <section aria-label="HR KPIs">
+        <HrKpiGrid />
+      </section>
       <section aria-label="People signals" className="grid gap-4 xl:grid-cols-3">
         <NewEmployeesWidget />
         <AttendanceAlertsWidget />
@@ -24,7 +31,9 @@ function HrOverview() {
         <AnniversariesWidget />
         <PendingInvitationsWidget />
       </section>
-      <section><PolicyAcknowledgementsWidget /></section>
+      <section>
+        <PolicyAcknowledgementsWidget />
+      </section>
     </div>
   );
 }

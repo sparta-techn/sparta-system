@@ -6,7 +6,14 @@ import type { User } from "@supabase/supabase-js";
  * kept only because Postgres enum values cannot be dropped. See `docs/RBAC.md`.
  */
 export type AppRole =
-  "owner" | "admin" | "hr" | "project_manager" | "team_lead" | "employee" | "intern" | "viewer";
+  | "owner"
+  | "admin"
+  | "hr"
+  | "project_manager"
+  | "team_lead"
+  | "employee"
+  | "intern"
+  | "viewer";
 
 export const ROLE_LABELS: Record<AppRole, string> = {
   owner: "Owner",

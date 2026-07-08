@@ -32,7 +32,8 @@ export function BurndownMock({ sprint }: { sprint: Sprint }) {
         <div>
           <h3 className="text-sm font-semibold">Burndown (mock)</h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Placeholder visual — real velocity, burndown, and completion-rate analytics ship in a later milestone.
+            Placeholder visual — real velocity, burndown, and completion-rate analytics ship in a
+            later milestone.
           </p>
         </div>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
@@ -60,10 +61,23 @@ export function BurndownMock({ sprint }: { sprint: Sprint }) {
               strokeDasharray="3 3"
             />
           ))}
-          <path d={idealPath} fill="none" className="stroke-muted-foreground/60" strokeWidth={1.5} strokeDasharray="4 4" />
+          <path
+            d={idealPath}
+            fill="none"
+            className="stroke-muted-foreground/60"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
+          />
           <path d={actualPath} fill="none" className="stroke-primary" strokeWidth={2} />
-          <text x={padX} y={height - 4} className="fill-muted-foreground" fontSize="10">Day 0</text>
-          <text x={width - padX - 24} y={height - 4} className="fill-muted-foreground" fontSize="10">
+          <text x={padX} y={height - 4} className="fill-muted-foreground" fontSize="10">
+            Day 0
+          </text>
+          <text
+            x={width - padX - 24}
+            y={height - 4}
+            className="fill-muted-foreground"
+            fontSize="10"
+          >
             Day {maxX}
           </text>
         </svg>

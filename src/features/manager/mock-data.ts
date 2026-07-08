@@ -96,9 +96,18 @@ const NAMES: Array<[string, string, ManagerEmployee["department"], string]> = [
 ];
 
 const STATUSES: ManagerStatus[] = [
-  "working", "working", "working", "working", "on_break",
-  "working", "late", "absent", "working", "on_leave",
-  "working", "finished",
+  "working",
+  "working",
+  "working",
+  "working",
+  "on_break",
+  "working",
+  "late",
+  "absent",
+  "working",
+  "on_leave",
+  "working",
+  "finished",
 ];
 
 const TASKS = [
@@ -117,9 +126,18 @@ const TASKS = [
 ];
 
 const HEALTHS: ManagerEmployee["workHealth"][] = [
-  "good", "good", "watch", "good", "good",
-  "good", "risk", "risk", "watch", "good",
-  "good", "good",
+  "good",
+  "good",
+  "watch",
+  "good",
+  "good",
+  "good",
+  "risk",
+  "risk",
+  "watch",
+  "good",
+  "good",
+  "good",
 ];
 
 export const managerEmployees: ManagerEmployee[] = NAMES.map(([name, initials, dept, role], i) => {
@@ -133,29 +151,47 @@ export const managerEmployees: ManagerEmployee[] = NAMES.map(([name, initials, d
     status,
     currentTask: status === "working" || status === "on_break" ? TASKS[i % TASKS.length] : null,
     workSeconds:
-      status === "working" ? 3600 * (2 + (i % 5)) + 60 * (i * 7) :
-      status === "on_break" ? 3600 * 2 + 60 * 12 :
-      status === "finished" ? 3600 * 7 + 60 * 42 :
-      0,
+      status === "working"
+        ? 3600 * (2 + (i % 5)) + 60 * (i * 7)
+        : status === "on_break"
+          ? 3600 * 2 + 60 * 12
+          : status === "finished"
+            ? 3600 * 7 + 60 * 42
+            : 0,
     breakSeconds: status === "on_break" ? 60 * (8 + i) : 60 * (i % 25),
     lastActivityAgo:
-      status === "working" ? `${(i % 6) + 1}m ago` :
-      status === "on_break" ? `${(i % 12) + 4}m ago` :
-      status === "late" ? "—" :
-      status === "absent" ? "—" :
-      status === "on_leave" ? "On leave" :
-      "Signed out",
+      status === "working"
+        ? `${(i % 6) + 1}m ago`
+        : status === "on_break"
+          ? `${(i % 12) + 4}m ago`
+          : status === "late"
+            ? "—"
+            : status === "absent"
+              ? "—"
+              : status === "on_leave"
+                ? "On leave"
+                : "Signed out",
     workHealth: HEALTHS[i % HEALTHS.length],
     openDependencies: (i * 3) % 5,
     reports: {
-      checkin: status === "absent" || status === "on_leave" ? "missed" : i % 4 === 0 ? "pending" : "done",
-      midday: status === "absent" || status === "on_leave" ? "na" : i % 3 === 0 ? "pending" : "done",
-      eod: status === "finished" ? "done" : status === "absent" || status === "on_leave" ? "na" : "pending",
+      checkin:
+        status === "absent" || status === "on_leave" ? "missed" : i % 4 === 0 ? "pending" : "done",
+      midday:
+        status === "absent" || status === "on_leave" ? "na" : i % 3 === 0 ? "pending" : "done",
+      eod:
+        status === "finished"
+          ? "done"
+          : status === "absent" || status === "on_leave"
+            ? "na"
+            : "pending",
     },
     email: `${name.split(" ")[0].toLowerCase()}@spartaflow.dev`,
     joinedAt: "2024-03-12",
     manager: i % 3 === 0 ? "Kerem Aydın" : "Sara Kim",
-    attendance7d: Array.from({ length: 7 }, (_, d) => +(6 + ((i + d) % 4) + Math.random()).toFixed(1)),
+    attendance7d: Array.from(
+      { length: 7 },
+      (_, d) => +(6 + ((i + d) % 4) + Math.random()).toFixed(1),
+    ),
   };
 });
 
@@ -218,23 +254,95 @@ export const managerBlockers: ManagerBlocker[] = [
 ];
 
 export const managerActivity: ManagerActivity[] = [
-  { id: "a1", kind: "dependency_resolved", actor: "Omar Said", detail: "Resolved /reports/weekly contract", minutesAgo: 2 },
-  { id: "a2", kind: "midday_submitted", actor: "Lena Vargas", detail: "Submitted midday status", minutesAgo: 5 },
-  { id: "a3", kind: "break_end", actor: "Ana Petrova", detail: "Returned from break", minutesAgo: 7 },
+  {
+    id: "a1",
+    kind: "dependency_resolved",
+    actor: "Omar Said",
+    detail: "Resolved /reports/weekly contract",
+    minutesAgo: 2,
+  },
+  {
+    id: "a2",
+    kind: "midday_submitted",
+    actor: "Lena Vargas",
+    detail: "Submitted midday status",
+    minutesAgo: 5,
+  },
+  {
+    id: "a3",
+    kind: "break_end",
+    actor: "Ana Petrova",
+    detail: "Returned from break",
+    minutesAgo: 7,
+  },
   { id: "a4", kind: "check_in", actor: "Diego Rivera", detail: "Started work day", minutesAgo: 12 },
-  { id: "a5", kind: "dependency_created", actor: "Marek Janik", detail: "Created blocker for QA", minutesAgo: 18 },
-  { id: "a6", kind: "checkin_submitted", actor: "Yuki Tanaka", detail: "Morning check-in submitted", minutesAgo: 26 },
+  {
+    id: "a5",
+    kind: "dependency_created",
+    actor: "Marek Janik",
+    detail: "Created blocker for QA",
+    minutesAgo: 18,
+  },
+  {
+    id: "a6",
+    kind: "checkin_submitted",
+    actor: "Yuki Tanaka",
+    detail: "Morning check-in submitted",
+    minutesAgo: 26,
+  },
   { id: "a7", kind: "break_start", actor: "Noor Hadid", detail: "Started break", minutesAgo: 32 },
-  { id: "a8", kind: "eod_submitted", actor: "Elena Rossi", detail: "Submitted EOD report", minutesAgo: 45 },
-  { id: "a9", kind: "check_out", actor: "Tomás León", detail: "Checked out for the day", minutesAgo: 64 },
+  {
+    id: "a8",
+    kind: "eod_submitted",
+    actor: "Elena Rossi",
+    detail: "Submitted EOD report",
+    minutesAgo: 45,
+  },
+  {
+    id: "a9",
+    kind: "check_out",
+    actor: "Tomás León",
+    detail: "Checked out for the day",
+    minutesAgo: 64,
+  },
 ];
 
 export const managerNotifications: ManagerNotification[] = [
-  { id: "n1", level: "critical", title: "2 employees absent without notice", body: "Sara K. and Noor H. have no check-in by 11:00.", time: "5m ago" },
-  { id: "n2", level: "critical", title: "Dependency escalated", body: "/reports/weekly contract — 22h open.", time: "12m ago" },
-  { id: "n3", level: "warning", title: "4 missing morning check-ins", body: "Send a reminder to the team?", time: "20m ago" },
-  { id: "n4", level: "warning", title: "Diego is approaching 9h", body: "Working session exceeds healthy threshold.", time: "35m ago" },
-  { id: "n5", level: "info", title: "Announcement scheduled", body: "Town hall posts at 16:00 today.", time: "1h ago" },
+  {
+    id: "n1",
+    level: "critical",
+    title: "2 employees absent without notice",
+    body: "Sara K. and Noor H. have no check-in by 11:00.",
+    time: "5m ago",
+  },
+  {
+    id: "n2",
+    level: "critical",
+    title: "Dependency escalated",
+    body: "/reports/weekly contract — 22h open.",
+    time: "12m ago",
+  },
+  {
+    id: "n3",
+    level: "warning",
+    title: "4 missing morning check-ins",
+    body: "Send a reminder to the team?",
+    time: "20m ago",
+  },
+  {
+    id: "n4",
+    level: "warning",
+    title: "Diego is approaching 9h",
+    body: "Working session exceeds healthy threshold.",
+    time: "35m ago",
+  },
+  {
+    id: "n5",
+    level: "info",
+    title: "Announcement scheduled",
+    body: "Town hall posts at 16:00 today.",
+    time: "1h ago",
+  },
 ];
 
 export const managerCalendar: CalendarItem[] = [

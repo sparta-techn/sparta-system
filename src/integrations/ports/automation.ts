@@ -78,12 +78,7 @@ export interface OutgoingWebhookMessage {
   idempotencyKey?: string;
 }
 
-export type WebhookDeliveryState =
-  | "delivered"
-  | "queued"
-  | "retrying"
-  | "dead_lettered"
-  | "failed";
+export type WebhookDeliveryState = "delivered" | "queued" | "retrying" | "dead_lettered" | "failed";
 
 export interface WebhookDeliveryResult {
   /** Delivery id (also the retry-queue id when queued). */

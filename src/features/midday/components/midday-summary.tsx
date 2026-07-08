@@ -19,7 +19,9 @@ export function MiddaySummary({ draft }: { draft: MiddayDraft }) {
         <div className="rounded-lg border bg-card p-3">
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-muted-foreground">Today's plan</span>
-            <span className="font-display text-2xl tabular-nums text-primary">{draft.progress}%</span>
+            <span className="font-display text-2xl tabular-nums text-primary">
+              {draft.progress}%
+            </span>
           </div>
           <Progress value={draft.progress} className="mt-2 h-2" />
         </div>
@@ -41,7 +43,9 @@ export function MiddaySummary({ draft }: { draft: MiddayDraft }) {
                   <CircleDot className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 )}
                 <span className="font-mono text-[11px] text-muted-foreground">{t.taskId}</span>
-                <span className="min-w-0 flex-1 truncate font-medium text-foreground">{t.title}</span>
+                <span className="min-w-0 flex-1 truncate font-medium text-foreground">
+                  {t.title}
+                </span>
                 <StatusBadge
                   tone={TASK_PROGRESS_META[t.state].tone}
                   label={TASK_PROGRESS_META[t.state].label}
@@ -76,9 +80,15 @@ export function MiddaySummary({ draft }: { draft: MiddayDraft }) {
                 className="flex items-center gap-2 rounded-lg border bg-card p-2.5 text-sm"
               >
                 <Link2 className="size-4 shrink-0 text-warning" aria-hidden />
-                <span className="font-mono text-[11px] text-muted-foreground">{b.dependencyId}</span>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {b.dependencyId}
+                </span>
                 <span className="min-w-0 flex-1 truncate text-foreground">{b.titleSnapshot}</span>
-                {b.resolved ? <StatusBadge status="resolved" size="sm" /> : <StatusBadge status="blocked" size="sm" />}
+                {b.resolved ? (
+                  <StatusBadge status="resolved" size="sm" />
+                ) : (
+                  <StatusBadge status="blocked" size="sm" />
+                )}
               </li>
             ))}
             {draft.newBlockerNotes ? (
@@ -129,7 +139,9 @@ export function MiddaySummary({ draft }: { draft: MiddayDraft }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{title}</h3>
+      <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h3>
       {children}
     </div>
   );

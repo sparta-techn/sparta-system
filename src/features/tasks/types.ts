@@ -193,13 +193,7 @@ export interface TaskFilters {
   includeArchived?: boolean;
 }
 
-export type TaskSortKey =
-  | "updated"
-  | "created"
-  | "priority"
-  | "due"
-  | "status"
-  | "title";
+export type TaskSortKey = "updated" | "created" | "priority" | "due" | "status" | "title";
 
 export interface TaskSort {
   key: TaskSortKey;
@@ -262,10 +256,7 @@ export const PRIORITY_LABEL: Record<TaskPriority, string> = {
   critical: "Critical",
 };
 
-export const PRIORITY_TONE: Record<
-  TaskPriority,
-  "neutral" | "info" | "warning" | "danger"
-> = {
+export const PRIORITY_TONE: Record<TaskPriority, "neutral" | "info" | "warning" | "danger"> = {
   low: "neutral",
   medium: "info",
   high: "warning",

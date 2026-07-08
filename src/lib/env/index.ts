@@ -69,7 +69,9 @@ function leakWarnings(source: Record<string, unknown>): string[] {
   const warnings: string[] = [];
   for (const key of FORBIDDEN_VITE_KEYS) {
     if (source[key] !== undefined && source[key] !== "") {
-      warnings.push(`${key} is set — a service-role/secret must NEVER be VITE_-prefixed (it inlines into the browser bundle).`);
+      warnings.push(
+        `${key} is set — a service-role/secret must NEVER be VITE_-prefixed (it inlines into the browser bundle).`,
+      );
     }
   }
   return warnings;

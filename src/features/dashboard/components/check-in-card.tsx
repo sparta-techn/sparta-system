@@ -1,12 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { mockCheckIn } from "../mock-data";
 
@@ -19,9 +13,7 @@ export function CheckInCard() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="size-4 text-primary" aria-hidden /> Morning check-in
           </CardTitle>
-          <CardDescription>
-            Set your intent for the day in under 30 seconds.
-          </CardDescription>
+          <CardDescription>Set your intent for the day in under 30 seconds.</CardDescription>
         </div>
         <StatusBadge
           tone={submitted ? "success" : "warning"}
@@ -29,7 +21,10 @@ export function CheckInCard() {
         />
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        <Row label="Mood" value={<span className="text-xl leading-none">{mockCheckIn.mood}</span>} />
+        <Row
+          label="Mood"
+          value={<span className="text-xl leading-none">{mockCheckIn.mood}</span>}
+        />
         <Row label="Focus" value={<span className="text-foreground">{mockCheckIn.focus}</span>} />
         <Row
           label="Blockers"

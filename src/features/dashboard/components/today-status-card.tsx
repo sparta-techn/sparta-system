@@ -4,12 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { cn } from "@/lib/utils";
-import {
-  formatDuration,
-  mockToday,
-  WORK_STATUS_META,
-  type WorkStatus,
-} from "../mock-data";
+import { formatDuration, mockToday, WORK_STATUS_META, type WorkStatus } from "../mock-data";
 
 function useNow(intervalMs = 1000) {
   const [now, setNow] = useState(() => new Date());
@@ -54,8 +49,7 @@ export function TodayStatusCard() {
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge tone={meta.tone} label={meta.label} />
             <span className="text-xs text-muted-foreground">
-              Scheduled start {mockToday.scheduledStart} · Started{" "}
-              {mockToday.startedAt}
+              Scheduled start {mockToday.scheduledStart} · Started {mockToday.startedAt}
             </span>
           </div>
           <div>
@@ -102,15 +96,7 @@ export function TodayStatusCard() {
   );
 }
 
-function Timer({
-  label,
-  value,
-  muted,
-}: {
-  label: string;
-  value: string;
-  muted?: boolean;
-}) {
+function Timer({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div>
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">

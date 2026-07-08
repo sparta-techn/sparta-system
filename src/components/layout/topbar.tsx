@@ -39,11 +39,7 @@ export function Topbar() {
           onClick={toggle}
           className="size-9"
         >
-          {resolvedTheme === "dark" ? (
-            <Sun className="size-4" />
-          ) : (
-            <Moon className="size-4" />
-          )}
+          {resolvedTheme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </Button>
         <NotificationDropdown
           trigger={

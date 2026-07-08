@@ -8,13 +8,7 @@ import {
   Workflow,
   type LucideIcon,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { mockActivity, type MockActivity } from "../mock-data";
 
 const ICONS: Record<MockActivity["kind"], LucideIcon> = {
@@ -46,10 +40,7 @@ export function ActivityTimeline() {
       </CardHeader>
       <CardContent>
         <ol className="relative space-y-4 pl-6">
-          <span
-            className="absolute left-[11px] top-2 bottom-2 w-px bg-border"
-            aria-hidden
-          />
+          <span className="absolute left-[11px] top-2 bottom-2 w-px bg-border" aria-hidden />
           {mockActivity.map((a) => {
             const Icon = ICONS[a.kind];
             return (
@@ -63,9 +54,7 @@ export function ActivityTimeline() {
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-sm text-foreground">
                     <span className="font-medium">{a.title}</span>
-                    {a.detail ? (
-                      <span className="text-muted-foreground"> · {a.detail}</span>
-                    ) : null}
+                    {a.detail ? <span className="text-muted-foreground"> · {a.detail}</span> : null}
                   </p>
                   <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                     {a.time}

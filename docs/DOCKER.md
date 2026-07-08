@@ -12,14 +12,14 @@
 
 ## 1. Files
 
-| File | Purpose |
-|---|---|
-| `Dockerfile` | **Production** image — multi-stage: Bun builds the app, Node 20-alpine runs `.output/server/index.mjs` (SSR). |
-| `Dockerfile.dev` | **Development** image — Vite dev server with HMR. |
-| `docker-compose.yml` | **Dev** stack — one `app` service (Vite) on `:8080`, source bind-mounted for hot reload. |
-| `docker-compose.prod.yml` | **Prod-like** stack — `app` (Node SSR) + `nginx` reverse proxy on `:80`. |
-| `docker/nginx/default.conf` | Nginx proxy config (SSR passthrough, asset caching, `/healthz`). |
-| `.dockerignore` | Keeps `.env`, `node_modules`, `.output`, `.git` out of the build context. |
+| File                        | Purpose                                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `Dockerfile`                | **Production** image — multi-stage: Bun builds the app, Node 20-alpine runs `.output/server/index.mjs` (SSR). |
+| `Dockerfile.dev`            | **Development** image — Vite dev server with HMR.                                                             |
+| `docker-compose.yml`        | **Dev** stack — one `app` service (Vite) on `:8080`, source bind-mounted for hot reload.                      |
+| `docker-compose.prod.yml`   | **Prod-like** stack — `app` (Node SSR) + `nginx` reverse proxy on `:80`.                                      |
+| `docker/nginx/default.conf` | Nginx proxy config (SSR passthrough, asset caching, `/healthz`).                                              |
+| `.dockerignore`             | Keeps `.env`, `node_modules`, `.output`, `.git` out of the build context.                                     |
 
 ---
 
@@ -41,10 +41,10 @@ cp .env.example .env   # then fill in the Supabase values
 Two classes, split by exposure (see `.env.example` and
 [`docs/DEPLOYMENT_PLAN.md`](./DEPLOYMENT_PLAN.md) §3):
 
-| Kind | Vars | When consumed | In Docker |
-|---|---|---|---|
-| **Client** (public, inlined into the browser bundle) | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID` | **Build time** | Passed as **build args** (`args:` in `docker-compose.prod.yml`, `ARG` in `Dockerfile`). Changing them needs a **rebuild**. |
-| **Server** (secret) | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_PROJECT_ID`, `PORT`, `HOST` | **Runtime** | Injected via `env_file: .env`. Changing them needs only a **restart**. |
+| Kind                                                 | Vars                                                                                                           | When consumed  | In Docker                                                                                                                  |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Client** (public, inlined into the browser bundle) | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`                               | **Build time** | Passed as **build args** (`args:` in `docker-compose.prod.yml`, `ARG` in `Dockerfile`). Changing them needs a **rebuild**. |
+| **Server** (secret)                                  | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_PROJECT_ID`, `PORT`, `HOST` | **Runtime**    | Injected via `env_file: .env`. Changing them needs only a **restart**.                                                     |
 
 > ⚠️ **Never** rename a secret to a `VITE_` name — that would inline it into the
 > public bundle. `SUPABASE_SERVICE_ROLE_KEY` must never be `VITE_`-prefixed and
@@ -115,11 +115,11 @@ This is a build-configuration override only — it does not touch application co
 Every service defines a healthcheck; `nginx` waits for `app` to be **healthy**
 before starting (`depends_on: condition: service_healthy`).
 
-| Service | Check | Notes |
-|---|---|---|
-| `app` (prod) | `node -e "fetch('http://127.0.0.1:3000/')…"` | Uses Node's built-in `fetch`; no extra tooling. Passes on any `status < 500`. |
-| `app` (dev) | `wget --spider http://127.0.0.1:8080/` | Vite dev server liveness. |
-| `nginx` | `wget --spider http://127.0.0.1/healthz` | `/healthz` is answered by Nginx directly (returns `200 ok`), independent of the upstream. |
+| Service      | Check                                        | Notes                                                                                     |
+| ------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `app` (prod) | `node -e "fetch('http://127.0.0.1:3000/')…"` | Uses Node's built-in `fetch`; no extra tooling. Passes on any `status < 500`.             |
+| `app` (dev)  | `wget --spider http://127.0.0.1:8080/`       | Vite dev server liveness.                                                                 |
+| `nginx`      | `wget --spider http://127.0.0.1/healthz`     | `/healthz` is answered by Nginx directly (returns `200 ok`), independent of the upstream. |
 
 Inspect health:
 
@@ -135,10 +135,10 @@ Tunables live on each healthcheck: `interval`, `timeout`, `retries`,
 
 ## 7. Restart policies
 
-| Stack | Policy | Rationale |
-|---|---|---|
-| Dev (`docker-compose.yml`) | `restart: unless-stopped` | Survives crashes/reboots but respects a manual stop. |
-| Prod (`docker-compose.prod.yml`) | `restart: always` | Auto-recovers `app` and `nginx` after crash or host reboot. |
+| Stack                            | Policy                    | Rationale                                                   |
+| -------------------------------- | ------------------------- | ----------------------------------------------------------- |
+| Dev (`docker-compose.yml`)       | `restart: unless-stopped` | Survives crashes/reboots but respects a manual stop.        |
+| Prod (`docker-compose.prod.yml`) | `restart: always`         | Auto-recovers `app` and `nginx` after crash or host reboot. |
 
 Combined with the healthchecks, a hung `app` is reported unhealthy and Nginx
 holds until it recovers. Under an orchestrator, pair `restart` with the health
@@ -153,7 +153,7 @@ WAF) exactly as in [`docs/DEPLOYMENT_PLAN.md`](./DEPLOYMENT_PLAN.md) §5–6. Tw
 options:
 
 1. **Cloudflare terminates TLS; origin stays HTTP** on `:80` (Cloudflare mode
-   *Full* — acceptable when the origin is locked to Cloudflare IPs by the host
+   _Full_ — acceptable when the origin is locked to Cloudflare IPs by the host
    firewall). No cert needed in the container. Simplest; default here.
 2. **Origin TLS (Full strict, recommended for public origins):** generate a
    Cloudflare Origin CA cert, drop `origin.pem`/`origin.key` into
@@ -215,11 +215,11 @@ symlink-rollback strategy in the deployment plan. Keep the last few tags.
 
 ## 11. Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `app` unhealthy / exits at boot | Built with `cloudflare-module` preset | Ensure `NITRO_PRESET=node-server` (it's set in `Dockerfile`); verify `.output/nitro.json` (§5). |
-| Blank app / auth fails in browser | `VITE_*` build args missing at build | Rebuild with the args populated from `.env` (§3). They are inlined, not runtime. |
-| `nginx` never starts | `app` not healthy yet | Check `docker compose logs app`; `nginx` waits on `service_healthy`. |
-| 502 from Nginx | `app` down or wrong upstream port | Confirm `app` listens on `3000`; check `docker/nginx/default.conf` upstream. |
-| Secrets appear in bundle | A secret was `VITE_`-prefixed | Rename to a non-`VITE_` server var; rebuild (§3). |
-| Dev has no HMR | Bind mount not applied | Run via `docker compose up` (not the prod file); confirm the `.:/app` volume. |
+| Symptom                           | Likely cause                          | Fix                                                                                             |
+| --------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `app` unhealthy / exits at boot   | Built with `cloudflare-module` preset | Ensure `NITRO_PRESET=node-server` (it's set in `Dockerfile`); verify `.output/nitro.json` (§5). |
+| Blank app / auth fails in browser | `VITE_*` build args missing at build  | Rebuild with the args populated from `.env` (§3). They are inlined, not runtime.                |
+| `nginx` never starts              | `app` not healthy yet                 | Check `docker compose logs app`; `nginx` waits on `service_healthy`.                            |
+| 502 from Nginx                    | `app` down or wrong upstream port     | Confirm `app` listens on `3000`; check `docker/nginx/default.conf` upstream.                    |
+| Secrets appear in bundle          | A secret was `VITE_`-prefixed         | Rename to a non-`VITE_` server var; rebuild (§3).                                               |
+| Dev has no HMR                    | Bind mount not applied                | Run via `docker compose up` (not the prod file); confirm the `.:/app` volume.                   |

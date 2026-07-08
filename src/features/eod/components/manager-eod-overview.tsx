@@ -2,13 +2,7 @@ import { AlertTriangle, CheckCircle2, ClipboardCheck, Sparkles, Users } from "lu
 
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 import { MOCK_TEAM_EOD } from "../mock-data";
@@ -27,9 +21,7 @@ export function ManagerEodOverview({ hrMode = false }: Props) {
   const avgCompletion =
     submitted.length === 0
       ? 0
-      : Math.round(
-          submitted.reduce((a, t) => a + (t.completionPct ?? 0), 0) / submitted.length,
-        );
+      : Math.round(submitted.reduce((a, t) => a + (t.completionPct ?? 0), 0) / submitted.length);
 
   const totalDone = submitted.reduce((a, t) => a + (t.completedCount ?? 0), 0);
   const totalOpenDeps = submitted.reduce((a, t) => a + (t.openDepsCount ?? 0), 0);
@@ -82,7 +74,10 @@ export function ManagerEodOverview({ hrMode = false }: Props) {
                     className="flex items-center justify-between gap-3 rounded-md border bg-card p-2.5 text-sm"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="grid size-7 place-items-center rounded-full bg-muted text-xs font-semibold" aria-hidden>
+                      <span
+                        className="grid size-7 place-items-center rounded-full bg-muted text-xs font-semibold"
+                        aria-hidden
+                      >
                         {t.initials}
                       </span>
                       <div>
@@ -119,7 +114,10 @@ export function ManagerEodOverview({ hrMode = false }: Props) {
                       className="flex items-center justify-between gap-3 rounded-md border bg-card p-2.5 text-sm"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="grid size-7 place-items-center rounded-full bg-primary-soft text-xs font-semibold text-primary" aria-hidden>
+                        <span
+                          className="grid size-7 place-items-center rounded-full bg-primary-soft text-xs font-semibold text-primary"
+                          aria-hidden
+                        >
                           {t.initials}
                         </span>
                         <div>
@@ -129,7 +127,9 @@ export function ManagerEodOverview({ hrMode = false }: Props) {
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="size-3.5 text-success" aria-hidden />
-                        <span className="text-sm font-medium tabular-nums">{t.completedCount ?? 0}</span>
+                        <span className="text-sm font-medium tabular-nums">
+                          {t.completedCount ?? 0}
+                        </span>
                       </div>
                     </li>
                   ))}
@@ -184,12 +184,17 @@ export function ManagerEodOverview({ hrMode = false }: Props) {
                       key={t.employeeId}
                       className="flex items-start gap-3 rounded-md border bg-card p-2.5 text-sm"
                     >
-                      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold" aria-hidden>
+                      <span
+                        className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold"
+                        aria-hidden
+                      >
                         {t.initials}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="text-foreground">{t.tomorrowRisk}</p>
-                        <p className="text-xs text-muted-foreground">{t.name} · {t.department}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.name} · {t.department}
+                        </p>
                       </div>
                     </li>
                   ))}
@@ -213,12 +218,17 @@ export function ManagerEodOverview({ hrMode = false }: Props) {
                   key={t.employeeId}
                   className="flex items-start gap-3 rounded-md border bg-card p-2.5 text-sm"
                 >
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-info-soft text-[11px] font-semibold text-info" aria-hidden>
+                  <span
+                    className="grid size-6 shrink-0 place-items-center rounded-full bg-info-soft text-[11px] font-semibold text-info"
+                    aria-hidden
+                  >
                     {t.initials}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-foreground">{t.helpRequest}</p>
-                    <p className="text-xs text-muted-foreground">{t.name} · {t.department}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t.name} · {t.department}
+                    </p>
                   </div>
                 </li>
               ))}

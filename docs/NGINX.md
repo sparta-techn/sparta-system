@@ -15,17 +15,17 @@
 
 ## 1. What the config does
 
-| Requirement | How it's implemented |
-|---|---|
-| **HTTPS only** | App is served only on the `:443` server block; TLS 1.2/1.3, modern ciphers, HSTS. |
-| **HTTP → HTTPS redirect** | `:80` server `return 301 https://$host$request_uri` (except `/healthz` and ACME challenge). |
-| **Compression** | `gzip` on for text/JS/CSS/JSON/SVG/fonts; Brotli block ready to enable if the module is present. |
-| **Caching** | `/assets/` (fingerprinted) → `1y, immutable`; other static extensions → `30d`; HTML/SSR → not cached. |
-| **SPA routing** | All non-asset paths proxy to the SSR server, which resolves the route — deep links / hard refreshes never 404. Static-only fallback documented in §7. |
-| **Security headers** | HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`; CSP baseline provided (commented). |
-| **Rate limiting** | `limit_req` zones (`req_general` 30r/s, `req_strict` 10r/s) + `limit_conn` (20/IP), keyed on the **real** client IP. |
-| **Proxy configuration** | `upstream spartaflow_app` with keepalive; forwards `Host`/`X-Forwarded-*`, WebSocket upgrade, sane timeouts. |
-| **Health endpoint** | `GET /healthz` → `200 ok`, answered by Nginx directly (independent of the upstream) on both `:80` and `:443`. |
+| Requirement               | How it's implemented                                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **HTTPS only**            | App is served only on the `:443` server block; TLS 1.2/1.3, modern ciphers, HSTS.                                                                            |
+| **HTTP → HTTPS redirect** | `:80` server `return 301 https://$host$request_uri` (except `/healthz` and ACME challenge).                                                                  |
+| **Compression**           | `gzip` on for text/JS/CSS/JSON/SVG/fonts; Brotli block ready to enable if the module is present.                                                             |
+| **Caching**               | `/assets/` (fingerprinted) → `1y, immutable`; other static extensions → `30d`; HTML/SSR → not cached.                                                        |
+| **SPA routing**           | All non-asset paths proxy to the SSR server, which resolves the route — deep links / hard refreshes never 404. Static-only fallback documented in §7.        |
+| **Security headers**      | HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`; CSP baseline provided (commented). |
+| **Rate limiting**         | `limit_req` zones (`req_general` 30r/s, `req_strict` 10r/s) + `limit_conn` (20/IP), keyed on the **real** client IP.                                         |
+| **Proxy configuration**   | `upstream spartaflow_app` with keepalive; forwards `Host`/`X-Forwarded-*`, WebSocket upgrade, sane timeouts.                                                 |
+| **Health endpoint**       | `GET /healthz` → `200 ok`, answered by Nginx directly (independent of the upstream) on both `:80` and `:443`.                                                |
 
 ---
 
@@ -81,7 +81,7 @@ The config expects certs at `/etc/nginx/certs/`. Two supported options
   `/.well-known/acme-challenge/` from `/var/www/certbot`), then point
   `ssl_certificate*` at `/etc/letsencrypt/live/<domain>/`.
 
-> Set the Cloudflare SSL/TLS mode to **Full (strict)**. Never use *Flexible* — it
+> Set the Cloudflare SSL/TLS mode to **Full (strict)**. Never use _Flexible_ — it
 > leaves Cloudflare→origin in cleartext and causes redirect loops with
 > "Always Use HTTPS".
 
@@ -92,11 +92,11 @@ The config expects certs at `/etc/nginx/certs/`. Two supported options
 Three controls, all keyed on the **real** client IP (thanks to `real_ip_header
 CF-Connecting-IP`):
 
-| Zone | Rate | Applied to | Notes |
-|---|---|---|---|
-| `req_general` | 30 req/s, `burst=50 nodelay` | `location /` | Normal browsing headroom; absorbs bursts, rejects sustained floods with `429`. |
-| `req_strict` | 10 req/s, `burst=10` | (opt-in) sensitive SSR endpoints | Uncomment the `/_serverFn/` block and set the real prefix. |
-| `conn_limit` | 20 connections/IP | server-wide | Caps concurrent connections per client. |
+| Zone          | Rate                         | Applied to                       | Notes                                                                          |
+| ------------- | ---------------------------- | -------------------------------- | ------------------------------------------------------------------------------ |
+| `req_general` | 30 req/s, `burst=50 nodelay` | `location /`                     | Normal browsing headroom; absorbs bursts, rejects sustained floods with `429`. |
+| `req_strict`  | 10 req/s, `burst=10`         | (opt-in) sensitive SSR endpoints | Uncomment the `/_serverFn/` block and set the real prefix.                     |
+| `conn_limit`  | 20 connections/IP            | server-wide                      | Caps concurrent connections per client.                                        |
 
 Rejected requests return **429**. Raise the rates if legitimate users are
 throttled; the zones reserve 10 MB each (~160k IPs). Because Cloudflare also does
@@ -149,8 +149,8 @@ Do **not** use both — the app is SSR today, so the proxy form is what ships.
 
 ## 8. Health checks
 
-| Endpoint | Serves | Use |
-|---|---|---|
+| Endpoint                          | Serves                            | Use                                                                                            |
+| --------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `GET /healthz` (`:80` and `:443`) | Nginx returns `200 "ok"` directly | Container/LB/uptime probes; independent of the upstream so it stays green during app restarts. |
 
 ```bash
@@ -177,14 +177,17 @@ docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
 
 ## 10. Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `nginx -t` fails on `ssl_certificate` | Cert files missing at `/etc/nginx/certs/` | Install certs (§4) or fix paths. |
-| Redirect loop | Cloudflare set to *Flexible* | Switch to **Full (strict)** (§4). |
-| All users share a rate limit / `429` storms | Real-IP not configured or stale CF ranges | Update `set_real_ip_from` list (§2). |
-| `502 Bad Gateway` | App not up / wrong upstream | Confirm SSR listens on `:3000`; fix `upstream` target (§2). |
-| Assets not cached | Request path isn't `/assets/…` | Check the build output path; adjust the `location` prefixes. |
-| CSP breaks the app | Policy too strict | Return to `Report-Only`, widen `connect-src`/`style-src` (§6). |
-| Security header missing on assets | `add_header` not inherited into that location | Repeat the header in the location block (§6). |
-| WebSocket/realtime fails | — | Realtime goes **direct** to Supabase, not through Nginx; the `Upgrade` map only covers app-served sockets. |
+| Symptom                                     | Likely cause                                  | Fix                                                                                                        |
+| ------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `nginx -t` fails on `ssl_certificate`       | Cert files missing at `/etc/nginx/certs/`     | Install certs (§4) or fix paths.                                                                           |
+| Redirect loop                               | Cloudflare set to _Flexible_                  | Switch to **Full (strict)** (§4).                                                                          |
+| All users share a rate limit / `429` storms | Real-IP not configured or stale CF ranges     | Update `set_real_ip_from` list (§2).                                                                       |
+| `502 Bad Gateway`                           | App not up / wrong upstream                   | Confirm SSR listens on `:3000`; fix `upstream` target (§2).                                                |
+| Assets not cached                           | Request path isn't `/assets/…`                | Check the build output path; adjust the `location` prefixes.                                               |
+| CSP breaks the app                          | Policy too strict                             | Return to `Report-Only`, widen `connect-src`/`style-src` (§6).                                             |
+| Security header missing on assets           | `add_header` not inherited into that location | Repeat the header in the location block (§6).                                                              |
+| WebSocket/realtime fails                    | —                                             | Realtime goes **direct** to Supabase, not through Nginx; the `Upgrade` map only covers app-served sockets. |
+
+```
+
 ```

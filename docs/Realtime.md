@@ -19,13 +19,13 @@ Component / provider
                           └── Postgres → supabase_realtime publication  ← migration 20260701130000
 ```
 
-| Layer | File | Responsibility |
-| --- | --- | --- |
-| Publication | `supabase/migrations/20260701130000_realtime_publication.sql` | Tables in `supabase_realtime` + `REPLICA IDENTITY FULL` |
-| Transport | `src/lib/supabase/realtime.ts` | `RealtimeManager`: ref-counted channels, reconnect/resync, auth sync |
-| React binding | `src/hooks/use-realtime.ts` | `useRealtimeSubscription` — subscribe in an effect, tear down on unmount |
-| Domain hooks | `src/features/realtime/hooks.ts` | One scoped hook per domain |
-| Barrel | `src/features/realtime/index.ts` | `@/features/realtime` public API |
+| Layer         | File                                                          | Responsibility                                                           |
+| ------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Publication   | `supabase/migrations/20260701130000_realtime_publication.sql` | Tables in `supabase_realtime` + `REPLICA IDENTITY FULL`                  |
+| Transport     | `src/lib/supabase/realtime.ts`                                | `RealtimeManager`: ref-counted channels, reconnect/resync, auth sync     |
+| React binding | `src/hooks/use-realtime.ts`                                   | `useRealtimeSubscription` — subscribe in an effect, tear down on unmount |
+| Domain hooks  | `src/features/realtime/hooks.ts`                              | One scoped hook per domain                                               |
+| Barrel        | `src/features/realtime/index.ts`                              | `@/features/realtime` public API                                         |
 
 The transport layer is **framework-agnostic** (no React) and reuses the single
 app Supabase client (`@/integrations/supabase/client`) — no duplicate client, so
@@ -35,16 +35,16 @@ auth token and socket are shared.
 
 ## 2. Connected domains
 
-| # | Domain | Hook | Table(s) | Default scope (filter) | State |
-| --- | --- | --- | --- | --- | --- |
-| 1 | **Notifications** | `useNotificationsRealtime` | `notifications` | `recipient_id=eq.<user>` | live |
-| 2 | **Task Updates** | `useTaskRealtime` | `tasks` | `project_id=eq.<project>` | dormant¹ |
-| 3 | **Task Assignments** | `useTaskAssignmentRealtime` | `tasks` | `assignee_id=eq.<user>` | dormant¹ |
-| 4 | **Comments** | `useCommentsRealtime` | `comments` | `parent_id=eq.<entity>` | dormant¹ |
-| 5 | **Mentions** | `useMentionsRealtime` | `mentions` | `mentioned_user_id=eq.<user>` (INSERT) | live |
-| 6 | **Daily Reports** | `useDailyReportsRealtime` | `daily_reports`, `daily_status_updates` | `user_id=eq.<user>` (or team-wide) | live |
-| 7 | **Attendance** | `useAttendanceRealtime` | `attendance` (+ `work_sessions`²) | `user_id=eq.<user>` (or team-wide) | live |
-| 8 | **Dependency Requests** | `useDependencyRealtime` | `dependency_requests` | none / custom (RLS-scoped) | live |
+| #   | Domain                  | Hook                        | Table(s)                                | Default scope (filter)                 | State    |
+| --- | ----------------------- | --------------------------- | --------------------------------------- | -------------------------------------- | -------- |
+| 1   | **Notifications**       | `useNotificationsRealtime`  | `notifications`                         | `recipient_id=eq.<user>`               | live     |
+| 2   | **Task Updates**        | `useTaskRealtime`           | `tasks`                                 | `project_id=eq.<project>`              | dormant¹ |
+| 3   | **Task Assignments**    | `useTaskAssignmentRealtime` | `tasks`                                 | `assignee_id=eq.<user>`                | dormant¹ |
+| 4   | **Comments**            | `useCommentsRealtime`       | `comments`                              | `parent_id=eq.<entity>`                | dormant¹ |
+| 5   | **Mentions**            | `useMentionsRealtime`       | `mentions`                              | `mentioned_user_id=eq.<user>` (INSERT) | live     |
+| 6   | **Daily Reports**       | `useDailyReportsRealtime`   | `daily_reports`, `daily_status_updates` | `user_id=eq.<user>` (or team-wide)     | live     |
+| 7   | **Attendance**          | `useAttendanceRealtime`     | `attendance` (+ `work_sessions`²)       | `user_id=eq.<user>` (or team-wide)     | live     |
+| 8   | **Dependency Requests** | `useDependencyRealtime`     | `dependency_requests`                   | none / custom (RLS-scoped)             | live     |
 
 ¹ **Dormant**: the `tasks` and `comments` tables don't exist yet. The hooks
 compile and can be mounted today but stay **inert** — `isRealtimeEnabled(table)`
@@ -60,6 +60,7 @@ and the hooks light up with **no call-site changes**.
 ## 3. Requirements — how each is met
 
 ### Subscribe only to relevant channels
+
 - Every domain hook takes a **scope id** and builds a Postgres `filter`
   (`recipient_id=eq.…`, `project_id=eq.…`). Only matching rows are streamed.
 - When the scope id is missing the hook subscribes to **nothing** (passes `null`
@@ -70,6 +71,7 @@ and the hooks light up with **no call-site changes**.
   components watching the same scope share one socket subscription.
 
 ### Automatically unsubscribe on page disposal
+
 - `useRealtimeSubscription` subscribes inside `useEffect` and **returns the
   unsubscribe fn as the cleanup**, so React tears the channel down on unmount.
 - It re-subscribes only when the channel identity (`table/event/filter/enabled`)
@@ -78,6 +80,7 @@ and the hooks light up with **no call-site changes**.
   for a key unsubscribes.
 
 ### Handle reconnects gracefully
+
 - The Supabase socket auto-reconnects; channels auto-rejoin.
 - The manager watches each channel's status. On `CHANNEL_ERROR` / `TIMED_OUT` it
   marks the channel **stale** and reports `reconnecting`. On the next
@@ -95,6 +98,7 @@ and the hooks light up with **no call-site changes**.
 ## 4. Usage
 
 ### Notifications badge (live + reconnect refetch)
+
 ```tsx
 import { useNotificationsRealtime } from "@/features/realtime";
 import { useQueryClient } from "@tanstack/react-query";
@@ -110,6 +114,7 @@ function useNotificationBell(userId: string) {
 ```
 
 ### Project task board (dormant until `tasks` ships)
+
 ```tsx
 import { useTaskRealtime } from "@/features/realtime";
 
@@ -120,6 +125,7 @@ useTaskRealtime(projectId, {
 ```
 
 ### Team attendance dashboard (RLS-scoped, team-wide)
+
 ```tsx
 import { useAttendanceRealtime } from "@/features/realtime";
 
@@ -152,6 +158,7 @@ receives change events for rows it is allowed to `SELECT`.
 ## 6. API reference
 
 ### `@/lib/supabase/realtime`
+
 - `subscribeToTable(sub): () => void` — low-level subscribe (used by the hook).
 - `realtimeManager` — the singleton (`subscribe`, `markAllStale`, `disposeAll`).
 - `isRealtimeEnabled(table)` / `PUBLISHED_TABLES` — publication membership.
@@ -160,9 +167,11 @@ receives change events for rows it is allowed to `SELECT`.
 - Types: `TableSubscription<Row>`, `PostgresEvent`, `RealtimeStatus`.
 
 ### `@/hooks/use-realtime`
+
 - `useRealtimeSubscription(sub | null)` — generic React binding.
 
 ### `@/features/realtime`
+
 - The eight domain hooks + `DomainHandlers<Row>` + re-exports of the above.
 
 ---

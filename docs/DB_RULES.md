@@ -7,11 +7,13 @@ Living document. All schema changes must comply. When in doubt, add a rule here 
 ## 1. Naming Conventions
 
 ### Tables
+
 - **Plural, snake_case**: `profiles`, `work_sessions`, `leave_requests`.
 - Junction tables: `<a>_<b>` in alphabetical order: `team_members`, `project_members`, `role_permissions`.
 - Never abbreviate unless it is universally understood (`auth.users` is external; we do not control it).
 
 ### Columns
+
 - **snake_case**: `user_id`, `work_date`, `started_at`, `late_minutes`.
 - Booleans: prefix with `is_` or `has_`: `is_active`, `is_company_wide`.
 - Timestamps: suffix with `_at` for a point in time, `_date` for calendar dates.
@@ -20,15 +22,18 @@ Living document. All schema changes must comply. When in doubt, add a rule here 
 - JSONB columns: plural when they hold arrays (`planned_tasks`), singular when a single object (`emergency_contact`).
 
 ### Enums
+
 - Name the enum type in singular PascalCase: `app_role`, `attendance_status`.
 - Enum values: lowercase, snake_case: `on_time`, `super_admin`, `in_progress`.
 - Define once in SQL; never hardcode values in application code.
 
 ### Functions & Triggers
+
 - Functions: descriptive, prefix with domain when grouped: `start_work_session()`, `finish_work_session()`, `tg_set_updated_at()`.
 - Triggers: prefix `tg_` + action + table: `tg_set_updated_at`, `tg_handle_new_user`.
 
 ### Indexes
+
 - Naming: `idx_<table>_<column(s)>`: `idx_profiles_department_id`.
 - Partial indexes append condition: `idx_profiles_status_active` (where `deleted_at is null`).
 - Unique indexes: `uk_<table>_<columns>`.
@@ -89,20 +94,24 @@ updated_by   uuid references auth.users(id) on delete set null
 ## 6. Indexing Rules
 
 ### Required indexes
+
 - Every foreign key column.
 - Every column used in `WHERE`, `JOIN`, or `ORDER BY` in frequently run queries.
 - Every `status` + `created_at` / `opened_at` pair used for dashboards.
 
 ### Partial indexes
+
 - Filter soft-deleted rows: `WHERE deleted_at is null`.
 - Filter open states: `WHERE status not in ('resolved','cancelled')`.
 - Filter pending items for approver queues: `WHERE status = 'pending'`.
 
 ### Unique indexes
+
 - Business uniqueness constraints must be enforced at the database level, not just application code.
 - Examples: one attendance per user per date; one morning check-in per user per day.
 
 ### Prohibited
+
 - No unused indexes. Review `pg_stat_user_indexes` quarterly.
 - No redundant indexes covering the same leading columns.
 
@@ -111,10 +120,12 @@ updated_by   uuid references auth.users(id) on delete set null
 ## 7. Row Level Security (RLS)
 
 ### Global rules
+
 - **Every table in `public` must have RLS enabled.** No exceptions.
 - Every table in `public` must have explicit `GRANT` statements.
 
 ### GRANT order (exact sequence)
+
 ```sql
 1. CREATE TABLE public.<name>(...)
 2. GRANT SELECT, INSERT, UPDATE, DELETE ON public.<name> TO authenticated;
@@ -127,16 +138,19 @@ updated_by   uuid references auth.users(id) on delete set null
 - Always include `service_role` for tables touched by edge functions, admin jobs, or triggers.
 
 ### Policy design
+
 - **Never query the protected table inside its own policy.** This causes infinite recursion.
 - Instead, use **SECURITY DEFINER helper functions** (e.g. `has_role`, `is_in_team`, `manages_team`).
 - Keep policies declarative: one predicate per operation where possible.
 - `TO authenticated` is the default target. `TO anon` only for public reference data.
 
 ### Helper functions
+
 - All helpers live in `public`, are `STABLE` (or `VOLATILE` only when necessary), `SECURITY DEFINER`, and `SET search_path = public`.
 - Revoke `EXECUTE` from `public`; grant to `authenticated` and `service_role`.
 
 ### Audit tables
+
 - `audit_logs`: revoke `UPDATE` and `DELETE` at the GRANT level.
 - Add a trigger that blocks `UPDATE`/`DELETE` even from table owners.
 - `service_role` may still insert; no `authenticated` write policies.
@@ -168,22 +182,27 @@ updated_by   uuid references auth.users(id) on delete set null
 ## 10. Migration Strategy
 
 ### One migration per logical change
+
 - A single migration may contain multiple statements if they are interdependent (table + triggers + indexes + policies).
 - Do not split a feature across multiple migrations unless the dependency graph demands it.
 
 ### Idempotency
+
 - Migrations must be rerunnable or guarded with `IF NOT EXISTS` / `IF EXISTS`.
 - Enum additions use `ALTER TYPE ... ADD VALUE IF NOT EXISTS`.
 
 ### Data safety
+
 - Migrations that alter columns must preserve existing data (e.g. add new column, backfill, then drop old).
 - Renaming columns requires a two-step migration or application compatibility window.
 
 ### Seeding
+
 - Reference tables (`roles`, `permissions`) are seeded in the same migration that creates them.
 - `company_settings` seeding happens in the initial migration with idempotent `INSERT ... ON CONFLICT`.
 
 ### Testing
+
 - Every policy migration must have corresponding pgTAP tests under `supabase/tests/policies/`.
 - Tests must pass before the migration is considered complete.
 
@@ -191,17 +210,17 @@ updated_by   uuid references auth.users(id) on delete set null
 
 ## 11. Anti-Patterns (Forbidden)
 
-| Anti-pattern | Why | Correct approach |
-|---|---|---|
-| Storing role on `profiles` | Privilege escalation risk | Separate `user_roles` table |
-| Querying protected table inside its own RLS policy | Infinite recursion | SECURITY DEFINER helper function |
-| `TO anon` grants on user data tables | Data exposure | Omit anon grants; use auth-only policies |
-| Using `service_role` key for ordinary app reads to bypass RLS | Bypasses all access control | Fix the policy or application logic |
-| Hard delete on user-visible records without audit | Data loss / compliance gap | Soft delete + audit log |
-| `CHECK (expire_at > now())` | Breaks on restore / immutable rule | Validation trigger |
-| Missing `GRANT` after `CREATE TABLE` | Data API permission error | Always include grants in same migration |
-| Integer primary keys for business tables | Predictable IDs, merge conflicts | `gen_random_uuid()` |
-| Nullable `user_id` in user-owned tables with RLS | Policy ambiguity, orphan rows | `NOT NULL` + correct default or insert value |
+| Anti-pattern                                                  | Why                                | Correct approach                             |
+| ------------------------------------------------------------- | ---------------------------------- | -------------------------------------------- |
+| Storing role on `profiles`                                    | Privilege escalation risk          | Separate `user_roles` table                  |
+| Querying protected table inside its own RLS policy            | Infinite recursion                 | SECURITY DEFINER helper function             |
+| `TO anon` grants on user data tables                          | Data exposure                      | Omit anon grants; use auth-only policies     |
+| Using `service_role` key for ordinary app reads to bypass RLS | Bypasses all access control        | Fix the policy or application logic          |
+| Hard delete on user-visible records without audit             | Data loss / compliance gap         | Soft delete + audit log                      |
+| `CHECK (expire_at > now())`                                   | Breaks on restore / immutable rule | Validation trigger                           |
+| Missing `GRANT` after `CREATE TABLE`                          | Data API permission error          | Always include grants in same migration      |
+| Integer primary keys for business tables                      | Predictable IDs, merge conflicts   | `gen_random_uuid()`                          |
+| Nullable `user_id` in user-owned tables with RLS              | Policy ambiguity, orphan rows      | `NOT NULL` + correct default or insert value |
 
 ---
 

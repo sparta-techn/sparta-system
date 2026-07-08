@@ -4,15 +4,15 @@ Targets and the database-layer techniques used to meet them. Application-layer g
 
 ## 1. SLOs
 
-| Surface | P50 | P95 | P99 |
-|---|---|---|---|
-| Auth sign-in | 250 ms | 600 ms | 1 s |
-| `getMe` (session hydration) | 80 ms | 200 ms | 400 ms |
-| Dashboard initial load (server fn) | 150 ms | 400 ms | 800 ms |
-| List queries (attendance/dependencies, 50 rows) | 80 ms | 250 ms | 500 ms |
-| Single-row mutations | 80 ms | 250 ms | 600 ms |
-| Realtime delivery (publish → client) | 200 ms | 500 ms | 1.5 s |
-| Background jobs (pg_cron) | n/a | within window | within window |
+| Surface                                         | P50    | P95           | P99           |
+| ----------------------------------------------- | ------ | ------------- | ------------- |
+| Auth sign-in                                    | 250 ms | 600 ms        | 1 s           |
+| `getMe` (session hydration)                     | 80 ms  | 200 ms        | 400 ms        |
+| Dashboard initial load (server fn)              | 150 ms | 400 ms        | 800 ms        |
+| List queries (attendance/dependencies, 50 rows) | 80 ms  | 250 ms        | 500 ms        |
+| Single-row mutations                            | 80 ms  | 250 ms        | 600 ms        |
+| Realtime delivery (publish → client)            | 200 ms | 500 ms        | 1.5 s         |
+| Background jobs (pg_cron)                       | n/a    | within window | within window |
 
 Error budget: 99.9% monthly availability for sign-in and dashboards.
 
@@ -39,12 +39,12 @@ Indexes maintained as part of the table migration that introduces the query patt
 
 ## 4. Materialized Views
 
-| MV | Refresh |
-|---|---|
+| MV                        | Refresh                    |
+| ------------------------- | -------------------------- |
 | `mv_company_health_daily` | every 15 min, CONCURRENTLY |
-| `mv_user_perf_weekly` | nightly 02:00 |
-| `mv_dependency_aging` | every 30 min |
-| `mv_team_daily_health` | every 10 min |
+| `mv_user_perf_weekly`     | nightly 02:00              |
+| `mv_dependency_aging`     | every 30 min               |
+| `mv_team_daily_health`    | every 10 min               |
 
 Refresh jobs check stale-or-skip flags to coalesce when traffic is low.
 
@@ -103,15 +103,15 @@ output: { rows[], next_cursor?, total_estimate? }
 
 ## 13. Capacity Planning
 
-| Resource | Today | 12-month target |
-|---|---|---|
-| Active employees | 100 | 1,000 |
-| Daily attendance rows | 100 | 1,000 |
-| Daily workflow rows | ~300 | ~3,000 |
-| Dependencies / month | ~500 | ~5,000 |
-| Notifications / day | ~2,000 | ~20,000 |
-| DB size after 1 yr | < 5 GB | < 50 GB |
-| Realtime concurrent | < 200 | < 2,000 |
+| Resource              | Today  | 12-month target |
+| --------------------- | ------ | --------------- |
+| Active employees      | 100    | 1,000           |
+| Daily attendance rows | 100    | 1,000           |
+| Daily workflow rows   | ~300   | ~3,000          |
+| Dependencies / month  | ~500   | ~5,000          |
+| Notifications / day   | ~2,000 | ~20,000         |
+| DB size after 1 yr    | < 5 GB | < 50 GB         |
+| Realtime concurrent   | < 200  | < 2,000         |
 
 Supabase tier sized to 2× expected peak; vertical scaling path documented before saturation.
 
@@ -136,12 +136,12 @@ TanStack Router plugin.
 
 ## A. TL;DR — what changed in this pass
 
-| Area | Change | File |
-| --- | --- | --- |
-| Query caching | Global `QueryClient` defaults: `staleTime` 60s, `gcTime` 5m, `refetchOnWindowFocus: false`, `retry: 1` | `src/router.tsx` |
-| Navigation | Enabled `defaultPreload: "intent"` (100ms delay, 30s preload stale time) for instant route transitions | `src/router.tsx` |
-| Rendering | `React.memo` on hot, pure leaf components rendered per row/card | `status-badge`, `employee-chip`, `badges`, `task-card`, `kanban-card`, `task-row` |
-| Rendering | Stabilized the row‑selection callback (`useCallback` + functional update) so memoized rows don't re‑render on sibling selection | `tasks-list.tsx` + `task-row.tsx` |
+| Area          | Change                                                                                                                          | File                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Query caching | Global `QueryClient` defaults: `staleTime` 60s, `gcTime` 5m, `refetchOnWindowFocus: false`, `retry: 1`                          | `src/router.tsx`                                                                  |
+| Navigation    | Enabled `defaultPreload: "intent"` (100ms delay, 30s preload stale time) for instant route transitions                          | `src/router.tsx`                                                                  |
+| Rendering     | `React.memo` on hot, pure leaf components rendered per row/card                                                                 | `status-badge`, `employee-chip`, `badges`, `task-card`, `kanban-card`, `task-row` |
+| Rendering     | Stabilized the row‑selection callback (`useCallback` + functional update) so memoized rows don't re‑render on sibling selection | `tasks-list.tsx` + `task-row.tsx`                                                 |
 
 All changes are behavior‑preserving. `tsc --noEmit` is clean, **157/157 tests
 pass**, and the production build succeeds. Only **safe** optimizations were
@@ -203,10 +203,10 @@ Applied (`src/router.tsx`):
 new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000,           // no redundant refetch on remount/nav
-      gcTime: 5 * 60_000,          // keep unused data 5m → instant revisits
+      staleTime: 60_000, // no redundant refetch on remount/nav
+      gcTime: 5 * 60_000, // keep unused data 5m → instant revisits
       refetchOnWindowFocus: false, // no refetch storm on tab focus
-      retry: 1,                    // fail fast instead of 3× latency
+      retry: 1, // fail fast instead of 3× latency
     },
   },
 });

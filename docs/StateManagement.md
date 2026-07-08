@@ -6,16 +6,16 @@ A pragmatic, layered approach. Each kind of state lives in exactly one place.
 
 ## 1. Categories of State
 
-| Category | Tool | Examples |
-|---|---|---|
-| **Server state** | TanStack Query | Attendance, dependencies, reports, announcements. |
-| **Realtime state** | TanStack Query cache + Supabase Realtime | Live team status, incoming notifications. |
-| **Local UI state** | `useState` / `useReducer` | Dialog open, form step, hover. |
-| **Cross-feature ephemeral state** | Zustand (slices) | Command palette, sidebar collapse, toast queue, current scope filter. |
-| **Form state** | React Hook Form + Zod | All forms. |
-| **URL state** | `useSearchParams` | Filters, pagination, tabs, date ranges. |
-| **Session / auth** | AuthProvider (context) backed by Supabase | Current user, claims, permissions. |
-| **Feature flags** | FeatureFlagsProvider (server-resolved, client-cached) | A/B and rollout gates. |
+| Category                          | Tool                                                  | Examples                                                              |
+| --------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------- |
+| **Server state**                  | TanStack Query                                        | Attendance, dependencies, reports, announcements.                     |
+| **Realtime state**                | TanStack Query cache + Supabase Realtime              | Live team status, incoming notifications.                             |
+| **Local UI state**                | `useState` / `useReducer`                             | Dialog open, form step, hover.                                        |
+| **Cross-feature ephemeral state** | Zustand (slices)                                      | Command palette, sidebar collapse, toast queue, current scope filter. |
+| **Form state**                    | React Hook Form + Zod                                 | All forms.                                                            |
+| **URL state**                     | `useSearchParams`                                     | Filters, pagination, tabs, date ranges.                               |
+| **Session / auth**                | AuthProvider (context) backed by Supabase             | Current user, claims, permissions.                                    |
+| **Feature flags**                 | FeatureFlagsProvider (server-resolved, client-cached) | A/B and rollout gates.                                                |
 
 Redux is explicitly **not** used.
 
@@ -77,15 +77,15 @@ This keeps realtime updates **coherent with cached queries**, avoiding the "two 
 
 ## 6. Caching Strategy
 
-| Data | Cache lifetime | Invalidation triggers |
-|---|---|---|
-| Today's attendance | 30s + realtime | Any attendance mutation, midnight rollover. |
-| Dependencies (open) | 30s + realtime | Mutation, realtime, manual refresh. |
-| Reports (rollups) | 5 min | Day boundary, manual refresh. |
-| Directory | 10 min | HR edits, role changes. |
-| Announcements | 1 min + realtime | Create, expire, read. |
-| Notifications | 0 (always fresh) + realtime | Any new event. |
-| Org config (roles, teams) | 30 min | Admin edits. |
+| Data                      | Cache lifetime              | Invalidation triggers                       |
+| ------------------------- | --------------------------- | ------------------------------------------- |
+| Today's attendance        | 30s + realtime              | Any attendance mutation, midnight rollover. |
+| Dependencies (open)       | 30s + realtime              | Mutation, realtime, manual refresh.         |
+| Reports (rollups)         | 5 min                       | Day boundary, manual refresh.               |
+| Directory                 | 10 min                      | HR edits, role changes.                     |
+| Announcements             | 1 min + realtime            | Create, expire, read.                       |
+| Notifications             | 0 (always fresh) + realtime | Any new event.                              |
+| Org config (roles, teams) | 30 min                      | Admin edits.                                |
 
 ---
 

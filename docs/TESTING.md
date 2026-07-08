@@ -14,11 +14,11 @@ purpose, so a change is tested at the cheapest level that can catch its bugs.
   ╱────────────────────╲
 ```
 
-| Layer | Tool | Env | Location | Runs |
-| --- | --- | --- | --- | --- |
-| **Unit** | Vitest | `node` | `src/**/*.test.ts` (co-located) | `npm run test:unit` |
-| **Component / Integration** | Vitest + React Testing Library | `jsdom` | `tests/component/**`, `tests/integration/**`, `src/**/*.test.tsx` | `npm run test:component` |
-| **E2E** | Playwright | real browser | `tests/e2e/*.spec.ts` | `npm run test:e2e` |
+| Layer                       | Tool                           | Env          | Location                                                          | Runs                     |
+| --------------------------- | ------------------------------ | ------------ | ----------------------------------------------------------------- | ------------------------ |
+| **Unit**                    | Vitest                         | `node`       | `src/**/*.test.ts` (co-located)                                   | `npm run test:unit`      |
+| **Component / Integration** | Vitest + React Testing Library | `jsdom`      | `tests/component/**`, `tests/integration/**`, `src/**/*.test.tsx` | `npm run test:component` |
+| **E2E**                     | Playwright                     | real browser | `tests/e2e/*.spec.ts`                                             | `npm run test:e2e`       |
 
 `npm test` runs both Vitest projects (unit + component). E2E is separate
 because it needs a running app and browser binaries.
@@ -137,7 +137,7 @@ events, and asserts the banner appears and clears. Nothing mocked.
 **b) Data layer through a provider** —
 [`tests/integration/query-hook.test.tsx`](../tests/integration/query-hook.test.tsx)
 renders a `useQuery` hook inside `TestProviders` (a `QueryClientProvider`) and
-swaps the *service* for a `vi.fn()`, asserting the loading → success and error
+swaps the _service_ for a `vi.fn()`, asserting the loading → success and error
 lifecycles:
 
 ```tsx
@@ -196,12 +196,12 @@ public/guard surface only.
 
 ## 7. What to test where
 
-| You changed… | Test at… |
-| --- | --- |
-| A pure rule / calculation / util | **Unit** |
-| A presentational component's output or a11y | **Component** |
-| A hook + provider, or component + service wiring | **Integration** |
-| A critical user journey, routing/guard, or full stack | **E2E** |
+| You changed…                                          | Test at…        |
+| ----------------------------------------------------- | --------------- |
+| A pure rule / calculation / util                      | **Unit**        |
+| A presentational component's output or a11y           | **Component**   |
+| A hook + provider, or component + service wiring      | **Integration** |
+| A critical user journey, routing/guard, or full stack | **E2E**         |
 
 Push each test as far **down** the pyramid as it can go: if a bug is catchable
 by a unit test, don't reach for an integration or E2E test to find it.

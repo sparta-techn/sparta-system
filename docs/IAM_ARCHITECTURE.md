@@ -108,21 +108,23 @@ public.role_permissions ─ permissions ✅ — the DB permission matrix (§6)
 Enforced at **four** independent layers so no single misconfiguration opens
 sign-up:
 
-| # | Layer | Mechanism | Status |
-| --- | --- | --- | --- |
-| 1 | **Supabase Auth config** | `[auth] enable_signup = false`; `enable_confirmations = true`. With signup disabled, only the **Admin API** (service-role) can create users. | 🆕 set in `supabase/config.toml` + hosted project settings |
-| 2 | **No client API** | The app never calls `supabase.auth.signUp()`. `auth-service.ts` exposes only `signInWithPassword`, `signOut`, `requestPasswordReset`, `updatePassword`. | ✅ verified — zero `signUp` calls in `src/` |
-| 3 | **No UI/route** | There is no `/auth/sign-up` route or component. `auth/` has only `index` (sign-in), `forgot-password`, `reset-password`, `accept-invitation`, `verify-email`, `session-expired`. | ✅ |
-| 4 | **Graceful messaging** | If a signup path is ever hit, `mapAuthError` returns *"Self-signup is disabled. Ask your administrator for an invitation."* | ✅ (`features/auth/errors.ts`) |
+| #   | Layer                    | Mechanism                                                                                                                                                                        | Status                                                     |
+| --- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 1   | **Supabase Auth config** | `[auth] enable_signup = false`; `enable_confirmations = true`. With signup disabled, only the **Admin API** (service-role) can create users.                                     | 🆕 set in `supabase/config.toml` + hosted project settings |
+| 2   | **No client API**        | The app never calls `supabase.auth.signUp()`. `auth-service.ts` exposes only `signInWithPassword`, `signOut`, `requestPasswordReset`, `updatePassword`.                          | ✅ verified — zero `signUp` calls in `src/`                |
+| 3   | **No UI/route**          | There is no `/auth/sign-up` route or component. `auth/` has only `index` (sign-in), `forgot-password`, `reset-password`, `accept-invitation`, `verify-email`, `session-expired`. | ✅                                                         |
+| 4   | **Graceful messaging**   | If a signup path is ever hit, `mapAuthError` returns _"Self-signup is disabled. Ask your administrator for an invitation."_                                                      | ✅ (`features/auth/errors.ts`)                             |
 
-**Why config matters most:** Layers 2–3 remove the *UI*, but the security
+**Why config matters most:** Layers 2–3 remove the _UI_, but the security
 guarantee comes from Layer 1 — with `enable_signup = false`, a crafted request
 to `/auth/v1/signup` is rejected by Supabase itself. Verify this in the hosted
 dashboard as a release gate.
 
 ### 4.4 Access revocation for non-active accounts
+
 Disabling sign-up is not enough — a `suspended`/`offboarded` user could still
 hold a valid session. Enforce at the authoritative layer:
+
 - **RLS predicate** 🆕: gate sensitive policies on `is_active(auth.uid())` — a
   `SECURITY DEFINER` helper returning `profiles.status = 'active'` — in addition
   to role checks.
@@ -134,32 +136,39 @@ hold a valid session. Enforce at the authoritative layer:
 ## 5. Bootstrap Owner account
 
 **The chicken-and-egg problem:** `handle_new_user()` assigns `employee` by
-default; only `owner`/`super_admin` may grant roles. So the *first* Owner cannot
+default; only `owner`/`super_admin` may grant roles. So the _first_ Owner cannot
 be created by the normal in-app flow. Two grounded, safe options — use **A** for
 provisioning, keep **B** as the idempotent guard:
 
 ### A. Provision via service-role Admin API (recommended)
+
 The trigger already honors an invited role from user metadata:
+
 ```sql
 -- handle_new_user() (existing):
 invited_role := (NEW.raw_user_meta_data ->> 'role')::public.app_role;  -- ✅
 INSERT INTO public.user_roles (user_id, role)
 VALUES (NEW.id, COALESCE(invited_role, 'employee'));
 ```
+
 So a one-time **server-side** script (service-role, never shipped) creates the
 Owner:
+
 ```ts
 // scripts/bootstrap-owner.ts  (design sketch — run once, service-role)
 await admin.auth.admin.inviteUserByEmail(OWNER_EMAIL, {
-  data: { role: "owner", full_name: OWNER_NAME },   // → trigger assigns 'owner'
+  data: { role: "owner", full_name: OWNER_NAME }, // → trigger assigns 'owner'
 });
 ```
+
 The Owner receives the invitation email and sets a password via
 `/auth/accept-invitation` like any invitee (§6).
 
 ### B. Idempotent, self-disabling `bootstrap_owner()` RPC (safety net) 🆕
+
 A `SECURITY DEFINER` function that promotes a caller to Owner **only while no
 Owner exists**, so it can never be used to escalate later:
+
 ```sql
 CREATE FUNCTION public.bootstrap_owner()
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -209,17 +218,19 @@ sequenceDiagram
 ```
 
 ### 6.2 What exists vs. what to add
-| Piece | Status |
-| --- | --- |
-| `handle_new_user()` provisions profile + role from invite metadata | ✅ |
-| `handle_user_email_confirmed()` flips `invited → active` | ✅ |
-| `/auth/accept-invitation` route (set password, `noindex`, `ssr:false`) | ✅ |
-| `/auth/verify-email`, `session-expired` routes | ✅ |
-| `invite_user(email, role)` **server fn** wrapping the Admin API + guard | 🆕 |
+
+| Piece                                                                                                  | Status                                 |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| `handle_new_user()` provisions profile + role from invite metadata                                     | ✅                                     |
+| `handle_user_email_confirmed()` flips `invited → active`                                               | ✅                                     |
+| `/auth/accept-invitation` route (set password, `noindex`, `ssr:false`)                                 | ✅                                     |
+| `/auth/verify-email`, `session-expired` routes                                                         | ✅                                     |
+| `invite_user(email, role)` **server fn** wrapping the Admin API + guard                                | 🆕                                     |
 | `invitations` **tracking table** (email, role, invited_by, token, expires_at, accepted_at, revoked_at) | 🆕 (`DATABASE_DESIGN.md §5` satellite) |
-| Resend / revoke invitation, expiry (e.g. 7 days) | 🆕 |
+| Resend / revoke invitation, expiry (e.g. 7 days)                                                       | 🆕                                     |
 
 ### 6.3 `invitations` table (🆕 design)
+
 Tracks invite state for the admin UI + audit; the auth user is still owned by
 Supabase.
 | Column | Type | Notes |
@@ -243,36 +254,39 @@ Supabase.
 ## 7. RBAC
 
 ### 7.1 Roles (`app_role` enum ✅)
+
 Ordered by `ROLE_RANK` (`features/auth/types.ts`):
 
-| Role | Rank | Scope summary |
-| --- | --- | --- |
-| `owner` | 100 | Everything; only role that can mint `super_admin`; read-only on some ops (e.g. attendance). |
-| `super_admin` | 90 | All except `owner:access`; manages roles/users/settings. |
-| `hr` | 70 | People/HR: profiles, invitations, directory, reports read; **not** role grants. |
-| `project_manager` | 60 | Project/portfolio management, report review. |
-| `team_lead` | 50 | Team-level management, report review. |
-| `employee` | 30 | Default. Own work, own reports. |
-| `viewer` | 10 | Read-mostly. |
+| Role              | Rank | Scope summary                                                                               |
+| ----------------- | ---- | ------------------------------------------------------------------------------------------- |
+| `owner`           | 100  | Everything; only role that can mint `super_admin`; read-only on some ops (e.g. attendance). |
+| `super_admin`     | 90   | All except `owner:access`; manages roles/users/settings.                                    |
+| `hr`              | 70   | People/HR: profiles, invitations, directory, reports read; **not** role grants.             |
+| `project_manager` | 60   | Project/portfolio management, report review.                                                |
+| `team_lead`       | 50   | Team-level management, report review.                                                       |
+| `employee`        | 30   | Default. Own work, own reports.                                                             |
+| `viewer`          | 10   | Read-mostly.                                                                                |
 
 A user may hold **multiple** roles; effective permissions are the **union**
 (`permissionsForRoles`, `has_permission`).
 
 ### 7.2 Who may grant which role (assignment matrix) 🆕 rule
+
 Enforced in the `grant_role`/`invite_user` RPCs + `roles_admin_write` RLS:
 
-| Granter | May grant |
-| --- | --- |
-| `owner` | any role (incl. `super_admin`, `owner`) |
+| Granter       | May grant                                     |
+| ------------- | --------------------------------------------- |
+| `owner`       | any role (incl. `super_admin`, `owner`)       |
 | `super_admin` | any role **except** `owner` and `super_admin` |
-| `hr` | `employee`, `viewer` (onboarding only) |
-| everyone else | nothing |
+| `hr`          | `employee`, `viewer` (onboarding only)        |
+| everyone else | nothing                                       |
 
 **Invariants:** never remove the last `owner`; no self-elevation
 (`granter ≠ target` for elevation, or an explicit allowlist); every grant/revoke
 is audited (§10).
 
 ### 7.3 Role/lifecycle operations (privileged) 🆕
+
 Expose as `SECURITY DEFINER` RPCs (not raw table writes) so guards + audit are
 centralized: `grant_role(user, role)`, `revoke_role(user, role)`,
 `suspend_user(user)`, `offboard_user(user)`. Each: assert caller authority →
@@ -280,6 +294,7 @@ mutate → `log_audit(...)` → (for suspend/offboard) invalidate session via Ad
 API (§4.4).
 
 ### 7.4 Frontend mirror (UX only)
+
 `AuthProvider` loads `roles` (`fetchRoles`) and precomputes the permission set;
 `useAuth()` exposes `hasRole`, `hasAnyRole`, `hasPermission`, `hasAnyPermission`
 (`ARCHITECTURE.md §7`). Granular helpers already exist in `permissions.ts`
@@ -296,20 +311,21 @@ mirrored by `features/auth/permissions.ts` for the UI. `has_permission(uid, key)
 
 ### 8.1 Current matrix (seeded in `20260630120000_hr_reference_and_permissions.sql` ✅ / `permissions.ts` ✅)
 
-| Permission ↓ / Role → | owner | super_admin | hr | project_manager | team_lead | employee | viewer |
-| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| `users:read`    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `users:write`   | ✅ | ✅ | ✅ | — | — | — | — |
-| `roles:write`   | ✅ | ✅ | — | — | — | — | — |
-| `hr:access`     | ✅ | ✅ | ✅ | — | — | — | — |
-| `owner:access`  | ✅ | — | — | — | — | — | — |
-| `reports:read`  | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ |
-| `reports:write` | ✅ | ✅ | — | ✅ | ✅ | ✅ | — |
+| Permission ↓ / Role → | owner | super_admin | hr  | project_manager | team_lead | employee | viewer |
+| --------------------- | :---: | :---------: | :-: | :-------------: | :-------: | :------: | :----: |
+| `users:read`          |  ✅   |     ✅      | ✅  |       ✅        |    ✅     |    ✅    |   ✅   |
+| `users:write`         |  ✅   |     ✅      | ✅  |        —        |     —     |    —     |   —    |
+| `roles:write`         |  ✅   |     ✅      |  —  |        —        |     —     |    —     |   —    |
+| `hr:access`           |  ✅   |     ✅      | ✅  |        —        |     —     |    —     |   —    |
+| `owner:access`        |  ✅   |      —      |  —  |        —        |     —     |    —     |   —    |
+| `reports:read`        |  ✅   |     ✅      | ✅  |       ✅        |    ✅     |    —     |   ✅   |
+| `reports:write`       |  ✅   |     ✅      |  —  |       ✅        |    ✅     |    ✅    |   —    |
 
 > `DATABASE_DESIGN.md §4` reserves further keys (`projects:write`, `tasks:write`)
 > in the `permission_key` enum for when those domains wire their write paths.
 
 ### 8.2 Drift prevention (DB ⇄ frontend)
+
 The frontend matrix must never diverge from the DB (a documented audit risk).
 Add a **parity test** 🆕 that asserts `permissions.ts` `ROLE_PERMISSIONS` equals
 the seeded `role_permissions` rows (generate one from the other, or snapshot).
@@ -321,9 +337,10 @@ Vitest `unit` project (`docs/TESTING.md`).
 ## 9. API authorization
 
 ### 9.1 Two enforced read/write paths
-| Path | When | Enforcement |
-| --- | --- | --- |
-| **Direct client + RLS** | Ordinary CRUD scoped by the caller's own rows/roles | RLS policies (Layer 4). Client uses the anon/publishable key + user JWT; RLS sees `auth.uid()`. |
+
+| Path                                        | When                                                                                   | Enforcement                                                                                                                                                                                             |
+| ------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Direct client + RLS**                     | Ordinary CRUD scoped by the caller's own rows/roles                                    | RLS policies (Layer 4). Client uses the anon/publishable key + user JWT; RLS sees `auth.uid()`.                                                                                                         |
 | **Server function** (`requireSupabaseAuth`) | Privileged / cross-row / multi-step logic (invites, role grants, exports, offboarding) | Middleware validates the Bearer JWT (`auth.getClaims`) and binds an **RLS-scoped** client `{ supabase, userId, claims }`. Privileged writes go through `SECURITY DEFINER` RPCs that re-check authority. |
 
 `ARCHITECTURE.md §15.4` flags this choice as "to be decided"; the IAM rule is:
@@ -331,15 +348,18 @@ Vitest `unit` project (`docs/TESTING.md`).
 function, never a direct client write.**
 
 ### 9.2 The middleware (✅ `integrations/supabase/auth-middleware.ts`)
+
 `requireSupabaseAuth`:
+
 - rejects missing/`non-Bearer`/malformed tokens (`Unauthorized: …`);
 - validates via `supabase.auth.getClaims(token)`; requires `claims.sub`;
 - builds a per-request client that forwards the user's token, so **RLS applies**
   to everything the server fn does on the user's behalf.
-Client side, `attachSupabaseAuth` ✅ attaches the session bearer to every
-server-fn RPC (registered in `start.ts`).
+  Client side, `attachSupabaseAuth` ✅ attaches the session bearer to every
+  server-fn RPC (registered in `start.ts`).
 
 ### 9.3 Service-role boundary
+
 - `client.server.ts` (service-role, **bypasses RLS**) is server-only, dynamically
   imported, never in the client bundle (`ARCHITECTURE.md §10`).
 - Use it **only** inside server fns for operations that legitimately need to
@@ -348,6 +368,7 @@ server-fn RPC (registered in `start.ts`).
   unauthenticated.
 
 ### 9.4 Privileged RPC contract (🆕)
+
 `invite_user`, `grant_role`, `revoke_role`, `suspend_user`, `offboard_user`,
 `bootstrap_owner`: all `SECURITY DEFINER`, `search_path = public`, **execute
 revoked from `anon`**, granted to `authenticated`, and each begins with an
@@ -363,24 +384,26 @@ Guards run in `beforeLoad`; they are **UX gates** (fail-closed redirects), not
 the security boundary — RLS still enforces (§2).
 
 ### 10.1 Layers (✅ existing + 🆕 proposed)
-| Guard | Where | Does |
-| --- | --- | --- |
-| **Authentication** ✅ | `_authenticated/route.tsx` `beforeLoad` | `supabase.auth.getUser()`; no user → `redirect('/auth?redirect=<href>')`. `ssr:false` (session in `localStorage`). |
-| **Session freshness** ✅ | global query/mutation `onError` (`lib/errors`) | on session-expiry → `/auth/session-expired` (see `ERROR_HANDLING.md`). |
-| **Role/permission** 🆕 | per-route `beforeLoad` on sensitive routes | assert role/permission; else `redirect('/unauthorized')`. |
-| **Unauthorized surface** ✅ | `routes/unauthorized.tsx` | the landing page for a denied guard. |
+
+| Guard                       | Where                                          | Does                                                                                                               |
+| --------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Authentication** ✅       | `_authenticated/route.tsx` `beforeLoad`        | `supabase.auth.getUser()`; no user → `redirect('/auth?redirect=<href>')`. `ssr:false` (session in `localStorage`). |
+| **Session freshness** ✅    | global query/mutation `onError` (`lib/errors`) | on session-expiry → `/auth/session-expired` (see `ERROR_HANDLING.md`).                                             |
+| **Role/permission** 🆕      | per-route `beforeLoad` on sensitive routes     | assert role/permission; else `redirect('/unauthorized')`.                                                          |
+| **Unauthorized surface** ✅ | `routes/unauthorized.tsx`                      | the landing page for a denied guard.                                                                               |
 
 ### 10.2 Proposed guard helper (design sketch)
+
 A small, reusable guard resolves the identity once (via a cached
 `ensureIdentity` query — auth repository `getCurrentIdentity`) and asserts:
+
 ```ts
 // design sketch — not applied
 function requirePermission(perm: Permission) {
   return async () => {
-    const id = await ensureIdentity();                 // { userId, roles }
+    const id = await ensureIdentity(); // { userId, roles }
     if (!id) throw redirect({ to: "/auth" });
-    if (!permissionsForRoles(id.roles).has(perm))
-      throw redirect({ to: "/unauthorized" });
+    if (!permissionsForRoles(id.roles).has(perm)) throw redirect({ to: "/unauthorized" });
   };
 }
 // e.g. HR area:
@@ -388,14 +411,15 @@ function requirePermission(perm: Permission) {
 // Owner dashboard:
 // beforeLoad: requirePermission("owner:access")
 ```
+
 **Route → gate mapping** (🆕 to wire; `ARCHITECTURE.md §15.5`):
 
-| Route (area) | Required |
-| --- | --- |
-| `/app/hr/*` | `hr:access` |
-| `/app/executive`, owner dashboard | `owner:access` |
-| `/app/**` (all in-app) | authenticated (✅) |
-| role/user admin screens | `roles:write` / `users:write` |
+| Route (area)                      | Required                      |
+| --------------------------------- | ----------------------------- |
+| `/app/hr/*`                       | `hr:access`                   |
+| `/app/executive`, owner dashboard | `owner:access`                |
+| `/app/**` (all in-app)            | authenticated (✅)            |
+| role/user admin screens           | `roles:write` / `users:write` |
 
 > The guard re-derives permissions from `roles` client-side for redirect UX; the
 > **same** permission is enforced by RLS/`has_permission` server-side. If the two
@@ -409,29 +433,35 @@ Satisfies CLAUDE.md Security ("Audit important actions") and `AuditSystem.md`.
 Two cooperating sinks:
 
 ### 11.1 `audit_events` — immutable DB trail (🆕, `DATABASE_DESIGN.md §18`)
+
 Append-only; **no UPDATE/DELETE grants**; written by `log_audit(...)`
 `SECURITY DEFINER` helper called from privileged RPCs/triggers.
 
-| Column | Notes |
-| --- | --- |
+| Column                                                                                                                                                 | Notes |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
 | id, actor_id (→ auth.users SET NULL), action (`audit_action`), entity_type, entity_id, summary, diff jsonb, ip, user_agent, correlation_id, created_at |
+
 - **RLS**: read `owner`/`super_admin`/`hr` only; no client writes.
 - **Indexes**: `(entity_type, entity_id, created_at DESC)`, `(actor_id, …)`, `(action)`.
 
 ### 11.2 What IAM audits (minimum)
+
 `login`, sign-out, failed sign-in (rate-limited), password change, `invite`
 (create/accept/revoke), `role_grant` / `role_revoke`, user `suspend`/`offboard`,
 `bootstrap_owner`, permission-matrix changes, privileged `export`. Each writes
 **actor, action, target, before/after diff, correlation_id**.
 
 ### 11.3 App-side bridge (✅ available)
+
 `src/lib/logging` already ships an `auditLog` service and correlation IDs
 (`docs/LOGGING.md`). Server fns should:
+
 1. call the `SECURITY DEFINER` write path (`log_audit`) — the durable record; and
 2. emit `auditLog.record({...})` — structured observability with the same
    `correlation_id`, so logs/traces/audit rows join up (`AuditSystem.md §7`).
 
 ### 11.4 Tamper-evidence & retention
+
 Append-only enforcement (grants + a `tg_prevent_audit_mutation` trigger);
 retention ≥ 1 year (security events), longer for role/offboarding changes
 (`AuditSystem.md §6, §8`). PII in `diff` respects redaction (`redact()` in
@@ -456,17 +486,17 @@ retention ≥ 1 year (security events), longer for role/offboarding changes
 
 ## 13. Threat model & anti-patterns
 
-| Threat | Mitigation |
-| --- | --- |
-| Self-registration | signup disabled at 4 layers (§4); primary = Supabase config. |
+| Threat                                | Mitigation                                                                    |
+| ------------------------------------- | ----------------------------------------------------------------------------- |
+| Self-registration                     | signup disabled at 4 layers (§4); primary = Supabase config.                  |
 | Privilege escalation via profile edit | roles live in `user_roles`, not `profiles`; `roles_admin_write` RLS (§3, §7). |
-| Escalation via API (skip UI) | RLS + `SECURITY DEFINER` RPC authority checks (§9). |
-| Frontend/DB matrix drift | DB is source of truth + parity test (§8.2). |
-| Service-role key leakage | server-only client, never bundled; never in a client-reachable route (§9.3). |
-| Orphaned access after offboarding | `is_active` RLS predicate + session invalidation (§4.4). |
-| Last-owner lockout | invariant: never remove the last owner (§7.2). |
-| Unaudited privileged action | every privileged RPC ends with `log_audit` (§9.4, §11). |
-| Enumeration on sign-in | generic error copy via `mapAuthError` (§4). |
+| Escalation via API (skip UI)          | RLS + `SECURITY DEFINER` RPC authority checks (§9).                           |
+| Frontend/DB matrix drift              | DB is source of truth + parity test (§8.2).                                   |
+| Service-role key leakage              | server-only client, never bundled; never in a client-reachable route (§9.3).  |
+| Orphaned access after offboarding     | `is_active` RLS predicate + session invalidation (§4.4).                      |
+| Last-owner lockout                    | invariant: never remove the last owner (§7.2).                                |
+| Unaudited privileged action           | every privileged RPC ends with `log_audit` (§9.4, §11).                       |
+| Enumeration on sign-in                | generic error copy via `mapAuthError` (§4).                                   |
 
 **Anti-patterns (forbidden):** trusting a route guard / `hasPermission()` as the
 only check; writing `user_roles` directly from the client; embedding the
@@ -486,6 +516,7 @@ auth guard · `unauthorized` + `accept-invitation` + `session-expired` routes ·
 `permissions.ts` frontend mirror + `useAuth()` · `lib/logging` `auditLog`.
 
 **To add (🆕), in order:**
+
 1. **Close signup**: `enable_signup=false` in Supabase config (§4).
 2. **Bootstrap Owner**: service-role invite + `bootstrap_owner()` guard (§5).
 3. **Invitations**: `invite_user` server fn + `invitations` table + revoke/expiry (§6).

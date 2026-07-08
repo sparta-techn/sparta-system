@@ -30,7 +30,11 @@ export {
 } from "./health";
 
 // Adapters (future vendors)
-export { PrometheusAdapter, renderPrometheus, PROMETHEUS_CONTENT_TYPE } from "./adapters/prometheus";
+export {
+  PrometheusAdapter,
+  renderPrometheus,
+  PROMETHEUS_CONTENT_TYPE,
+} from "./adapters/prometheus";
 
 // Contracts
 export type {

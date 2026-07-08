@@ -3,11 +3,7 @@ import { Square, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTasksState } from "@/features/tasks/store";
-import {
-  TIME_TRACKING_CURRENT_USER_ID,
-  stopTimer,
-  useTimeState,
-} from "../store";
+import { TIME_TRACKING_CURRENT_USER_ID, stopTimer, useTimeState } from "../store";
 import { formatTimer, liveSeconds } from "../utils";
 import { useNow } from "../hooks/use-now";
 
@@ -22,7 +18,7 @@ export function FloatingActiveTimer({ className }: { className?: string }) {
     (s) => s.logs.find((l) => l.userId === userId && l.endTime === null) ?? null,
   );
   const task = useTasksState((s) =>
-    active ? s.tasks.find((t) => t.id === active.taskId) ?? null : null,
+    active ? (s.tasks.find((t) => t.id === active.taskId) ?? null) : null,
   );
   const now = useNow(active ? 1000 : 30_000);
 

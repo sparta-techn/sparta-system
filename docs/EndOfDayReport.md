@@ -32,16 +32,16 @@ submitted for it. The checkout action itself remains in the Attendance module.
 
 Seven sections + a final review. Required fields are marked.
 
-| # | Section | Required | Notes |
-|---|---|---|---|
-| 1 | Today's Summary | ✓ | Free-text, max 500 chars. Live counter. |
-| 2 | Completed Today | — | Per planned task: `completed` / `partial` / `not_started` + optional note. |
-| 3 | Work Still In Progress | — | Dynamic list with title, priority, ETA, notes. |
-| 4 | Open Dependencies | — | Auto-loaded from the Dependencies module. Per-item note + inline "Mark resolved". Link out to create a new one. |
-| 5 | Need From Others Tomorrow | — | Department · description · priority · due date · related dependency. |
-| 6 | Tomorrow's Plan | ✓ (1+ priority) | Chip-list editors for priorities, tasks, meetings, expected blockers. |
-| 7 | Daily Reflection | — | Three optional prompts: went well / slowed me down / for my manager. |
-| ✓ | Review | — | Read-only render of all sections + work-session summary. |
+| #   | Section                   | Required        | Notes                                                                                                           |
+| --- | ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1   | Today's Summary           | ✓               | Free-text, max 500 chars. Live counter.                                                                         |
+| 2   | Completed Today           | —               | Per planned task: `completed` / `partial` / `not_started` + optional note.                                      |
+| 3   | Work Still In Progress    | —               | Dynamic list with title, priority, ETA, notes.                                                                  |
+| 4   | Open Dependencies         | —               | Auto-loaded from the Dependencies module. Per-item note + inline "Mark resolved". Link out to create a new one. |
+| 5   | Need From Others Tomorrow | —               | Department · description · priority · due date · related dependency.                                            |
+| 6   | Tomorrow's Plan           | ✓ (1+ priority) | Chip-list editors for priorities, tasks, meetings, expected blockers.                                           |
+| 7   | Daily Reflection          | —               | Three optional prompts: went well / slowed me down / for my manager.                                            |
+| ✓   | Review                    | —               | Read-only render of all sections + work-session summary.                                                        |
 
 ### Validation rules
 
@@ -109,7 +109,7 @@ Same shell, but **all qualitative work content is suppressed**. HR sees:
 
 - Submission rate.
 - Missing reports list (name, role, status).
-- Other KPIs render as `—` with the hint *Hidden in HR view*.
+- Other KPIs render as `—` with the hint _Hidden in HR view_.
 
 This implements the principle that operational reports are not personnel
 records.
@@ -155,13 +155,13 @@ UX can be demoed end-to-end.
 
 ## Future integration points
 
-| Concern | Today (mock) | Backend swap-in |
-|---|---|---|
-| Persistence | `localStorage` via `store.ts` | `submit_eod_report`, `update_eod_report`, `get_session_eod` RPCs |
-| Planned tasks | Morning check-in store | ClickUp sync |
-| Work-session summary | Synthesised in route | `select_today_work_session_summary` RPC |
-| Dependencies | `useDependencies()` | Existing dependency tables |
-| History | `listEodSubmissions` (localStorage index) | RLS-protected `eod_reports` view |
+| Concern              | Today (mock)                              | Backend swap-in                                                  |
+| -------------------- | ----------------------------------------- | ---------------------------------------------------------------- |
+| Persistence          | `localStorage` via `store.ts`             | `submit_eod_report`, `update_eod_report`, `get_session_eod` RPCs |
+| Planned tasks        | Morning check-in store                    | ClickUp sync                                                     |
+| Work-session summary | Synthesised in route                      | `select_today_work_session_summary` RPC                          |
+| Dependencies         | `useDependencies()`                       | Existing dependency tables                                       |
+| History              | `listEodSubmissions` (localStorage index) | RLS-protected `eod_reports` view                                 |
 
 ## File map
 

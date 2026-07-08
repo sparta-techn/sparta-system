@@ -53,32 +53,32 @@ service in the barrel; the new project insert/update are exported as
 
 ## 2. Services — `@/services/projects`
 
-| Service / singleton | Table | Key methods (beyond inherited CRUD) |
-| --- | --- | --- |
-| `ProjectRecordsService` / `projectRecordsService` | `projects` | `listByStatus`, `listByManager`, `setStatus`, `setHealth`, `archive` |
-| `ProjectRolesService` / `projectRolesService` | `project_roles` | `listActive`, `getBySlug` |
-| `ProjectMembersService` / `projectMembersService` | `project_members` | `listByProject`, `listByUser`, `getMembership`, `setRole` |
-| `MilestonesService` / `milestonesService` | `milestones` | `listByProject`, `setStatus`, `setProgress` |
-| `EpicsService` / `epicsService` | `epics` | `listByProject`, `archive` |
-| `ProjectActivityService` / `projectActivityService` | `project_activity` | `log`, `listByProject` — **append-only** (`update`/`upsert`/`remove` reject) |
-| `ProjectCalendarService` / `projectCalendarService` | `project_calendar_events` | `listByProject`, `listInRange`, `listByMilestone` |
-| `ProjectRisksService` / `projectRisksService` | `project_risks` | `listByProject`, `listByStatus`, `listOpen`, `setStatus` (stamps `resolved_at`) |
-| `WorkspaceService` / `workspaceService` | `company_settings` (singleton) | `get`, `update` (typed `supabase` client, reuses `CompanySettings`) |
+| Service / singleton                                 | Table                          | Key methods (beyond inherited CRUD)                                             |
+| --------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------- |
+| `ProjectRecordsService` / `projectRecordsService`   | `projects`                     | `listByStatus`, `listByManager`, `setStatus`, `setHealth`, `archive`            |
+| `ProjectRolesService` / `projectRolesService`       | `project_roles`                | `listActive`, `getBySlug`                                                       |
+| `ProjectMembersService` / `projectMembersService`   | `project_members`              | `listByProject`, `listByUser`, `getMembership`, `setRole`                       |
+| `MilestonesService` / `milestonesService`           | `milestones`                   | `listByProject`, `setStatus`, `setProgress`                                     |
+| `EpicsService` / `epicsService`                     | `epics`                        | `listByProject`, `archive`                                                      |
+| `ProjectActivityService` / `projectActivityService` | `project_activity`             | `log`, `listByProject` — **append-only** (`update`/`upsert`/`remove` reject)    |
+| `ProjectCalendarService` / `projectCalendarService` | `project_calendar_events`      | `listByProject`, `listInRange`, `listByMilestone`                               |
+| `ProjectRisksService` / `projectRisksService`       | `project_risks`                | `listByProject`, `listByStatus`, `listOpen`, `setStatus` (stamps `resolved_at`) |
+| `WorkspaceService` / `workspaceService`             | `company_settings` (singleton) | `get`, `update` (typed `supabase` client, reuses `CompanySettings`)             |
 
 ---
 
 ## 3. Repositories — `@/repositories/projects`
 
-| Repository / singleton | Feature | Verbs |
-| --- | --- | --- |
-| `ProjectRepository` / `projectRepository` | **Project CRUD** | `list`, `getById(OrThrow)`, `listByStatus`, `listByManager`, `create` (logs `project_created`), `update`, `setStatus`/`setHealth` (log), `archive`, `remove`, `getWithActivity`, **`listTasks` (reuses TasksService)** |
-| `WorkspaceRepository` / `workspaceRepository` | **Workspace CRUD** | `get`, `update` |
-| `ProjectMemberRepository` / `projectMemberRepository` | **Member Assignment** | `listMembers`, `getMembership`, `assign(projectId,userId,roleId?)`, `assignByRole(slug)`, `setRole`, `remove` (logs `member_added`/`member_removed`) |
-| `MilestoneRepository` / `milestoneRepository` | **Milestones** | `listForProject`, `create` (logs `milestone_created`), `update`, `setStatus` (logs `milestone_reached` on done), `setProgress`, `remove` |
-| `EpicRepository` / `epicRepository` | **Epics** | `listForProject`, `create` (logs `epic_created`), `update`, `archive`, `remove` |
-| `ProjectCalendarRepository` / `projectCalendarRepository` | **Project Calendar** | `listForProject`, `listInRange(from,to)`, `listForMilestone`, `create` (logs `event_created`), `update`, `remove` |
-| `ProjectActivityRepository` / `projectActivityRepository` | **Project Activity** | `listForProject`, `log` |
-| `ProjectRiskRepository` / `projectRiskRepository` | **Risk Management** | `listForProject`, `listOpen`, `raise` (logs `risk_raised`), `update`, `setStatus`, `resolve` (logs `risk_resolved`), `remove` |
+| Repository / singleton                                    | Feature               | Verbs                                                                                                                                                                                                                  |
+| --------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProjectRepository` / `projectRepository`                 | **Project CRUD**      | `list`, `getById(OrThrow)`, `listByStatus`, `listByManager`, `create` (logs `project_created`), `update`, `setStatus`/`setHealth` (log), `archive`, `remove`, `getWithActivity`, **`listTasks` (reuses TasksService)** |
+| `WorkspaceRepository` / `workspaceRepository`             | **Workspace CRUD**    | `get`, `update`                                                                                                                                                                                                        |
+| `ProjectMemberRepository` / `projectMemberRepository`     | **Member Assignment** | `listMembers`, `getMembership`, `assign(projectId,userId,roleId?)`, `assignByRole(slug)`, `setRole`, `remove` (logs `member_added`/`member_removed`)                                                                   |
+| `MilestoneRepository` / `milestoneRepository`             | **Milestones**        | `listForProject`, `create` (logs `milestone_created`), `update`, `setStatus` (logs `milestone_reached` on done), `setProgress`, `remove`                                                                               |
+| `EpicRepository` / `epicRepository`                       | **Epics**             | `listForProject`, `create` (logs `epic_created`), `update`, `archive`, `remove`                                                                                                                                        |
+| `ProjectCalendarRepository` / `projectCalendarRepository` | **Project Calendar**  | `listForProject`, `listInRange(from,to)`, `listForMilestone`, `create` (logs `event_created`), `update`, `remove`                                                                                                      |
+| `ProjectActivityRepository` / `projectActivityRepository` | **Project Activity**  | `listForProject`, `log`                                                                                                                                                                                                |
+| `ProjectRiskRepository` / `projectRiskRepository`         | **Risk Management**   | `listForProject`, `listOpen`, `raise` (logs `risk_raised`), `update`, `setStatus`, `resolve` (logs `risk_resolved`), `remove`                                                                                          |
 
 The **project activity feed** is populated as a side effect of domain actions:
 project create / status / health, member add / remove, milestone create / reached,
@@ -89,17 +89,17 @@ single `projectActivityService.log`.
 
 ## 4. Supported operations → call sites
 
-| Operation | Call |
-| --- | --- |
-| Project CRUD | `projectRepository.create({ key, name, manager_id, … })` · `.setStatus(id,'active')` · `.archive(id)` |
-| Workspace CRUD | `workspaceRepository.get()` · `.update({ timezone, work_start_time, … })` |
-| Member assignment | `projectMemberRepository.assignByRole(projectId, userId, 'lead')` · `.remove(projectId, userId)` |
-| Milestones | `milestoneRepository.create({ project_id, name, due_date })` · `.setStatus(id,'done')` |
-| Epics | `epicRepository.create({ project_id, name, color })` |
-| Project calendar | `projectCalendarRepository.create({ project_id, title, starts_at })` · `.listInRange(id, from, to)` |
-| Project activity | `projectActivityRepository.listForProject(projectId)` |
-| Risk management | `projectRiskRepository.raise({ project_id, title, severity, likelihood })` · `.resolve(id)` |
-| Project tasks (reuse) | `projectRepository.listTasks(projectId)` → `TasksService.listByProject` |
+| Operation             | Call                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------------- |
+| Project CRUD          | `projectRepository.create({ key, name, manager_id, … })` · `.setStatus(id,'active')` · `.archive(id)` |
+| Workspace CRUD        | `workspaceRepository.get()` · `.update({ timezone, work_start_time, … })`                             |
+| Member assignment     | `projectMemberRepository.assignByRole(projectId, userId, 'lead')` · `.remove(projectId, userId)`      |
+| Milestones            | `milestoneRepository.create({ project_id, name, due_date })` · `.setStatus(id,'done')`                |
+| Epics                 | `epicRepository.create({ project_id, name, color })`                                                  |
+| Project calendar      | `projectCalendarRepository.create({ project_id, title, starts_at })` · `.listInRange(id, from, to)`   |
+| Project activity      | `projectActivityRepository.listForProject(projectId)`                                                 |
+| Risk management       | `projectRiskRepository.raise({ project_id, title, severity, likelihood })` · `.resolve(id)`           |
+| Project tasks (reuse) | `projectRepository.listTasks(projectId)` → `TasksService.listByProject`                               |
 
 `user_id` / actor is taken from the authenticated session; RLS
 (`is_project_member`, `can_manage_project`) and the `created_by`/`actor_id`

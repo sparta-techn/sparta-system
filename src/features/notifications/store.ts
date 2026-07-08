@@ -12,12 +12,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { notificationRepository } from "@/repositories/notifications";
 import { subscribeToTable } from "@/lib/supabase/realtime";
 
-import {
-  archiveState,
-  deleteState,
-  markReadState,
-  markUnreadState,
-} from "./collaboration-rules";
+import { archiveState, deleteState, markReadState, markUnreadState } from "./collaboration-rules";
 import { notificationRowToApp } from "./mappers";
 import type { AppNotification, NotificationLifecycle } from "./types";
 
@@ -142,9 +137,7 @@ export const notificationStore = {
   },
   markAllRead(userId: string) {
     const at = nowIso();
-    write(
-      read().map((n) => (n.recipientId === userId && !n.readAt ? markReadState(n, at) : n)),
-    );
+    write(read().map((n) => (n.recipientId === userId && !n.readAt ? markReadState(n, at) : n)));
     void notificationRepository.markAllRead(userId).catch(() => void hydrate());
   },
   archive(id: string) {

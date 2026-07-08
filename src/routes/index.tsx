@@ -40,8 +40,8 @@ function LandingPage() {
           SpartaFlow Hub
         </h1>
         <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          The internal operating system for our remote team. Access is by invitation only — if
-          you don't have one yet, ask HR or your administrator.
+          The internal operating system for our remote team. Access is by invitation only — if you
+          don't have one yet, ask HR or your administrator.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">

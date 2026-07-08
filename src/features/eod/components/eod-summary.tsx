@@ -1,4 +1,14 @@
-import { CheckCircle2, CircleDot, Clock, Coffee, Link2, ListChecks, MessageCircle, Sparkles, Target } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleDot,
+  Clock,
+  Coffee,
+  Link2,
+  ListChecks,
+  MessageCircle,
+  Sparkles,
+  Target,
+} from "lucide-react";
 
 import { StatusBadge } from "@/components/status-badge";
 import { Progress } from "@/components/ui/progress";
@@ -27,7 +37,10 @@ export function EodSummary({ draft, sessionSummary }: Props) {
         )}
       </Section>
 
-      <Section title={`Completed today (${completed.length} done · ${partial.length} partial)`} icon={CheckCircle2}>
+      <Section
+        title={`Completed today (${completed.length} done · ${partial.length} partial)`}
+        icon={CheckCircle2}
+      >
         {draft.completed.length === 0 ? (
           <Empty>No planned tasks tracked.</Empty>
         ) : (
@@ -43,7 +56,9 @@ export function EodSummary({ draft, sessionSummary }: Props) {
                   <CircleDot className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 )}
                 <span className="font-mono text-[11px] text-muted-foreground">{t.taskId}</span>
-                <span className="min-w-0 flex-1 truncate font-medium text-foreground">{t.title}</span>
+                <span className="min-w-0 flex-1 truncate font-medium text-foreground">
+                  {t.title}
+                </span>
                 <StatusBadge
                   tone={TASK_PROGRESS_META[t.state].tone}
                   label={TASK_PROGRESS_META[t.state].label}
@@ -64,8 +79,15 @@ export function EodSummary({ draft, sessionSummary }: Props) {
             {draft.inProgress.map((item) => (
               <li key={item.id} className="rounded-lg border bg-card p-2.5 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate font-medium text-foreground">{item.title}</span>
-                  <StatusBadge tone={priorityTone(item.priority)} label={item.priority} size="sm" withDot={false} />
+                  <span className="min-w-0 flex-1 truncate font-medium text-foreground">
+                    {item.title}
+                  </span>
+                  <StatusBadge
+                    tone={priorityTone(item.priority)}
+                    label={item.priority}
+                    size="sm"
+                    withDot={false}
+                  />
                 </div>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   ETA: <span className="text-foreground">{item.eta || "—"}</span>
@@ -85,9 +107,14 @@ export function EodSummary({ draft, sessionSummary }: Props) {
         ) : (
           <ul className="space-y-1.5">
             {draft.openDependencies.map((d) => (
-              <li key={d.dependencyId} className="flex items-start gap-2 rounded-lg border bg-card p-2.5 text-sm">
+              <li
+                key={d.dependencyId}
+                className="flex items-start gap-2 rounded-lg border bg-card p-2.5 text-sm"
+              >
                 <Link2 className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
-                <span className="font-mono text-[11px] text-muted-foreground">{d.dependencyId}</span>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {d.dependencyId}
+                </span>
                 <span className="min-w-0 flex-1 text-foreground">
                   <span className="block truncate">{d.titleSnapshot}</span>
                   {d.note ? (
@@ -105,7 +132,10 @@ export function EodSummary({ draft, sessionSummary }: Props) {
         )}
       </Section>
 
-      <Section title={`Need from others tomorrow (${draft.needFromOthers.length})`} icon={MessageCircle}>
+      <Section
+        title={`Need from others tomorrow (${draft.needFromOthers.length})`}
+        icon={MessageCircle}
+      >
         {draft.needFromOthers.length === 0 ? (
           <Empty>No requests routed.</Empty>
         ) : (
@@ -117,7 +147,12 @@ export function EodSummary({ draft, sessionSummary }: Props) {
                   <span className="min-w-0 flex-1 truncate font-medium text-foreground">
                     {n.description || "—"}
                   </span>
-                  <StatusBadge tone={priorityTone(n.priority)} label={n.priority} size="sm" withDot={false} />
+                  <StatusBadge
+                    tone={priorityTone(n.priority)}
+                    label={n.priority}
+                    size="sm"
+                    withDot={false}
+                  />
                 </div>
                 {n.dueDate ? (
                   <p className="mt-1 text-xs text-muted-foreground">Due: {n.dueDate}</p>
@@ -151,7 +186,10 @@ export function EodSummary({ draft, sessionSummary }: Props) {
           <Kv label="Check-out (est.)" value={sessionSummary.checkOut ?? "—"} />
           <Kv label="Worked" value={fmt(sessionSummary.workedMinutes)} />
           <Kv label="Breaks" value={fmt(sessionSummary.breakMinutes)} icon={Coffee} />
-          <Kv label="Morning check-in" value={sessionSummary.morningCheckInDone ? "Done" : "Skipped"} />
+          <Kv
+            label="Morning check-in"
+            value={sessionSummary.morningCheckInDone ? "Done" : "Skipped"}
+          />
           <Kv label="Midday status" value={sessionSummary.middayStatusDone ? "Done" : "Skipped"} />
           <Kv label="Dependencies created" value={String(sessionSummary.dependenciesCreated)} />
           <Kv label="Dependencies resolved" value={String(sessionSummary.dependenciesResolved)} />
@@ -188,7 +226,15 @@ function Empty({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PlanBlock({ label, items, required }: { label: string; items: string[]; required?: boolean }) {
+function PlanBlock({
+  label,
+  items,
+  required,
+}: {
+  label: string;
+  items: string[];
+  required?: boolean;
+}) {
   return (
     <div className="rounded-lg border bg-card p-3">
       <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -212,21 +258,15 @@ function ReflectionLine({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
     <div className="rounded-lg border bg-card p-2.5 text-sm">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-0.5 text-foreground">{value}</p>
     </div>
   );
 }
 
-function Kv({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  icon?: typeof Coffee;
-}) {
+function Kv({ label, value, icon: Icon }: { label: string; value: string; icon?: typeof Coffee }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border bg-card px-3 py-2 text-sm">
       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">

@@ -14,22 +14,23 @@ primitives, strict TypeScript, and 131 passing unit tests. **One critical gap** 
 the owner-only route was not access-gated — has been **fixed**. No other critical
 issues found.
 
-| Area | Result |
-| --- | --- |
-| Performance | ✅ Good · 1 minor rec |
-| Charts | ✅ Good |
-| Aggregation logic | ✅ Correct · 1 minor rec |
-| Permissions | ⛔→✅ **Critical fixed** · 1 minor rec |
-| Security | ✅ Good |
-| TypeScript | ✅ Strict, clean |
-| Reusability | ✅ Strong |
-| Documentation | ✅ Thorough |
+| Area              | Result                                 |
+| ----------------- | -------------------------------------- |
+| Performance       | ✅ Good · 1 minor rec                  |
+| Charts            | ✅ Good                                |
+| Aggregation logic | ✅ Correct · 1 minor rec               |
+| Permissions       | ⛔→✅ **Critical fixed** · 1 minor rec |
+| Security          | ✅ Good                                |
+| TypeScript        | ✅ Strict, clean                       |
+| Reusability       | ✅ Strong                              |
+| Documentation     | ✅ Thorough                            |
 
 ---
 
 ## Critical issue (fixed)
 
 ### C1 — Executive route was reachable by any authenticated user
+
 **`src/routes/_authenticated/app/executive.tsx`** — the executive cockpit is
 owner-scoped by design (every plan/doc states `owner:access`), but the route only
 inherited the `_authenticated` auth guard. Any signed-in `employee` / `viewer`
@@ -57,6 +58,7 @@ lands (unchanged).
 ## Findings by area
 
 ### Performance ✅
+
 - KPI, health, and alert computations are memoized (`useMemo`) or effect-gated;
   inputs are stable references (`useMemo(() => …, [])`). Good.
 - Alert generation is on-mount + explicit **Re-evaluate**; AI summaries are strictly
@@ -68,6 +70,7 @@ lands (unchanged).
   Not critical (charts are hand-rolled SVG, not a heavy chart lib).
 
 ### Charts ✅
+
 - All charts reuse `@/features/analytics/charts` (`LineChart`, `BarChart`,
   `DonutChart`, `Timeline`, `TrendCard`) via `ChartCard` — no duplicated chart
   code. Prop shapes (`TrendPoint[]`, `series`, `colorClasses`, `formatValue`) are
@@ -75,6 +78,7 @@ lands (unchanged).
   render as intended.
 
 ### Aggregation logic ✅
+
 - KPI calculators are pure and unit-tested at their boundaries (rates, ratios,
   safe division, benchmark deltas). Alert rules and health banding likewise.
 - Health is a genuine higher-order composite over KPIs — no metric is
@@ -86,6 +90,7 @@ lands (unchanged).
   `blocked / max(openTasks, 1)`.
 
 ### Permissions ⛔→✅
+
 - **C1 fixed** (above).
 - **Rec (minor):** the sidebar shows the **Executive** link to everyone
   (`app-sidebar.tsx` `TEAM`); it now leads non-owners to `/unauthorized`. Gate the
@@ -93,6 +98,7 @@ lands (unchanged).
   advertising the feature. Non-critical.
 
 ### Security ✅
+
 - Runs entirely on mock/local data; no service-role key, no provider key, no
   direct Supabase writes. AI flows through the shared `aiAssistant` (offline mock
   provider) — no provider-specific logic. `localStorage` stores hold only
@@ -101,11 +107,13 @@ lands (unchanged).
   component. No secrets in source.
 
 ### TypeScript ✅
+
 - Strict, **no `any`**. Discriminated unions for bands/severity/priority; `Record`
   maps are exhaustive over their key unions. Public service surfaces are fully
   typed and re-exported. `tsc --noEmit` is clean across the whole project.
 
 ### Reusability ✅
+
 - Clear layering: pure services (`services/kpi`, `services/alerts`,
   `services/health`) are UI-agnostic and reused by the feature via thin adapters.
 - UI reuses `StatCard`, `TrendCard`, `ChartCard`, `InsightGrid`, `Tabs`, `Card`,
@@ -115,11 +123,12 @@ lands (unchanged).
   need health bands, lift `BAND_BADGE`/`BAND_TEXT` into a small shared helper.
 
 ### Documentation ✅
+
 - Each capability ships a doc: `EXECUTIVE_DASHBOARD_PLAN.md`, `KPI_SERVICES.md`,
   `EXECUTIVE_DASHBOARD.md`, `EXECUTIVE_AI.md`, `EXECUTIVE_ALERTS.md`,
   `ORGANIZATION_HEALTH.md`, and this review. Consistent structure, verification
   commands, and a "going live" adapter path in each.
-- **Doc note:** several docs list "gate the route on `owner:access`" as *next* —
+- **Doc note:** several docs list "gate the route on `owner:access`" as _next_ —
   now **done**; update those "Next" sections to reflect it.
 
 ---
@@ -143,5 +152,5 @@ npx eslint src/routes/_authenticated/app/executive.tsx   # clean
 npx vitest run      # 131 passed (10 files)
 ```
 
-*Only the critical access-control gap (C1) was fixed. All other items above are
-intentionally left as recommendations per the review scope.*
+_Only the critical access-control gap (C1) was fixed. All other items above are
+intentionally left as recommendations per the review scope._

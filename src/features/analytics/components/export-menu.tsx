@@ -2,8 +2,12 @@ import { Download, FileSpreadsheet, FileText, Printer, Table2 } from "lucide-rea
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 export function ExportMenu({ scope }: { scope: string }) {
@@ -32,7 +36,11 @@ export function ExportMenu({ scope }: { scope: string }) {
           <Table2 className="mr-2 size-4" aria-hidden /> CSV data
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => { window.print(); }}>
+        <DropdownMenuItem
+          onSelect={() => {
+            window.print();
+          }}
+        >
           <Printer className="mr-2 size-4" aria-hidden /> Print view
         </DropdownMenuItem>
       </DropdownMenuContent>

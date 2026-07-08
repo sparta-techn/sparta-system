@@ -12,20 +12,20 @@ Font stacks declared in `@theme inline` (`--font-sans`, `--font-mono`, `--font-d
 
 Use Tailwind's default size utilities; do not invent new sizes. Map for SpartaFlow:
 
-| Role | Class | Size / leading | Weight | Tracking |
-|---|---|---|---|---|
-| Display | `text-4xl sm:text-5xl font-display font-semibold tracking-tight` | 36/40 → 48/52 | 600 | tight |
-| H1 (page) | `text-2xl sm:text-3xl font-display font-semibold tracking-tight` | 24/32 → 30/36 | 600 | tight |
-| H2 | `text-xl font-display font-semibold` | 20/28 | 600 | normal |
-| H3 | `text-lg font-semibold` | 18/26 | 600 | normal |
-| H4 | `text-base font-semibold` | 16/24 | 600 | normal |
-| Body Large | `text-base` | 16/24 | 400 | normal |
-| Body | `text-sm` | 14/20 | 400 | normal |
-| Small | `text-xs` | 12/16 | 400 | normal |
-| Caption / Eyebrow | `text-xs font-medium uppercase tracking-wide text-muted-foreground` | 12/16 | 500 | wide |
-| Label | `text-sm font-medium` | 14/20 | 500 | normal |
-| Button | `text-sm font-medium` | 14/20 | 500 | normal |
-| Code | `font-mono text-[13px]` | 13/20 | 400 | normal |
+| Role              | Class                                                               | Size / leading | Weight | Tracking |
+| ----------------- | ------------------------------------------------------------------- | -------------- | ------ | -------- |
+| Display           | `text-4xl sm:text-5xl font-display font-semibold tracking-tight`    | 36/40 → 48/52  | 600    | tight    |
+| H1 (page)         | `text-2xl sm:text-3xl font-display font-semibold tracking-tight`    | 24/32 → 30/36  | 600    | tight    |
+| H2                | `text-xl font-display font-semibold`                                | 20/28          | 600    | normal   |
+| H3                | `text-lg font-semibold`                                             | 18/26          | 600    | normal   |
+| H4                | `text-base font-semibold`                                           | 16/24          | 600    | normal   |
+| Body Large        | `text-base`                                                         | 16/24          | 400    | normal   |
+| Body              | `text-sm`                                                           | 14/20          | 400    | normal   |
+| Small             | `text-xs`                                                           | 12/16          | 400    | normal   |
+| Caption / Eyebrow | `text-xs font-medium uppercase tracking-wide text-muted-foreground` | 12/16          | 500    | wide     |
+| Label             | `text-sm font-medium`                                               | 14/20          | 500    | normal   |
+| Button            | `text-sm font-medium`                                               | 14/20          | 500    | normal   |
+| Code              | `font-mono text-[13px]`                                             | 13/20          | 400    | normal   |
 
 Defaults: body is `text-sm text-foreground` in dense ops UIs; pages can opt into `text-base` for marketing-style content.
 

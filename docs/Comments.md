@@ -26,15 +26,15 @@ Storage: localStorage key `spartaflow:task-communication:v1` via
 
 ## Features
 
-| Action | UI |
-|---|---|
-| Add comment | Top-level composer on the Comments tab |
-| Reply | Reply button on each comment → nested composer |
-| Edit (author only) | Kebab menu → Edit → inline composer |
-| Delete (author only) | Kebab menu → Delete → tombstone |
-| Mention `@handle` | Type `@` → inline suggestions; tokens render as chips |
-| Reactions | Smile button → 8 quick emojis; toggle per user |
-| Submit shortcut | ⌘/Ctrl + Enter |
+| Action               | UI                                                    |
+| -------------------- | ----------------------------------------------------- |
+| Add comment          | Top-level composer on the Comments tab                |
+| Reply                | Reply button on each comment → nested composer        |
+| Edit (author only)   | Kebab menu → Edit → inline composer                   |
+| Delete (author only) | Kebab menu → Delete → tombstone                       |
+| Mention `@handle`    | Type `@` → inline suggestions; tokens render as chips |
+| Reactions            | Smile button → 8 quick emojis; toggle per user        |
+| Submit shortcut      | ⌘/Ctrl + Enter                                        |
 
 Mentions and reactions are **UI only** — they do not currently push to any
 real notification queue. They do trigger toast feedback via `sonner`.
@@ -57,6 +57,7 @@ inside the Overview tab and is intentionally separate — see
 ## Notifications (UI only)
 
 `commStore.addComment` emits sonner toasts:
+
 - Always: `"{author} commented"` with a preview of the message.
 - If mentions are present: a follow-up `"Mention sent to {names}"` success toast.
 

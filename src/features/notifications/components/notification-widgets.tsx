@@ -2,13 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowRight, Bell, Inbox, ListChecks } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { cn } from "@/lib/utils";
 
@@ -82,9 +76,7 @@ export function RecentNotificationsWidget() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {n.title}
-                    </p>
+                    <p className="truncate text-sm font-medium text-foreground">{n.title}</p>
                     <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
                       {formatRelative(n.createdAt)}
                     </span>
@@ -114,7 +106,12 @@ export function PendingActionsWidget() {
   useMinuteTick();
   const all = useNotifications(userId);
   const pending = all
-    .filter((n) => !n.readAt && !n.archivedAt && (n.priority === "high" || n.priority === "critical" || n.type === "reminder"))
+    .filter(
+      (n) =>
+        !n.readAt &&
+        !n.archivedAt &&
+        (n.priority === "high" || n.priority === "critical" || n.type === "reminder"),
+    )
     .slice(0, 4);
 
   return (
@@ -158,9 +155,16 @@ export function ManagerAlertsWidget() {
   const userId = getCurrentUserId();
   useMinuteTick();
   const all = useNotifications(userId);
-  const critical = all.filter((n) => !n.archivedAt && (n.priority === "critical" || n.type === "critical")).slice(0, 5);
-  const missingReports = all.filter((n) => !n.archivedAt && n.category === "reports" && n.type === "reminder").length;
-  const lateEmployees = all.filter((n) => !n.archivedAt && (n.eventName === "attendance.absent" || n.eventName === "attendance.late")).length;
+  const critical = all
+    .filter((n) => !n.archivedAt && (n.priority === "critical" || n.type === "critical"))
+    .slice(0, 5);
+  const missingReports = all.filter(
+    (n) => !n.archivedAt && n.category === "reports" && n.type === "reminder",
+  ).length;
+  const lateEmployees = all.filter(
+    (n) =>
+      !n.archivedAt && (n.eventName === "attendance.absent" || n.eventName === "attendance.late"),
+  ).length;
 
   return (
     <Card>

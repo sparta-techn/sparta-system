@@ -31,7 +31,7 @@ Each step is intentionally lightweight:
 - **Morning** sets intent (mood, main goal, planned tasks, known blockers).
 - **Midday** confronts intent with reality and reroutes if needed.
 - **EOD** captures what actually happened and prepares tomorrow.
-- **Checkout** is purely an attendance event; it is *not* a place to update
+- **Checkout** is purely an attendance event; it is _not_ a place to update
   status.
 
 ## Work-session lifecycle (where EOD fits)
@@ -58,18 +58,18 @@ A submitted EOD report guarantees the following, in this order of importance:
 2. **Open dependencies are accurate.** Every item the employee is waiting on
    is either pinned (with a current note) or marked resolved.
 3. **Asks are routed.** Anything required from another team tomorrow is
-   captured under *Need from others* with a department and priority.
+   captured under _Need from others_ with a department and priority.
 4. **Tomorrow is set up.** At least one priority exists; the employee can
    walk away from the laptop.
 
 ## Roles and what they consume
 
-| Role | Default view | What they get |
-|---|---|---|
-| Employee | Wizard + widget + history | Drafts, edit window, personal history. |
-| Teammate | (future) Team feed | Public-facing summary + tomorrow priorities. |
-| Manager | `/app/eod?view=manager` | Submission rate, common blockers, tomorrow risks, help requests, completion bars. |
-| HR | `/app/eod?view=hr` | Submission rate + missing reports only. Work content is hidden by design. |
+| Role     | Default view              | What they get                                                                     |
+| -------- | ------------------------- | --------------------------------------------------------------------------------- |
+| Employee | Wizard + widget + history | Drafts, edit window, personal history.                                            |
+| Teammate | (future) Team feed        | Public-facing summary + tomorrow priorities.                                      |
+| Manager  | `/app/eod?view=manager`   | Submission rate, common blockers, tomorrow risks, help requests, completion bars. |
+| HR       | `/app/eod?view=hr`        | Submission rate + missing reports only. Work content is hidden by design.         |
 
 The HR view is the test: if HR can answer "did everyone hand off?" without
 seeing any work content, the privacy boundary is correct.
@@ -92,17 +92,17 @@ EOD reports are **operational data**, not personnel records:
 - HR view hides work content (see above).
 - Manager view aggregates blockers and risks, but the per-person bars only
   show completion percentage — not the qualitative reflection.
-- The *Reflection* section is shown to the employee and their direct
+- The _Reflection_ section is shown to the employee and their direct
   manager only (when backend lands; today it is local-only).
 
 ## Rituals this replaces
 
-| Ritual | Replaced by |
-|---|---|
-| "What did you do today?" Slack pings | Submitted EOD report. |
-| Daily standup "yesterday" segment | Common blockers + tomorrow risks panels. |
-| End-of-day handoff email | Today's Summary section. |
-| Manager 1:1 status interrogation | Reflection (*for manager*) + tomorrow plan. |
+| Ritual                               | Replaced by                                 |
+| ------------------------------------ | ------------------------------------------- |
+| "What did you do today?" Slack pings | Submitted EOD report.                       |
+| Daily standup "yesterday" segment    | Common blockers + tomorrow risks panels.    |
+| End-of-day handoff email             | Today's Summary section.                    |
+| Manager 1:1 status interrogation     | Reflection (_for manager_) + tomorrow plan. |
 
 It does **not** replace:
 
@@ -112,14 +112,14 @@ It does **not** replace:
 
 ## Failure modes & UX countermeasures
 
-| Failure | Countermeasure |
-|---|---|
-| Employee submits a vague summary to "get it done" | Live char counter + placeholder example; tomorrow plan is required so the form can't be one-line. |
-| Open dependencies go stale | Section auto-loads from the Dependencies module; pinning is one click; resolving inline avoids context-switch. |
-| Asks routed without a department | Department is a select with eight fixed options — no free text for routing. |
-| Manager has to read prose | Operational view aggregates blockers and risks; no manager workflow requires reading a summary. |
-| HR sees performance data | Dedicated HR view strips work content. |
-| Time-pressured user skips reflection | Reflection is fully optional and last in the wizard. |
+| Failure                                           | Countermeasure                                                                                                 |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Employee submits a vague summary to "get it done" | Live char counter + placeholder example; tomorrow plan is required so the form can't be one-line.              |
+| Open dependencies go stale                        | Section auto-loads from the Dependencies module; pinning is one click; resolving inline avoids context-switch. |
+| Asks routed without a department                  | Department is a select with eight fixed options — no free text for routing.                                    |
+| Manager has to read prose                         | Operational view aggregates blockers and risks; no manager workflow requires reading a summary.                |
+| HR sees performance data                          | Dedicated HR view strips work content.                                                                         |
+| Time-pressured user skips reflection              | Reflection is fully optional and last in the wizard.                                                           |
 
 ## Time budget
 
@@ -142,8 +142,8 @@ when the user returns at 17:45 to submit.
 ## Open questions (for the next milestone)
 
 - Should resolving a dependency inside the EOD wizard write back to the
-  Dependencies module immediately, or only at submit time? *(Today: local
-  to the report.)*
+  Dependencies module immediately, or only at submit time? _(Today: local
+  to the report.)_
 - Should the team feed show the summary verbatim, or a shortened version?
 - Should the EOD report carry attachments (PR links, dashboards)? Likely
   yes via the Dependencies attachment model, but out of scope for the

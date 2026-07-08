@@ -32,22 +32,22 @@ Avoid unnecessary complexity. Never duplicate components.
 
 ## 3. Tech Stack (locked)
 
-| Layer | Technology |
-|---|---|
-| Framework | TanStack Start v1 (React 19, Vite 7) |
-| Language | TypeScript (strict) |
-| Styling | TailwindCSS v4 (tokens in `src/styles.css`) |
-| Components | shadcn/ui (extended via `src/components/ui/*`) |
-| Backend | Lovable Cloud (Supabase) |
-| Database | PostgreSQL |
-| Auth | Supabase Auth (invite-only) |
-| Realtime | Supabase Realtime |
-| Storage | Supabase Storage |
-| Data fetching | TanStack Query |
-| Server logic | `createServerFn` (`@tanstack/react-start`) |
-| Public APIs / webhooks | `src/routes/api/public/*` |
-| Charts | Reusable SVG primitives in `src/features/analytics/components/charts/*` |
-| State | TanStack Query (server) + Zustand / React context (local) |
+| Layer                  | Technology                                                              |
+| ---------------------- | ----------------------------------------------------------------------- |
+| Framework              | TanStack Start v1 (React 19, Vite 7)                                    |
+| Language               | TypeScript (strict)                                                     |
+| Styling                | TailwindCSS v4 (tokens in `src/styles.css`)                             |
+| Components             | shadcn/ui (extended via `src/components/ui/*`)                          |
+| Backend                | Lovable Cloud (Supabase)                                                |
+| Database               | PostgreSQL                                                              |
+| Auth                   | Supabase Auth (invite-only)                                             |
+| Realtime               | Supabase Realtime                                                       |
+| Storage                | Supabase Storage                                                        |
+| Data fetching          | TanStack Query                                                          |
+| Server logic           | `createServerFn` (`@tanstack/react-start`)                              |
+| Public APIs / webhooks | `src/routes/api/public/*`                                               |
+| Charts                 | Reusable SVG primitives in `src/features/analytics/components/charts/*` |
+| State                  | TanStack Query (server) + Zustand / React context (local)               |
 
 > Do not introduce alternative frameworks, routers, or styling systems.
 
@@ -80,6 +80,7 @@ src/
 ```
 
 **Rules**
+
 - A feature never imports from another feature's internals. Cross-feature use goes through `services/` exports or shared `components/ui`.
 - Pages are thin: compose feature components + hooks. No business logic in route files.
 - Server logic in `*.functions.ts` (client-callable) or `*.server.ts` (server-only). Never under `src/server/`.
@@ -91,6 +92,7 @@ src/
 **One component per concept.** Reuse aggressively. Extend via props, not by forking.
 
 Core building blocks already standardized:
+
 - Cards, Dialogs, Sheets, Drawers
 - Tables (sortable, filterable, paginated)
 - Tabs, Accordion
@@ -125,21 +127,21 @@ Roles (enum `app_role`): `owner`, `admin`, `hr`, `project_manager`, `team_lead`,
 
 ### 7.1 Existing (do not regenerate — only extend)
 
-| Module | Route prefix | Status |
-|---|---|---|
-| Authentication | `/auth` | Live (invite-only, Supabase Auth) |
-| Employee Dashboard | `/app` | Live |
-| Attendance & Work Session | `/app` (widgets) + `/app/attendance` | Live (DB-backed) |
-| Morning Check-in | `/app/checkin` | Live |
-| Dependencies | `/app/dependencies` | Live |
-| Midday Report | `/app/midday` | Live |
-| End-of-Day Report | `/app/eod` | Live |
-| Notifications & Automation | `/app/notifications` | Live |
-| Manager Dashboard | `/app/manager` | Live (mock) |
-| HR Dashboard & Employees | `/app/hr` | Live (mock) |
-| Analytics | `/app/analytics` | Live (mock) |
-| Company Hub | `/app/hub` | Live |
-| Projects (Workspace, Clients, Templates) | `/app/projects` | Live (mock) |
+| Module                                   | Route prefix                         | Status                            |
+| ---------------------------------------- | ------------------------------------ | --------------------------------- |
+| Authentication                           | `/auth`                              | Live (invite-only, Supabase Auth) |
+| Employee Dashboard                       | `/app`                               | Live                              |
+| Attendance & Work Session                | `/app` (widgets) + `/app/attendance` | Live (DB-backed)                  |
+| Morning Check-in                         | `/app/checkin`                       | Live                              |
+| Dependencies                             | `/app/dependencies`                  | Live                              |
+| Midday Report                            | `/app/midday`                        | Live                              |
+| End-of-Day Report                        | `/app/eod`                           | Live                              |
+| Notifications & Automation               | `/app/notifications`                 | Live                              |
+| Manager Dashboard                        | `/app/manager`                       | Live (mock)                       |
+| HR Dashboard & Employees                 | `/app/hr`                            | Live (mock)                       |
+| Analytics                                | `/app/analytics`                     | Live (mock)                       |
+| Company Hub                              | `/app/hub`                           | Live                              |
+| Projects (Workspace, Clients, Templates) | `/app/projects`                      | Live (mock)                       |
 
 ### 7.2 Upcoming
 
@@ -190,6 +192,7 @@ Roles (enum `app_role`): `owner`, `admin`, `hr`, `project_manager`, `team_lead`,
 ## 11. Hard Rules (do / don't)
 
 **Always**
+
 - Reuse existing hooks, layouts, and components.
 - Extend existing screens; add tabs/sections rather than parallel pages.
 - Update `/docs/*` when a module ships or changes.
@@ -198,6 +201,7 @@ Roles (enum `app_role`): `owner`, `admin`, `hr`, `project_manager`, `team_lead`,
 - Guard authenticated pages under `_authenticated/`.
 
 **Never**
+
 - Regenerate or redesign an existing screen without an explicit request.
 - Remove functionality silently.
 - Rename or fork shared components.
@@ -212,6 +216,7 @@ Roles (enum `app_role`): `owner`, `admin`, `hr`, `project_manager`, `team_lead`,
 ## 12. Documentation Convention
 
 Every module owns at least one markdown file in `/docs/`:
+
 - `<Module>.md` — overview, data model, flows, RBAC, edge cases.
 - Cross-cutting concerns: `Security.md`, `Performance.md`, `RBAC.md`, `Routing.md`, etc.
 

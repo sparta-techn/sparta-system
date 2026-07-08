@@ -21,10 +21,7 @@ export function BlockersEditor({ value, onChange }: Props) {
     }
   }
   function addCustom() {
-    onChange([
-      ...value,
-      { id: `b_custom_${Date.now()}`, kind: "custom", label: "" },
-    ]);
+    onChange([...value, { id: `b_custom_${Date.now()}`, kind: "custom", label: "" }]);
   }
   function updateCustom(id: string, label: string) {
     onChange(value.map((b) => (b.id === id ? { ...b, label } : b)));

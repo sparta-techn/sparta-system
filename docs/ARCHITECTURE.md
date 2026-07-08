@@ -2,6 +2,7 @@
 
 > Status snapshot of the **current** codebase (as built), not the target spec.
 > The product is a frontend-complete prototype with a maturing backend:
+>
 > - **Database**: 10 migrations, ~35 tables live (identity/HR, attendance,
 >   reports, projects, collaboration, notifications). See §10.
 > - **Data layers**: a class-based **service** layer (`src/services`, 35
@@ -57,17 +58,17 @@ Feature-first. Each domain under `src/features/<name>/` owns its UI, state,
 types, and (where present) data access. Folders are **not** uniform — they grow
 only the parts they need. Observed shapes:
 
-| Sub-path | Purpose |
-| --- | --- |
-| `components/` | Feature-scoped React components |
-| `hooks/` | Feature-scoped hooks (e.g. `attendance/hooks`, `time-tracking/hooks`) |
-| `types.ts` | Domain types |
-| `store.ts` | localStorage-backed reactive store (mock persistence) |
-| `mock-data.ts` | Seed data for the store |
-| `api.ts` | **Real Supabase data access** (currently only `attendance`) |
-| `queries.ts` | TanStack Query `queryOptions` factories (only `attendance`) |
-| `utils.ts` | Pure domain helpers |
-| `*-context.tsx` | Feature-level React Context (auth, analytics filters) |
+| Sub-path        | Purpose                                                               |
+| --------------- | --------------------------------------------------------------------- |
+| `components/`   | Feature-scoped React components                                       |
+| `hooks/`        | Feature-scoped hooks (e.g. `attendance/hooks`, `time-tracking/hooks`) |
+| `types.ts`      | Domain types                                                          |
+| `store.ts`      | localStorage-backed reactive store (mock persistence)                 |
+| `mock-data.ts`  | Seed data for the store                                               |
+| `api.ts`        | **Real Supabase data access** (currently only `attendance`)           |
+| `queries.ts`    | TanStack Query `queryOptions` factories (only `attendance`)           |
+| `utils.ts`      | Pure domain helpers                                                   |
+| `*-context.tsx` | Feature-level React Context (auth, analytics filters)                 |
 
 Features present: `analytics`, `attendance`, `auth`, `checkin`, `dashboard`,
 `dependencies`, `eod`, `hr`, `kanban`, `manager`, `midday`, `notifications`,
@@ -168,7 +169,7 @@ src/lib/supabase + integrations/supabase   ← the single Supabase client
 
 > CLAUDE.md alignment: the mandate "all external communication goes through
 > service classes; components never call APIs directly" is now **satisfied
-> literally** by the service + repository layers. The remaining gap is *wiring*:
+> literally** by the service + repository layers. The remaining gap is _wiring_:
 > most feature UIs still read their `store.ts`, not a repository.
 
 ---
@@ -241,13 +242,13 @@ Layered, no Redux:
 
 `src/integrations/supabase/` (clients are generated — header says don't edit):
 
-| File | Role |
-| --- | --- |
-| `client.ts` | Browser client (publishable key). Lazy `Proxy` singleton. `localStorage` session, `persistSession`, `autoRefreshToken`. Strips bearer for opaque `sb_publishable_` keys. |
-| `client.server.ts` | **Service-role** admin client. Bypasses RLS. Server-only; dynamic-import inside server handlers. Never ships to client bundle. |
+| File                 | Role                                                                                                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `client.ts`          | Browser client (publishable key). Lazy `Proxy` singleton. `localStorage` session, `persistSession`, `autoRefreshToken`. Strips bearer for opaque `sb_publishable_` keys.            |
+| `client.server.ts`   | **Service-role** admin client. Bypasses RLS. Server-only; dynamic-import inside server handlers. Never ships to client bundle.                                                      |
 | `auth-middleware.ts` | `requireSupabaseAuth` server `functionMiddleware`: reads the `Authorization` bearer, validates via `auth.getClaims`, injects `{ supabase, userId, claims }` into server-fn context. |
-| `auth-attacher.ts` | `attachSupabaseAuth` **client** middleware (registered in `start.ts`): attaches the session bearer to every server-fn RPC. |
-| `types.ts` | Generated `Database` types. |
+| `auth-attacher.ts`   | `attachSupabaseAuth` **client** middleware (registered in `start.ts`): attaches the session bearer to every server-fn RPC.                                                          |
+| `types.ts`           | Generated `Database` types.                                                                                                                                                         |
 
 **Live schema** (10 migrations in `supabase/migrations/`, ~35 tables). Identity/HR:
 `profiles`, `user_roles`, `permissions`, `role_permissions`, `departments`,
@@ -274,7 +275,7 @@ Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (client);
 
 ## 11. Authentication Flow
 
-1. **Bootstrap** — `AuthProvider` subscribes to `onAuthStateChange` *first*, then
+1. **Bootstrap** — `AuthProvider` subscribes to `onAuthStateChange` _first_, then
    reads the existing session. Identity (`profile` + `roles`) is only refetched
    when the user id actually changes; the supabase call is deferred out of the
    auth callback (`setTimeout 0`) to avoid deadlocks.
@@ -306,7 +307,7 @@ Two-tier, with the **database as source of truth**:
   the permission set; components gate with `hasRole`/`hasPermission` from
   `useAuth()`. `ROLE_RANK`/`ROLE_LABELS` support hierarchy/display.
 
-The frontend matrix is explicitly documented as a *mirror of RLS intent* — it
+The frontend matrix is explicitly documented as a _mirror of RLS intent_ — it
 must never be the only enforcement point.
 
 ---
@@ -325,7 +326,7 @@ must never be the only enforcement point.
 - `components/{error-boundary,error-screen,states}` — error/fallback surfaces.
 - Store pattern (`useSyncExternalStore` facade) — repeated, copy-able template for
   any mock-backed feature.
-- `attendance/{api,queries}.ts` — the reference template for a *real* backend
+- `attendance/{api,queries}.ts` — the reference template for a _real_ backend
   feature (service fns + query-key factory + `queryOptions`).
 
 ---
@@ -357,7 +358,7 @@ stores were designed for swap-out. Recommended sequence:
 
 1. **Wire the UI to the repository/service layers.** The boundary is now built
    (`src/repositories` → `src/services` → Supabase, §5). The remaining work is
-   *consumption*: replace each feature's `store.ts` reads/writes with repository
+   _consumption_: replace each feature's `store.ts` reads/writes with repository
    calls behind TanStack Query hooks, so `store.ts` becomes at most an
    optimistic/offline cache. `attendance` (`api.ts` + `queries.ts`) remains the
    reference for the query-hook shape.
@@ -410,5 +411,5 @@ stores were designed for swap-out. Recommended sequence:
 
 ---
 
-*This document describes the codebase as observed. When the backend lands, update
-§5, §9, §10, and §15 to reflect the real data path.*
+_This document describes the codebase as observed. When the backend lands, update
+§5, §9, §10, and §15 to reflect the real data path._

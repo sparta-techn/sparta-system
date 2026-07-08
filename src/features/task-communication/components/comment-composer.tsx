@@ -2,11 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { AtSign, Send, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { MENTIONABLE_USERS, QUICK_EMOJIS } from "../types";
 

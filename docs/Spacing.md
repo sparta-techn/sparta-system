@@ -6,22 +6,22 @@ We use the Tailwind v4 default 4-px scale (`p-1` = 4 px, `p-2` = 8 px, …). Eve
 
 Reference (the ones we actually use):
 
-| Token | px | Use |
-|---|---|---|
-| `0.5` | 2 | hairline pad, badge dot offset |
-| `1` | 4 | icon ↔ text in compact rows |
-| `1.5` | 6 | between label and field |
-| `2` | 8 | base padding inside small chips, button gap |
-| `3` | 12 | card inner gap (compact) |
-| `4` | 16 | card padding (default), form field spacing |
-| `5` | 20 | card padding (StatCard), section gap (compact) |
-| `6` | 24 | card padding (roomy), top of page |
-| `8` | 32 | between major content sections |
-| `10` | 40 | between page sub-sections (lg) |
-| `12` | 48 | empty-state vertical padding |
-| `16` | 64 | hero spacing (rare in app) |
-| `20` | 80 | page max-width gutter (rare) |
-| `24` | 96 | full-bleed gutter on large screens |
+| Token | px  | Use                                            |
+| ----- | --- | ---------------------------------------------- |
+| `0.5` | 2   | hairline pad, badge dot offset                 |
+| `1`   | 4   | icon ↔ text in compact rows                    |
+| `1.5` | 6   | between label and field                        |
+| `2`   | 8   | base padding inside small chips, button gap    |
+| `3`   | 12  | card inner gap (compact)                       |
+| `4`   | 16  | card padding (default), form field spacing     |
+| `5`   | 20  | card padding (StatCard), section gap (compact) |
+| `6`   | 24  | card padding (roomy), top of page              |
+| `8`   | 32  | between major content sections                 |
+| `10`  | 40  | between page sub-sections (lg)                 |
+| `12`  | 48  | empty-state vertical padding                   |
+| `16`  | 64  | hero spacing (rare in app)                     |
+| `20`  | 80  | page max-width gutter (rare)                   |
+| `24`  | 96  | full-bleed gutter on large screens             |
 
 ## 2. Layout Recipes
 

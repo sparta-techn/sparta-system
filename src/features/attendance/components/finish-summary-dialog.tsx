@@ -29,9 +29,7 @@ export function FinishSummaryDialog({ open, onOpenChange, session, expectedSecon
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Day wrapped</DialogTitle>
-          <DialogDescription>
-            Here's how your work session ended.
-          </DialogDescription>
+          <DialogDescription>Here's how your work session ended.</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <Row label="Status">

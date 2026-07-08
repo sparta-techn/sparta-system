@@ -11,19 +11,19 @@ _Review date: 2026-07-02._
 
 ## 1. Scorecard
 
-| # | Check | Verdict | Notes |
-| --- | --- | --- | --- |
-| 1 | **Build passes** | ✅ Pass | `vite build` succeeds; SSR + client bundles + nitro output generated. |
-| 2 | **TypeScript clean** | ✅ Pass | `tsc --noEmit` → 0 errors. |
-| 3 | **ESLint clean** | ⚠️ Logic clean | **0 real errors** (2 critical fixed). 1886 pre-existing `prettier/prettier` formatting errors remain (one-command fix; non-critical — see §3). |
-| 4 | **No dead code** | ⚠️ Minor | 5 unused barrel repositories (§4.1). |
-| 5 | **No duplicated components** | ⚠️ Minor | 2× `EmptyState` (§4.2). |
-| 6 | **No duplicated services** | ⚠️ Minor | `ProjectsService` vs `ProjectRecordsService` target the same table (§4.3). |
-| 7 | **No duplicated repositories** | ⚠️ Minor | Flat vs nested repository layers coexist (§4.1). |
-| 8 | **No `console.log` left** | ✅ Pass | 0 stray logs; the 2 hits are the logging adapter's own sink (§5). |
-| 9 | **No TODO left** | ⚠️ Intentional | 6 TODOs, all "not implemented" markers in unbuilt AI provider stubs (§6). |
-| 10 | **No mock data in production modules** | ⚠️ By design | Service/repository layers are **clean**; feature/UI mock stores remain (prototype state) (§7). |
-| — | Tests | ✅ Pass | 195/195 across unit + component projects. |
+| #   | Check                                  | Verdict        | Notes                                                                                                                                          |
+| --- | -------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Build passes**                       | ✅ Pass        | `vite build` succeeds; SSR + client bundles + nitro output generated.                                                                          |
+| 2   | **TypeScript clean**                   | ✅ Pass        | `tsc --noEmit` → 0 errors.                                                                                                                     |
+| 3   | **ESLint clean**                       | ⚠️ Logic clean | **0 real errors** (2 critical fixed). 1886 pre-existing `prettier/prettier` formatting errors remain (one-command fix; non-critical — see §3). |
+| 4   | **No dead code**                       | ⚠️ Minor       | 5 unused barrel repositories (§4.1).                                                                                                           |
+| 5   | **No duplicated components**           | ⚠️ Minor       | 2× `EmptyState` (§4.2).                                                                                                                        |
+| 6   | **No duplicated services**             | ⚠️ Minor       | `ProjectsService` vs `ProjectRecordsService` target the same table (§4.3).                                                                     |
+| 7   | **No duplicated repositories**         | ⚠️ Minor       | Flat vs nested repository layers coexist (§4.1).                                                                                               |
+| 8   | **No `console.log` left**              | ✅ Pass        | 0 stray logs; the 2 hits are the logging adapter's own sink (§5).                                                                              |
+| 9   | **No TODO left**                       | ⚠️ Intentional | 6 TODOs, all "not implemented" markers in unbuilt AI provider stubs (§6).                                                                      |
+| 10  | **No mock data in production modules** | ⚠️ By design   | Service/repository layers are **clean**; feature/UI mock stores remain (prototype state) (§7).                                                 |
+| —   | Tests                                  | ✅ Pass        | 195/195 across unit + component projects.                                                                                                      |
 
 **Overall:** Ship-ready on the hard gates (build, types, logic-lint, tests). The
 ⚠️ items are pre-existing tech-debt/architecture-evolution artifacts, not
@@ -37,10 +37,10 @@ Two **`react-hooks/rules-of-hooks` violations** — genuinely critical because a
 hook called after an early return changes the hook count between renders, which
 React can throw on ("rendered fewer/more hooks than during the previous render").
 
-| File | Problem | Fix |
-| --- | --- | --- |
-| `src/features/tasks/components/tasks-list.tsx` | `useCallback(toggle)` was declared **after** the `loading` / empty early returns (introduced during the perf pass). | Moved the `useCallback` above the early returns so hook order is constant. |
-| `src/features/tasks/components/task-detail.tsx` | `useTasksStateOptional(task.parentTaskId)` was called **after** the `if (!task) return` guard (pre-existing). | Moved it above the guard using `task?.parentTaskId` (the hook already tolerates a nullish id). |
+| File                                            | Problem                                                                                                             | Fix                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/features/tasks/components/tasks-list.tsx`  | `useCallback(toggle)` was declared **after** the `loading` / empty early returns (introduced during the perf pass). | Moved the `useCallback` above the early returns so hook order is constant.                     |
+| `src/features/tasks/components/task-detail.tsx` | `useTasksStateOptional(task.parentTaskId)` was called **after** the `if (!task) return` guard (pre-existing).       | Moved it above the guard using `task?.parentTaskId` (the hook already tolerates a nullish id). |
 
 Verified: `eslint` reports **0** `rules-of-hooks` errors afterward; `tsc` clean;
 build + 195 tests green. These were the only issues meeting the "critical" bar
@@ -73,7 +73,9 @@ build + 195 tests green. These were the only issues meeting the "critical" bar
 ## 4. Duplication & dead code (deferred — not critical)
 
 ### 4.1 Repository layer: flat vs nested (dead code + duplication)
+
 Two parallel repository structures coexist:
+
 - **Flat** (`src/repositories/*.repository.ts`, 7 files) — exported by the public
   barrel `@/repositories`, documented in `REPOSITORIES.md`.
 - **Nested** (`src/repositories/<domain>/*.repository.ts`, ~28 files) — imported
@@ -82,20 +84,21 @@ Two parallel repository structures coexist:
 
 Usage of the flat/barrel singletons (outside the layer itself):
 
-| Repo | Consumers |
-| --- | --- |
-| `projectRepository` | 4 |
-| `employeeRepository` | 2 |
+| Repo                                                                                               | Consumers    |
+| -------------------------------------------------------------------------------------------------- | ------------ |
+| `projectRepository`                                                                                | 4            |
+| `employeeRepository`                                                                               | 2            |
 | `authRepository`, `taskRepository`, `sprintRepository`, `attendanceRepository`, `reportRepository` | **0 (dead)** |
 
 So **5 of 7 barrel repositories are unused**, and three (`employee`/`project`/
-`attendance`) duplicate a nested counterpart that *is* used. **Recommendation:**
+`attendance`) duplicate a nested counterpart that _is_ used. **Recommendation:**
 pick one layout (the nested/subpath layout is the one features actually consume),
 migrate the 2 live barrel repos, delete the 5 dead ones, and update
 `REPOSITORIES.md`. Deferred: it's a refactor touching the documented public API,
 not a runtime bug.
 
 ### 4.2 Duplicated component: `EmptyState`
+
 Two implementations: `src/components/states.tsx` (`EmptyState`/`ErrorState`/
 `LoadingState`) and `src/features/hr/components/empty-state.tsx`. Feature code
 imports the HR one widely. CLAUDE.md says "never create duplicate UI
@@ -103,6 +106,7 @@ components." **Recommendation:** standardize on `components/states.tsx` and
 re-point imports. Deferred: mechanical but wide-reaching; not a defect.
 
 ### 4.3 Duplicated service: projects
+
 `ProjectsService` (`projects.service.ts`) and `ProjectRecordsService`
 (`project-records.service.ts`) **both** declare `table = "projects"` and are both
 exported from `services/projects/index.ts`. The latter's doc comment calls the

@@ -66,28 +66,40 @@ Defined in `src/ai/types/context.ts`.
 
 ```ts
 interface ContextRequest {
-  surface: string | null;              // where the assistant opened (drives sources)
-  hints: Record<string, unknown>;      // scoping hints (taskId, projectId, workDate, …)
-  userId: string;                      // the asking user — sources scope reads to this
+  surface: string | null; // where the assistant opened (drives sources)
+  hints: Record<string, unknown>; // scoping hints (taskId, projectId, workDate, …)
+  userId: string; // the asking user — sources scope reads to this
 }
 
-interface ContextEntity {              // one cited grounding row
-  type: string; id: string; ref?: string; summary: string;
+interface ContextEntity {
+  // one cited grounding row
+  type: string;
+  id: string;
+  ref?: string;
+  summary: string;
 }
 
-interface ContextFragment {            // one source's contribution
-  source: ContextSourceKey; label: string;
-  entities: ContextEntity[]; truncated: boolean; note?: string;
+interface ContextFragment {
+  // one source's contribution
+  source: ContextSourceKey;
+  label: string;
+  entities: ContextEntity[];
+  truncated: boolean;
+  note?: string;
 }
 
-interface ContextSource {              // a reusable, single-module builder
+interface ContextSource {
+  // a reusable, single-module builder
   readonly key: ContextSourceKey;
   readonly label: string;
   gather(request: ContextRequest): Promise<ContextFragment>;
 }
 
-interface ContextBlock {               // merged, provider-ready grounding
-  summary: string; entities: ContextEntity[]; truncated: boolean;
+interface ContextBlock {
+  // merged, provider-ready grounding
+  summary: string;
+  entities: ContextEntity[];
+  truncated: boolean;
 }
 ```
 
@@ -101,18 +113,18 @@ section, so the model treats it as cited data, not instructions.
 Each source is a reusable singleton that maps one module's rows into
 `ContextEntity`s. All reads go through the service layer.
 
-| Source (`key`) | Service(s) used | Gathers | Hints |
-| --- | --- | --- | --- |
-| `profile` | `authService`, `employeesService` | Who is asking: name, title, roles, status, tz, location | — |
-| `attendance` | `attendanceRecordsService`, `attendanceSessionsService` | Today's record (status, worked/break/overtime) + active session | `workDate` |
-| `daily_reports` | `dailyReportsService`, `statusUpdatesService` | Recent EOD reports + check-in/midday updates | — |
-| `projects` | `projectsService` | A project (`projectId`) or projects the user manages: status, health, progress | `projectId` |
-| `tasks` | `tasksService` | A task (`taskId`), a project's tasks (`projectId`), or the user's assigned tasks | `taskId`, `projectId` |
-| `sprints` | `sprintsService` | A project's sprints (`projectId`) or active sprints | `projectId` |
-| `time_tracking` | `attendanceSessionsService` | Tracked time per recent work date (see note) | — |
-| `comments` | `tasksService.listComments` | Discussion on a task in scope | `taskId` (required) |
-| `dependencies` | `dependencyRequestsService` | Blockers the user requested or owns, open items first | — |
-| `notifications` | `notificationsService` | Recent notifications + unread count | — |
+| Source (`key`)  | Service(s) used                                         | Gathers                                                                          | Hints                 |
+| --------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------- |
+| `profile`       | `authService`, `employeesService`                       | Who is asking: name, title, roles, status, tz, location                          | —                     |
+| `attendance`    | `attendanceRecordsService`, `attendanceSessionsService` | Today's record (status, worked/break/overtime) + active session                  | `workDate`            |
+| `daily_reports` | `dailyReportsService`, `statusUpdatesService`           | Recent EOD reports + check-in/midday updates                                     | —                     |
+| `projects`      | `projectsService`                                       | A project (`projectId`) or projects the user manages: status, health, progress   | `projectId`           |
+| `tasks`         | `tasksService`                                          | A task (`taskId`), a project's tasks (`projectId`), or the user's assigned tasks | `taskId`, `projectId` |
+| `sprints`       | `sprintsService`                                        | A project's sprints (`projectId`) or active sprints                              | `projectId`           |
+| `time_tracking` | `attendanceSessionsService`                             | Tracked time per recent work date (see note)                                     | —                     |
+| `comments`      | `tasksService.listComments`                             | Discussion on a task in scope                                                    | `taskId` (required)   |
+| `dependencies`  | `dependencyRequestsService`                             | Blockers the user requested or owns, open items first                            | —                     |
+| `notifications` | `notificationsService`                                  | Recent notifications + unread count                                              | —                     |
 
 **Time tracking note.** A dedicated `time_logs` service does not exist yet; the
 tracked-time signal in the service layer today is the attendance **work session**
@@ -151,15 +163,15 @@ Each source caps its output so no single module floods the prompt budget.
 
 `SURFACE_SOURCES` decides "when the assistant opens from X, gather Y":
 
-| Surface | Sources |
-| --- | --- |
-| `global` (default / `null` surface) | profile, attendance, daily_reports, tasks, notifications |
-| `tasks` | profile, tasks, comments, dependencies, sprints |
-| `projects` | profile, projects, sprints, tasks |
-| `sprints` | profile, sprints, tasks |
-| `analytics` | profile, projects, time_tracking, attendance |
-| `reports` | profile, daily_reports, attendance, dependencies, time_tracking |
-| `dependencies` | profile, dependencies, tasks |
+| Surface                             | Sources                                                         |
+| ----------------------------------- | --------------------------------------------------------------- |
+| `global` (default / `null` surface) | profile, attendance, daily_reports, tasks, notifications        |
+| `tasks`                             | profile, tasks, comments, dependencies, sprints                 |
+| `projects`                          | profile, projects, sprints, tasks                               |
+| `sprints`                           | profile, sprints, tasks                                         |
+| `analytics`                         | profile, projects, time_tracking, attendance                    |
+| `reports`                           | profile, daily_reports, attendance, dependencies, time_tracking |
+| `dependencies`                      | profile, dependencies, tasks                                    |
 
 `registerDefaultResolvers(builder)` registers a resolver per surface and sets the
 `global` resolver as the default (used for the `null` surface and any surface
@@ -178,7 +190,7 @@ import { aiEngine } from "@/ai";
 await aiEngine.generate({
   user: { id, displayName, roles },
   surface: "tasks",
-  contextHints: { taskId: "…" },   // scopes the tasks/comments sources
+  contextHints: { taskId: "…" }, // scopes the tasks/comments sources
   prompt: "Summarize where this task stands and what's blocking it.",
 });
 ```
@@ -228,7 +240,7 @@ that is the point of the fragment/resolver split.
 
 ---
 
-*The Context Engine is deliberately read-only and service-sourced. Grounding
+_The Context Engine is deliberately read-only and service-sourced. Grounding
 authorization is delegated to service/RLS scoping; the engine never widens what a
 user can see. Running this orchestration inside the server-side Edge Function
-(`docs/AI_ARCHITECTURE.md §12`) keeps provider calls and keys off the client.*
+(`docs/AI_ARCHITECTURE.md §12`) keeps provider calls and keys off the client._

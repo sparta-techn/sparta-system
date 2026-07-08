@@ -24,11 +24,7 @@ const TONE_DOT: Record<string, string> = {
 function matches(task: Task, f: KanbanFilters) {
   if (f.search) {
     const q = f.search.toLowerCase();
-    if (
-      !task.title.toLowerCase().includes(q) &&
-      !task.ref.toLowerCase().includes(q)
-    )
-      return false;
+    if (!task.title.toLowerCase().includes(q) && !task.ref.toLowerCase().includes(q)) return false;
   }
   if (f.projectIds?.length && !f.projectIds.includes(task.projectId)) return false;
   if (f.assigneeIds?.length && !f.assigneeIds.includes(task.assigneeId ?? "")) return false;
@@ -68,7 +64,10 @@ export function KanbanBoard({ filters }: { filters: KanbanFilters }) {
     const all = listTasks().filter((t) => !t.parentTaskId && matches(t, filters));
     const map = {} as Record<TaskStatus, Task[]>;
     for (const col of columns) {
-      map[col] = sortTasks(all.filter((t) => t.status === col), order[col]);
+      map[col] = sortTasks(
+        all.filter((t) => t.status === col),
+        order[col],
+      );
     }
     return map;
   }, [columns, order, filters]);
@@ -122,7 +121,9 @@ export function KanbanBoard({ filters }: { filters: KanbanFilters }) {
                     )}
                   >
                     {items.length}
-                    {limit > 0 ? <span className="text-muted-foreground/70"> / {limit}</span> : null}
+                    {limit > 0 ? (
+                      <span className="text-muted-foreground/70"> / {limit}</span>
+                    ) : null}
                   </span>
                 </header>
                 <div className="flex flex-1 flex-col gap-2 p-1">
@@ -180,9 +181,7 @@ export function KanbanBoard({ filters }: { filters: KanbanFilters }) {
                   <span className={cn("size-2 rounded-full", TONE_DOT[STATUS_TONE[col]])} />
                   <h3 className="text-sm font-semibold">{STATUS_LABEL[col]}</h3>
                 </div>
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {items.length}
-                </span>
+                <span className="text-xs tabular-nums text-muted-foreground">{items.length}</span>
               </header>
               <div className="space-y-2">
                 {items.length === 0 ? (

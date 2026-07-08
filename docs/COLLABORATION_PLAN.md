@@ -14,16 +14,16 @@ Services, Repositories, UI, Realtime events, and Permissions.
 
 ## 0. Current state (what to reuse, not rebuild)
 
-| Capability | Status today | Reuse target |
-| --- | --- | --- |
+| Capability              | Status today                                                                                                                                                                                                                                                                                                                                                                                                             | Reuse target                                                                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Notification engine** | Frontend-complete, **mock** (`features/notifications/`): `event-bus.ts` → `automation-engine.ts` → `rules.ts` → `channels.ts` → `store.ts` (localStorage). Types: `DomainEvent`, `EventName`, `AppNotification`, `AutomationRule`, `NotificationSpec`, `RecipientRule`, `NotificationPreferences` (quiet hours). UI: `notification-dropdown`, `notification-center`, `notification-preferences`, `notification-widgets`. | Keep the event/rule DSL as the contract; move generation + storage server-side. Swap store internals for Supabase + realtime; **UI unchanged**. |
-| **Task comments/files** | Mock (`features/task-communication/`): `TaskThreadComment` (mentions[], reactions[], threads, soft delete), `TaskFile`, `TaskCommActivity`. UI: `threaded-comments`, `comment-composer`, `comment-item`, `communication-activity`, `task-files-panel`. | → polymorphic `comments` + `comment_reactions` + `attachments`. |
-| **Dependencies** | Mock (`features/dependencies/`) **but** `public.dependency_requests` **exists** (migration `20260630130000`) with the state enum + RLS. Embedded `comments[]` + `activity[]` in the mock. | Wire the mock store to the live table; add `dependency_activity`, comments, and a state-machine RPC. |
-| **Project activity** | **Live**: `public.project_activity` (append-only) + `projectActivityRepository`. | The activity-feed backbone; generalize the pattern to tasks/dependencies. |
-| **Manager surfaces** | Mock consumers: `live-activity-feed`, `notifications-panel`, `blockers-panel`, `report-compliance`. | Inbox/Activity-Feed data sources feed these. |
-| **Approvals / Inbox** | **Do not exist** (no feature, no table). | Net-new — Sections 4 & 5. |
-| **Realtime** | **Not wired anywhere.** `work_sessions` are in the `supabase_realtime` publication but no client subscribes. | Section 7 builds the transport. |
-| **Auth/RLS helpers** | Live: `has_role`, `has_any_role`, `can_review_reports`, `is_project_member`, `can_manage_project`, `tg_set_updated_at`, `handle_new_user`. | Reuse verbatim; add `can_access_dependency`, `can_approve`, `is_mentioned_in`. |
+| **Task comments/files** | Mock (`features/task-communication/`): `TaskThreadComment` (mentions[], reactions[], threads, soft delete), `TaskFile`, `TaskCommActivity`. UI: `threaded-comments`, `comment-composer`, `comment-item`, `communication-activity`, `task-files-panel`.                                                                                                                                                                   | → polymorphic `comments` + `comment_reactions` + `attachments`.                                                                                 |
+| **Dependencies**        | Mock (`features/dependencies/`) **but** `public.dependency_requests` **exists** (migration `20260630130000`) with the state enum + RLS. Embedded `comments[]` + `activity[]` in the mock.                                                                                                                                                                                                                                | Wire the mock store to the live table; add `dependency_activity`, comments, and a state-machine RPC.                                            |
+| **Project activity**    | **Live**: `public.project_activity` (append-only) + `projectActivityRepository`.                                                                                                                                                                                                                                                                                                                                         | The activity-feed backbone; generalize the pattern to tasks/dependencies.                                                                       |
+| **Manager surfaces**    | Mock consumers: `live-activity-feed`, `notifications-panel`, `blockers-panel`, `report-compliance`.                                                                                                                                                                                                                                                                                                                      | Inbox/Activity-Feed data sources feed these.                                                                                                    |
+| **Approvals / Inbox**   | **Do not exist** (no feature, no table).                                                                                                                                                                                                                                                                                                                                                                                 | Net-new — Sections 4 & 5.                                                                                                                       |
+| **Realtime**            | **Not wired anywhere.** `work_sessions` are in the `supabase_realtime` publication but no client subscribes.                                                                                                                                                                                                                                                                                                             | Section 7 builds the transport.                                                                                                                 |
+| **Auth/RLS helpers**    | Live: `has_role`, `has_any_role`, `can_review_reports`, `is_project_member`, `can_manage_project`, `tg_set_updated_at`, `handle_new_user`.                                                                                                                                                                                                                                                                               | Reuse verbatim; add `can_access_dependency`, `can_approve`, `is_mentioned_in`.                                                                  |
 
 **Conventions inherited (all new work MUST follow):** `uuid` PKs, `created_at`/
 `updated_at` + `tg_set_updated_at`, `created_by`/`actor_id` audit
@@ -81,14 +81,15 @@ Realtime delivers the new rows to subscribed clients (Section 7).
 ## 1. Notifications
 
 ### Database
+
 - `public.notifications` (per `DATABASE_DESIGN.md §17`):
   `id`, `recipient_id → profiles CASCADE`, `type notification_type`,
   `priority notification_priority default 'normal'`, `state notification_state
-  default 'unseen'`, `title`, `body`, `category preference_category`,
+default 'unseen'`, `title`, `body`, `category preference_category`,
   `event_id uuid → events(id) SET NULL`, `event_name text`, `payload jsonb`,
   `actions jsonb` (`[{label,href,kind}]`), `entity_type text`, `entity_id uuid`,
   `href text`, `seen_at`/`read_at`/`archived_at`/`dismissed_at`/`expires_at
-  timestamptz`, `created_at`.
+timestamptz`, `created_at`.
   - **Indexes**: `(recipient_id, created_at DESC)`, partial
     `(recipient_id) WHERE state = 'unseen'` (badge count), `(entity_type, entity_id)`.
 - `public.notification_preferences` (`user_id PK → profiles`, `categories jsonb`,
@@ -102,6 +103,7 @@ Realtime delivers the new rows to subscribed clients (Section 7).
   notifications.
 
 ### Services (`src/services/notifications/`)
+
 - `NotificationsService extends BaseService<NotificationRow, NotificationInsert, NotificationUpdate>` — table `notifications`; finders `listForRecipient(userId, {state?})`, `unseenCount(userId)`; lifecycle `markSeen`, `markRead`, `markAllRead`, `archive`, `dismiss` (state + `*_at` stamps).
 - `NotificationPreferencesService` — `get(userId)`, `upsert(userId, patch)` (typed client; single row).
 - `EventsService` — append-only (`log(event)`); `update`/`remove` reject.
@@ -110,6 +112,7 @@ Realtime delivers the new rows to subscribed clients (Section 7).
   sink changes.
 
 ### Repositories (`src/repositories/notifications/`)
+
 - `NotificationRepository` — `inbox(userId, filter)`, `badgeCount(userId)`,
   `markRead`/`markAllRead`/`archive`/`dismiss`, `emit(event)` (writes `events`,
   lets the trigger/worker fan out). Composes `NotificationsService` +
@@ -118,12 +121,14 @@ Realtime delivers the new rows to subscribed clients (Section 7).
   matrix used by `notification-preferences.tsx`.
 
 ### UI (reuse existing — swap data source only)
+
 - `notification-dropdown`, `notification-center`, `notification-preferences`,
   `notification-widgets` stay as-is. Swap `notifications/store.ts` internals to
   hydrate from `NotificationRepository` + realtime, keeping `notificationStore`,
   `useNotifications`, `useUnreadCount` signatures identical.
 
 ### Realtime events
+
 - Publication: add `notifications`. Client subscribes to
   `postgres_changes` on `notifications WHERE recipient_id = auth.uid()` → prepend
   to cache, bump badge, toast on `INSERT` (respecting quiet hours/prefs client-side
@@ -131,6 +136,7 @@ Realtime delivers the new rows to subscribed clients (Section 7).
 - Channel: `notifications:{userId}`.
 
 ### Permissions
+
 - RLS: recipient reads/updates **own only** —
   `USING (recipient_id = auth.uid())`, `WITH CHECK (recipient_id = auth.uid())`,
   and updates limited to state/`*_at` columns. **No client INSERT** grant; inserts
@@ -143,6 +149,7 @@ Realtime delivers the new rows to subscribed clients (Section 7).
 ## 2. Activity Feed
 
 ### Database
+
 - Backbone exists: `public.project_activity` (append-only). Add the siblings with
   the same shape so a **unified feed** is a UNION:
   - `public.task_activity` (`task_id → tasks CASCADE`, `actor_id`, `kind`,
@@ -159,29 +166,34 @@ Realtime delivers the new rows to subscribed clients (Section 7).
 - **Indexes**: each table `(<parent>_id, created_at DESC)`, `(actor_id)`.
 
 ### Services (`src/services/activity/`)
+
 - `TaskActivityService`, `DependencyActivityService` — append-only
   (`log`, `listByParent`; update/remove reject), mirroring `ProjectActivityService`.
 - `ActivityFeedService` — reads the `activity_feed` view: `listForProject`,
   `listForActor`, `listGlobal(limit)`, cursor pagination by `at`.
 
 ### Repositories (`src/repositories/activity/`)
+
 - `ActivityFeedRepository` — `forProject(projectId, cursor)`,
   `forUser(userId)`, `recent(scope)`; resolves actor via the profiles directory.
 - Existing `projectActivityRepository` is folded in as one source.
 
 ### UI (reuse)
+
 - Manager `live-activity-feed.tsx`, project `ProjectActivity` tab, dashboard
   recent-activity widget, `project-analytics` `unifiedActivity` — all repoint to
   `ActivityFeedRepository`. No new components required for MVP; an optional global
   `/app/activity` route composes `Card` + timeline list.
 
 ### Realtime events
+
 - Publication: add `task_activity`, `dependency_activity` (project_activity too).
 - Subscribe per open project: `activity:project:{projectId}` on
   `postgres_changes INSERT` → prepend to the feed cache. Global feed for
   managers subscribes without the project filter (RLS still scopes rows).
 
 ### Permissions
+
 - RLS mirrors the parent entity: task/dependency activity readable when the user
   can read the parent (`is_project_member` / `can_access_dependency` /
   reviewer roles). Append-only; no client UPDATE/DELETE. The `activity_feed` view
@@ -192,6 +204,7 @@ Realtime delivers the new rows to subscribed clients (Section 7).
 ## 3. Mentions
 
 ### Database
+
 - No separate table needed initially — mentions live on `public.comments`
   (`DATABASE_DESIGN.md §11`): `mentions uuid[]` (profile ids), GIN-indexed.
   `comments` is polymorphic (`parent_type comment_parent`, `parent_id`,
@@ -208,12 +221,14 @@ Realtime delivers the new rows to subscribed clients (Section 7).
   the projects store's people directory pattern / `employeeRepository`).
 
 ### Services (`src/services/comments/`)
+
 - `CommentsService extends BaseService` — `listForParent(type, id)`,
   `create` (validates `parent_id` exists via the polymorphic-integrity trigger),
   `edit`, `softDelete`; `mentions` passed through.
 - `CommentReactionsService` — `toggle(commentId, userId, emoji)`.
 
 ### Repositories (`src/repositories/comments/`)
+
 - `CommentRepository` — `thread(parentType, parentId)` (nests replies),
   `post(input)` (mentions resolved to profile ids), `edit`, `remove`, `react`.
   Mention resolution + emit handled server-side by the trigger; the repo just
@@ -221,11 +236,13 @@ Realtime delivers the new rows to subscribed clients (Section 7).
 - `MentionRepository` — `listForUser(userId)` over `my_mentions` (Inbox source).
 
 ### UI (reuse)
+
 - `threaded-comments`, `comment-composer` (typeahead `@` picker → live profiles),
   `comment-item`, `dep-comments`. Composer swaps `MENTIONABLE_USERS` for the live
   directory; render/threading unchanged.
 
 ### Realtime events
+
 - Publication: add `comments`, `comment_reactions`.
 - Channel `comments:{parentType}:{parentId}` on `postgres_changes` → live thread
   updates + reaction counts + typing indicator via **broadcast** (ephemeral, not
@@ -233,6 +250,7 @@ Realtime delivers the new rows to subscribed clients (Section 7).
   `notifications:{userId}` channel.
 
 ### Permissions
+
 - RLS: read a comment if you can read its parent (delegated:
   `is_project_member(project_id)` for task/project, `can_access_dependency` for
   dependency). Insert if you can read the parent; edit/soft-delete **own** only;
@@ -247,6 +265,7 @@ Realtime delivers the new rows to subscribed clients (Section 7).
 Net-new. A generic approval workflow so any entity can request a decision.
 
 ### Database
+
 - `public.approvals`:
   `id`, `type approval_type`, `status approval_status default 'pending'`,
   `entity_type text`, `entity_id uuid` (polymorphic subject),
@@ -269,17 +288,20 @@ Net-new. A generic approval workflow so any entity can request a decision.
   (`eod.submitted`, `dependency.created`, membership/role requests).
 
 ### Services (`src/services/approvals/`)
+
 - `ApprovalsService extends BaseService` — `listForApprover(userId, {status})`,
   `listForRequester(userId)`, `pendingCount(userId)`, `getForEntity(type,id)`.
 - `ApprovalDecisionsService` — append-only history.
 - The `decide_approval` RPC is called through the repository, not direct writes.
 
 ### Repositories (`src/repositories/approvals/`)
+
 - `ApprovalRepository` — `queue(userId)` (my pending), `raised(userId)`,
   `approve(id, note)`, `reject(id, note)`, `cancel(id)`, `historyFor(id)`.
   `approve`/`reject` call `decide_approval` (atomic + side effect + emit).
 
 ### UI (new, composed from reused primitives)
+
 - `features/approvals/components/`: `approval-queue.tsx` (Table of pending, filter
   by type), `approval-card.tsx` (subject preview + Approve/Reject with note
   Dialog), `approval-history.tsx` (Timeline). Route `/app/approvals`. Reuses
@@ -288,12 +310,14 @@ Net-new. A generic approval workflow so any entity can request a decision.
   manager EOD review panel (`report-compliance`).
 
 ### Realtime events
+
 - Publication: add `approvals`. Approver subscribes
   `approvals:{userId}` on `postgres_changes` (assignee_id = me) → queue badge +
   toast on new pending. Requester gets the decision via their
   `notifications:{userId}` channel.
 
 ### Permissions
+
 - New helper `can_approve(uid, approval_id)` SECURITY DEFINER: true if
   `assignee_id = uid`, or the approver_scope role matches
   (`has_any_role`), or manager-of-requester, or `owner`/`super_admin`.
@@ -310,14 +334,15 @@ Net-new **unified read model** — not a new source of truth. One place for
 assigned/blocked dependencies.
 
 ### Database
+
 - View `public.inbox_items` (`security_invoker = on`) UNION-ing, keyed by
   `(kind inbox_item_kind, source_id)`:
   - unseen/unread `notifications` (recipient = me),
   - `my_mentions` (comments mentioning me, not yet read),
   - pending `approvals` (assignee = me),
   - open `dependency_requests` where I'm `owner_id` (needs action),
-  projecting `kind, source_id, title, summary, priority, entity_type, entity_id,
-  href, at`. RLS applies through each underlying table.
+    projecting `kind, source_id, title, summary, priority, entity_type, entity_id,
+href, at`. RLS applies through each underlying table.
 - `public.inbox_state` (per-user overlay for non-notification items):
   `(user_id, kind, source_id) PK`, `status text` (`open`/`snoozed`/`done`),
   `snoozed_until`, `updated_at` — lets a user snooze/complete a mention/approval
@@ -325,29 +350,34 @@ assigned/blocked dependencies.
 - **Index**: `inbox_state (user_id, status)`; the view is ordered by `at DESC`.
 
 ### Services (`src/services/inbox/`)
+
 - `InboxService` — `list(userId, {kind?, status?})` over `inbox_items` left-joined
   to `inbox_state`; `counts(userId)` (per-kind badges); `setState(userId, kind,
-  sourceId, status)`; `snooze(...)`.
+sourceId, status)`; `snooze(...)`.
 
 ### Repositories (`src/repositories/inbox/`)
+
 - `InboxRepository` — `items(userId, filter)`, `unreadCounts(userId)`,
   `markDone`, `snooze`, `openAll` — composes `InboxService` and delegates the
   actual entity actions (mark-read, approve, resolve) to the owning repositories
   so a single click can both act and clear.
 
 ### UI (new, reuses notification widgets)
+
 - `features/inbox/components/`: `inbox-list.tsx` (Tabs: All / Mentions / Approvals
   / Dependencies / Notifications), `inbox-item-row.tsx` (icon by `kind`, deep-link,
   snooze/done actions), `inbox-filters.tsx`. Route `/app/inbox`. Topbar bell can
   route here. Reuses `Tabs`, `Card`, `Badge`, `Avatar`, `notification-widgets`.
 
 ### Realtime events
+
 - No new publication — the Inbox subscribes to the **same channels** its sources
   use (`notifications:{userId}`, `approvals:{userId}`, mention notifications) and
   invalidates the `inbox_items` query on any of them. `inbox_state` (add to
   publication) syncs snooze/done across tabs.
 
 ### Permissions
+
 - The view is `security_invoker` so each row is gated by its source table's RLS —
   the Inbox can never surface something the user couldn't already read.
   `inbox_state`: self read+write (`user_id = auth.uid()`).
@@ -360,6 +390,7 @@ The cross-team request/blocker board — table already live; complete the
 collaboration surface.
 
 ### Database
+
 - `public.dependency_requests` **exists** (migration `20260630130000`): state enum
   `draft…closed`, `type`, `priority`, `requester_id`, `owner_id`, `department_id`,
   `related_task_id`, `tags[]`, `due_at`, `resolved_at`, RLS (read:
@@ -378,18 +409,21 @@ collaboration surface.
   RPC pattern; replaces free-form UPDATE of `state`.
 
 ### Services (`src/services/dependencies/`)
+
 - `DependencyRequestsService extends BaseService` — `listInbox(userId)` (owner=me,
   open), `listRequested(userId)`, `listByState`, `listByProject`,
   `boardColumns()`; state changes go through the RPC wrapper `setState`.
 - `DependencyActivityService` — append-only history.
 
 ### Repositories (`src/repositories/dependencies/`)
+
 - `DependencyRepository` — `board(filter)`, `create`, `assign(ownerId)`,
   `accept`/`reject`/`block`/`resolve`/`close` (→ `set_dependency_state`),
   `comment`/`thread` (→ `CommentRepository` with `parent_type='dependency'`),
   `activity(id)`. Reuses `commentRepository` + `dependencyActivityService`.
 
 ### UI (reuse — store-internal swap)
+
 - `dependencies/store.ts` internals swap to `DependencyRepository`, keeping the
   public API so `dep-kanban`, `dep-table`, `dep-card`, `dep-timeline`,
   `dep-comments`, `dep-create-dialog`, `dep-filters`, `dep-widgets` are unchanged.
@@ -398,12 +432,14 @@ collaboration surface.
   live directory (same fix as the projects module).
 
 ### Realtime events
+
 - Publication: add `dependency_requests`, `dependency_activity`.
 - Channel `dependencies:board` (or per project/department) on `postgres_changes` →
   live kanban card moves; `dependencies:{id}` for the detail view (activity +
   comments). Owner/requester decision notifications via `notifications:{userId}`.
 
 ### Permissions
+
 - Keep existing RLS; add `can_access_dependency(uid, id)` SECURITY DEFINER
   (requester OR owner OR same department OR reviewer role) reused by comments and
   activity RLS. State transitions only via `set_dependency_state` (re-checks the
@@ -417,6 +453,7 @@ collaboration surface.
 The shared subscription infrastructure the six features above ride on.
 
 ### Database
+
 - **Publication**: extend `supabase_realtime` to include `notifications`,
   `comments`, `comment_reactions`, `task_activity`, `dependency_activity`,
   `project_activity`, `dependency_requests`, `approvals`, `inbox_state`, `tasks`
@@ -431,6 +468,7 @@ The shared subscription infrastructure the six features above ride on.
   needs (e.g. notification state changes) so old-row filtering works.
 
 ### Services / integration (`src/integrations/supabase/realtime.ts` — new reusable module)
+
 - `subscribeToTable({ table, filter, on })` — thin wrapper over
   `supabase.channel(...).on('postgres_changes', …)` returning an unsubscribe fn.
 - `subscribePresence(channel, meta)` — presence (who's online / viewing a
@@ -441,6 +479,7 @@ The shared subscription infrastructure the six features above ride on.
   `(table, filter)` reuse one socket subscription; tears down on last unmount.
 
 ### Repositories / cache wiring
+
 - Each feature repository exposes a `subscribe(scope, onChange)` that maps realtime
   payloads to store/query-cache updates:
   - Mock-store features (notifications, dependencies, task-communication): realtime
@@ -449,22 +488,25 @@ The shared subscription infrastructure the six features above ride on.
     relevant key.
 
 ### UI
+
 - No bespoke UI — realtime silently keeps existing components live: unread badge,
   kanban boards, comment threads, activity feeds, inbox counts, presence avatars.
   A small `usePresence(channel)` hook powers "who's viewing" chips where useful.
 
 ### Realtime events (channel catalogue)
-| Channel | Transport | Purpose |
-| --- | --- | --- |
-| `notifications:{userId}` | postgres_changes | live notification + badge |
-| `approvals:{userId}` | postgres_changes | approval queue |
-| `inbox:{userId}` | invalidation (fan-in) | unified inbox counts |
-| `comments:{parentType}:{parentId}` | postgres_changes + broadcast | live threads + typing |
-| `activity:project:{projectId}` | postgres_changes | project/task/dep activity |
-| `dependencies:board` / `dependencies:{id}` | postgres_changes | kanban + detail |
-| `presence:project:{projectId}` / `presence:task:{taskId}` | presence | who's online/viewing |
+
+| Channel                                                   | Transport                    | Purpose                   |
+| --------------------------------------------------------- | ---------------------------- | ------------------------- |
+| `notifications:{userId}`                                  | postgres_changes             | live notification + badge |
+| `approvals:{userId}`                                      | postgres_changes             | approval queue            |
+| `inbox:{userId}`                                          | invalidation (fan-in)        | unified inbox counts      |
+| `comments:{parentType}:{parentId}`                        | postgres_changes + broadcast | live threads + typing     |
+| `activity:project:{projectId}`                            | postgres_changes             | project/task/dep activity |
+| `dependencies:board` / `dependencies:{id}`                | postgres_changes             | kanban + detail           |
+| `presence:project:{projectId}` / `presence:task:{taskId}` | presence                     | who's online/viewing      |
 
 ### Permissions
+
 - `postgres_changes`: enforced by table RLS — subscribers only receive rows they
   can `SELECT`. Presence/broadcast: gated by `realtime.messages` RLS policies
   (join allowed only for members of the referenced entity). No service-role usage
@@ -477,7 +519,7 @@ The shared subscription infrastructure the six features above ride on.
 
 1. **Foundation** — enums; `events` outbox + `emit_event`; realtime module
    (`integrations/supabase/realtime.ts`); `notifications` + `notification_preferences`
-   + `notify()` + `tg_fanout_event`; publication + RLS. Swap notifications store.
+   - `notify()` + `tg_fanout_event`; publication + RLS. Swap notifications store.
 2. **Mentions & Comments** — `comments` (+ polymorphic-integrity trigger) +
    `comment_reactions`; `tg_comment_mentions` → notifications; wire
    task-communication + dependency comments.
@@ -538,6 +580,6 @@ src/features/approvals/  src/features/inbox/                                    
 # notifications / dependencies / task-communication: store-internal swap only (UI unchanged)
 ```
 
-*This is a plan. Implementation happens in later, migration-first waves; each
+_This is a plan. Implementation happens in later, migration-first waves; each
 table ships with RLS in the same migration, and `types.ts` is regenerated after
-each.*
+each._

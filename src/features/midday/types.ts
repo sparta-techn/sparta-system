@@ -27,15 +27,16 @@ export interface TaskProgressEntry {
   note?: string;
 }
 
-export type EndOfDayOutlook =
-  | "on_track"
-  | "need_more_time"
-  | "blocked"
-  | "need_manager_help";
+export type EndOfDayOutlook = "on_track" | "need_more_time" | "blocked" | "need_manager_help";
 
 export const OUTLOOK_META: Record<
   EndOfDayOutlook,
-  { label: string; description: string; tone: "success" | "warning" | "danger" | "info"; emoji: string }
+  {
+    label: string;
+    description: string;
+    tone: "success" | "warning" | "danger" | "info";
+    emoji: string;
+  }
 > = {
   on_track: {
     label: "Likely to finish today's plan",

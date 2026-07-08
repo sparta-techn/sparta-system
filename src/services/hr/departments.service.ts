@@ -11,7 +11,11 @@ import type { Department, DepartmentInsert, DepartmentUpdate } from "./types";
  * add the department-specific reads and the soft-archive lifecycle. Writes are
  * gated to `hr` / `admin` / `owner` by RLS.
  */
-export class DepartmentsService extends BaseService<Department, DepartmentInsert, DepartmentUpdate> {
+export class DepartmentsService extends BaseService<
+  Department,
+  DepartmentInsert,
+  DepartmentUpdate
+> {
   protected readonly table = "departments";
   protected readonly entity = "Department";
   protected readonly defaultOrderBy = "name";

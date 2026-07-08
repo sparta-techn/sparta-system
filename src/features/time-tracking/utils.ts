@@ -24,14 +24,20 @@ export function formatHours(minutes: number): string {
 }
 
 export function formatTimer(seconds: number): string {
-  const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
-  const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
-  const s = Math.floor(seconds % 60).toString().padStart(2, "0");
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
   return `${h}:${m}:${s}`;
 }
 
 export function liveSeconds(log: TimeLog, now = Date.now()): number {
-  if (log.endTime) return Math.floor(((log.durationMinutes ?? 0) * 60));
+  if (log.endTime) return Math.floor((log.durationMinutes ?? 0) * 60);
   return Math.max(0, Math.floor((now - new Date(log.startTime).getTime()) / 1000));
 }
 

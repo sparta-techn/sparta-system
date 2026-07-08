@@ -21,10 +21,7 @@ import type { MakeClientConfig, MakeExecution, MakeExecutionStatus } from "./typ
 export class MakeClient implements AutomationTransport {
   constructor(private readonly config: MakeClientConfig = {}) {}
 
-  async triggerWorkflow(
-    accountId: string,
-    request: WorkflowTriggerRequest,
-  ): Promise<WorkflowRun> {
+  async triggerWorkflow(accountId: string, request: WorkflowTriggerRequest): Promise<WorkflowRun> {
     const execution = await this.runScenarioRaw(accountId, request);
     return toWorkflowRun(execution);
   }
@@ -34,11 +31,10 @@ export class MakeClient implements AutomationTransport {
     return toWorkflowRun(execution);
   }
 
-  async postWebhook(
-    accountId: string,
-    message: OutgoingWebhookMessage,
-  ): Promise<{ id: string }> {
-    return notImplemented(`MakeClient.postWebhook (account ${accountId}, event ${message.eventType})`);
+  async postWebhook(accountId: string, message: OutgoingWebhookMessage): Promise<{ id: string }> {
+    return notImplemented(
+      `MakeClient.postWebhook (account ${accountId}, event ${message.eventType})`,
+    );
   }
 
   async verifySignature(accountId: string, delivery: RawWebhookDelivery): Promise<boolean> {
@@ -51,7 +47,9 @@ export class MakeClient implements AutomationTransport {
     accountId: string,
     request: WorkflowTriggerRequest,
   ): Promise<MakeExecution> {
-    return notImplemented(`MakeClient.runScenario (account ${accountId}, scenario ${request.workflowId})`);
+    return notImplemented(
+      `MakeClient.runScenario (account ${accountId}, scenario ${request.workflowId})`,
+    );
   }
 
   private async getExecutionRaw(accountId: string, runId: string): Promise<MakeExecution> {

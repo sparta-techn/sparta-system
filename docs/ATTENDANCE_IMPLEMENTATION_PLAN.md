@@ -13,17 +13,17 @@
 
 This plan covers the full employee day, end-to-end:
 
-| # | Feature | Today | Target |
-| --- | --- | --- | --- |
-| 1 | **Attendance** | ✅ live (Supabase) | extend reads only |
-| 2 | **Morning Check-in** | 🟡 UI + `localStorage` store | `daily_checkins` table + RPC |
-| 3 | **Working Session** | ✅ live (part of Attendance) | no schema change |
-| 4 | **Break Management** | ✅ live (part of Attendance) | no schema change |
-| 5 | **Midday Status** | 🟡 UI + `localStorage` store | `midday_reports` table + RPC |
-| 6 | **End-of-Day Report** | 🟡 UI store + scaffolded `ReportsService` | `eod_reports` table + RPC |
-| 7 | **Dependency Requests** | 🟡 UI + in-memory mock | `dependencies` + activity table + RPC |
-| 8 | **Daily Timeline** | ❌ not built | composite read (view + query) |
-| 9 | **Manager Review** | 🟡 UI + mock-data | roll-up reads over the above |
+| #   | Feature                 | Today                                     | Target                                |
+| --- | ----------------------- | ----------------------------------------- | ------------------------------------- |
+| 1   | **Attendance**          | ✅ live (Supabase)                        | extend reads only                     |
+| 2   | **Morning Check-in**    | 🟡 UI + `localStorage` store              | `daily_checkins` table + RPC          |
+| 3   | **Working Session**     | ✅ live (part of Attendance)              | no schema change                      |
+| 4   | **Break Management**    | ✅ live (part of Attendance)              | no schema change                      |
+| 5   | **Midday Status**       | 🟡 UI + `localStorage` store              | `midday_reports` table + RPC          |
+| 6   | **End-of-Day Report**   | 🟡 UI store + scaffolded `ReportsService` | `eod_reports` table + RPC             |
+| 7   | **Dependency Requests** | 🟡 UI + in-memory mock                    | `dependencies` + activity table + RPC |
+| 8   | **Daily Timeline**      | ❌ not built                              | composite read (view + query)         |
+| 9   | **Manager Review**      | 🟡 UI + mock-data                         | roll-up reads over the above          |
 
 Legend: ✅ live · 🟡 mock/UI-only · ❌ absent.
 
@@ -32,6 +32,7 @@ Legend: ✅ live · 🟡 mock/UI-only · ❌ absent.
 ## 2. Current-state audit
 
 **Live today (`attendance`)**
+
 - Tables: `work_sessions`, `work_session_breaks`, `company_settings`, `holidays`.
 - RPCs: `current_work_date`, `start_work_session`, `start_break`, `end_break`,
   `finish_work_session`.
@@ -43,6 +44,7 @@ Legend: ✅ live · 🟡 mock/UI-only · ❌ absent.
 - Realtime: both tables in `supabase_realtime`.
 
 **Service / repository pattern in place**
+
 - `services/core/base-service.ts` — generic `BaseService<Row, Insert, Update>`
   (list/paginate/getById/create/update/upsert/remove/count) over the relaxed
   `db` client (`services/core/client.ts`) so services can target tables not yet
@@ -52,6 +54,7 @@ Legend: ✅ live · 🟡 mock/UI-only · ❌ absent.
   `report.repository.ts` for the already-scaffolded EOD shell.
 
 **Mock-only today**
+
 - `features/checkin` — `store.ts` over `localStorage`, keyed per work date.
   Types: `CheckInDraft` / `CheckInSubmission`. No service/repository/table.
 - `features/midday` — `store.ts`, `MiddayDraft` / `MiddaySubmission`. No backend.
@@ -62,6 +65,7 @@ Legend: ✅ live · 🟡 mock/UI-only · ❌ absent.
 - `features/manager` — `mock-data.ts` only; pure presentation.
 
 **Issues this plan must resolve**
+
 1. **Column-casing mismatch (EOD):** `ReportsService` declares `userId`,
    `sessionId`, `workDate` (camelCase) but DB convention is snake_case
    (`user_id`, `session_id`, `work_date`). → §8 reconciles by switching the
@@ -134,7 +138,7 @@ Every table ships RLS + policies in the migration that creates it.
 
 ---
 
-## 5. Feature 1 — Attendance  *(extend reads only)*
+## 5. Feature 1 — Attendance _(extend reads only)_
 
 Already live; **no schema change**. This section records the contract so the
 report features can reference the session.
@@ -168,22 +172,23 @@ can be set. Add a thin `useCurrentSessionId()` derived from `todaySessionQuery`.
 Plans the day right after clock-in. One per `(user_id, work_date)`.
 
 ### Database — `public.daily_checkins` 🆕
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| user_id | uuid NOT NULL | → `auth.users(id)` CASCADE (denormalized) |
-| work_date | date NOT NULL | from `current_work_date()` |
-| session_id | uuid | → `work_sessions(id)` SET NULL |
-| mood | report_mood | `excellent…difficult` |
-| mood_note | text | |
-| main_goal | text | |
-| priorities | jsonb | `[{title, level, effort}]` (`PriorityItem[]`) |
-| task_ids | uuid[] | planned tasks (future ClickUp/tasks refs) |
-| blockers | jsonb | `[{kind, label, note}]` (`BlockerItem[]`) |
-| help_request | jsonb | `HelpRequest` shape |
-| submitted_at | timestamptz | set by RPC |
-| created_at / updated_at | timestamptz | trigger |
-| | | UNIQUE `(user_id, work_date)` |
+
+| Column                  | Type          | Notes                                         |
+| ----------------------- | ------------- | --------------------------------------------- |
+| id                      | uuid PK       |                                               |
+| user_id                 | uuid NOT NULL | → `auth.users(id)` CASCADE (denormalized)     |
+| work_date               | date NOT NULL | from `current_work_date()`                    |
+| session_id              | uuid          | → `work_sessions(id)` SET NULL                |
+| mood                    | report_mood   | `excellent…difficult`                         |
+| mood_note               | text          |                                               |
+| main_goal               | text          |                                               |
+| priorities              | jsonb         | `[{title, level, effort}]` (`PriorityItem[]`) |
+| task_ids                | uuid[]        | planned tasks (future ClickUp/tasks refs)     |
+| blockers                | jsonb         | `[{kind, label, note}]` (`BlockerItem[]`)     |
+| help_request            | jsonb         | `HelpRequest` shape                           |
+| submitted_at            | timestamptz   | set by RPC                                    |
+| created_at / updated_at | timestamptz   | trigger                                       |
+|                         |               | UNIQUE `(user_id, work_date)`                 |
 
 - Indexes: `(user_id, work_date DESC)`, `(work_date)`.
 - Enum `report_mood`: `excellent, good, okay, stressed, difficult` (mirrors
@@ -196,25 +201,30 @@ Plans the day right after clock-in. One per `(user_id, work_date)`.
   (`EDIT_WINDOW_MINUTES`) server-side.
 
 ### APIs — `features/checkin/api.ts` (replaces `store.ts`)
+
 - `getTodayCheckin(userId): Promise<DailyCheckinRow | null>`
 - `submitCheckin(draft: CheckInDraft): Promise<DailyCheckinRow>` → `rpc('submit_checkin')`
 - `updateCheckin(id, draft): Promise<DailyCheckinRow>` → `rpc('update_checkin')`
 - `listCheckinsByDate(workDate)` (manager roll-up)
 
 ### Queries — `features/checkin/queries.ts`
+
 `checkinKeys = { all, today(userId), byDate(date), history(userId) }`;
 `todayCheckinQuery(userId)` (`staleTime 15s`), `checkinsByDateQuery(date)`.
 
 ### Services — `services/reports/checkin.service.ts`
+
 `CheckinService extends BaseService<DailyCheckinRow, DailyCheckinInsert, DailyCheckinUpdate>`
 `table='daily_checkins'`. Methods: `submit`, `update`, `getToday(userId)`,
 `listByUser`, `listByDate(workDate)`.
 
 ### Repositories — `repositories/checkin.repository.ts`
+
 `CheckinRepository` wraps `checkinService`: `submit`, `update`,
 `getToday`, `listByDate`, `listByUser`.
 
 ### UI flow
+
 `check-in-widget` (dashboard entry) → `check-in-wizard` (mood → priorities →
 tasks → blockers → help) → `check-in-summary`. Wizard `onSubmit` calls a
 `useSubmitCheckin()` mutation (invalidates `checkinKeys.today`). `check-in.tsx`
@@ -222,19 +232,21 @@ route renders summary or wizard based on `todayCheckinQuery`. Drafts may stay in
 `localStorage` (autosave) but the **submission** is server-side.
 
 ### Validation
+
 - `zod` schema `checkInDraftSchema` (mood required, ≥1 priority, help_request
   conditional fields) at the mutation boundary before `submit`.
 - DB: `UNIQUE(user_id, work_date)` blocks double-submit; RPC validates edit
   window + ownership.
 
 ### Permissions
+
 - Submit/update: self only (`reports:write`; employee has it).
 - Read own: author. Read team: `can_review_reports` (owner, super_admin, hr,
   project_manager, team_lead → `reports:read`).
 
 ---
 
-## 7. Feature 3 — Working Session  *(part of Attendance — no schema change)*
+## 7. Feature 3 — Working Session _(part of Attendance — no schema change)_
 
 The "working" portion of `work_sessions` between clock-in and clock-out.
 
@@ -246,7 +258,7 @@ The "working" portion of `work_sessions` between clock-in and clock-out.
   timer in `AppShell`. Finish → `finish-summary-dialog` (which should prompt the
   EOD report — see §8 linkage).
 - **Validation**: server RPC guards (`'Cannot finish a session that never
-  started'`, already-finished). Late/overtime computed in `finish_work_session`.
+started'`, already-finished). Late/overtime computed in `finish_work_session`.
 - **Permissions**: self act; managers read.
 
 **Linkage added by this plan:** `finish_work_session` stays the source of truth
@@ -255,7 +267,7 @@ the client).
 
 ---
 
-## 8. Feature 4 — Break Management  *(part of Attendance — no schema change)*
+## 8. Feature 4 — Break Management _(part of Attendance — no schema change)_
 
 - **Database**: `work_session_breaks` (`session_id`, `user_id`, `started_at`,
   `ended_at`, `duration_seconds`); partial index on open breaks; `break_seconds`
@@ -275,22 +287,23 @@ the client).
 Progress pulse mid-workday. One per `(user_id, work_date)`.
 
 ### Database — `public.midday_reports` 🆕
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| user_id | uuid NOT NULL | CASCADE (denormalized) |
-| work_date | date NOT NULL | |
-| session_id | uuid | → `work_sessions(id)` SET NULL |
-| progress | int | 0–100 (multiples of 10) `CHECK (progress BETWEEN 0 AND 100)` |
-| task_progress | jsonb | `TaskProgressEntry[]` (id + **title snapshot** + state) |
-| current_focus | text | |
-| blocker_links | jsonb | `BlockerLink[]` — dependency id + title snapshot |
-| new_blocker_notes | text | inline free-text blocker |
-| help_request | jsonb | `HelpRequest` |
-| outlook | eod_outlook | `on_track…need_manager_help` |
-| submitted_at | timestamptz | |
-| created_at / updated_at | timestamptz | trigger |
-| | | UNIQUE `(user_id, work_date)` |
+
+| Column                  | Type          | Notes                                                        |
+| ----------------------- | ------------- | ------------------------------------------------------------ |
+| id                      | uuid PK       |                                                              |
+| user_id                 | uuid NOT NULL | CASCADE (denormalized)                                       |
+| work_date               | date NOT NULL |                                                              |
+| session_id              | uuid          | → `work_sessions(id)` SET NULL                               |
+| progress                | int           | 0–100 (multiples of 10) `CHECK (progress BETWEEN 0 AND 100)` |
+| task_progress           | jsonb         | `TaskProgressEntry[]` (id + **title snapshot** + state)      |
+| current_focus           | text          |                                                              |
+| blocker_links           | jsonb         | `BlockerLink[]` — dependency id + title snapshot             |
+| new_blocker_notes       | text          | inline free-text blocker                                     |
+| help_request            | jsonb         | `HelpRequest`                                                |
+| outlook                 | eod_outlook   | `on_track…need_manager_help`                                 |
+| submitted_at            | timestamptz   |                                                              |
+| created_at / updated_at | timestamptz   | trigger                                                      |
+|                         |               | UNIQUE `(user_id, work_date)`                                |
 
 - Indexes: `(user_id, work_date DESC)`, `(work_date)`.
 - Enum `task_progress_state`: `completed, partial, not_started`.
@@ -299,19 +312,23 @@ Progress pulse mid-workday. One per `(user_id, work_date)`.
 - RLS / permissions: identical to check-in (§6).
 
 ### APIs — `features/midday/api.ts`
+
 `getTodayMidday(userId)`, `submitMidday(draft)`, `updateMidday(id, draft)`,
 `listMiddayByDate(workDate)`.
 
 ### Queries — `features/midday/queries.ts`
+
 `middayKeys`; `todayMiddayQuery(userId)`, `middayByDateQuery(date)`.
 
 ### Services / Repositories
+
 `services/reports/midday.service.ts` →
 `MiddayService extends BaseService<MiddayReportRow, …>` `table='midday_reports'`.
 `repositories/midday.repository.ts` → `MiddayRepository` wraps it
 (`submit/update/getToday/listByDate`).
 
 ### UI flow
+
 `midday-reminder` (nudge) → `midday-widget` → `midday-wizard` (progress slider →
 task progress → blockers/links → outlook → help) → `midday-summary`. `midday.tsx`
 route gates on `todayMiddayQuery`. `manager-midday-overview` consumes
@@ -319,10 +336,12 @@ route gates on `todayMiddayQuery`. `manager-midday-overview` consumes
 the picker shows live dependencies.
 
 ### Validation
+
 - `zod` `middayDraftSchema`: `progress` 0–100 step 10, `outlook` required,
   `taskProgress` entries well-formed. DB `CHECK` + `UNIQUE`.
 
 ### Permissions
+
 Self submit/update (`reports:write`); team read via `can_review_reports`.
 
 ---
@@ -333,23 +352,24 @@ Closes the day; one per Work Session. Service shell already exists — this plan
 **reconciles its column casing** and adds the migration + RPCs.
 
 ### Database — `public.eod_reports` 🆕
-| Column | Type | Notes |
-| --- | --- | --- |
-| id | uuid PK | |
-| user_id | uuid NOT NULL | CASCADE |
-| work_date | date NOT NULL | |
-| session_id | uuid | → `work_sessions(id)` SET NULL |
-| summary | text | `≤ 500` (`SUMMARY_MAX_LENGTH`) |
-| completed | jsonb | `TaskProgressEntry[]` |
-| in_progress | jsonb | `InProgressItem[]` |
-| open_dependencies | jsonb | `OpenDependencyEntry[]` (id + title snapshot) |
-| need_from_others | jsonb | `NeedFromOthersItem[]` |
-| tomorrow_plan | jsonb | `TomorrowPlan` |
-| reflection | jsonb | `DailyReflection` |
-| session_summary | jsonb | `WorkSessionSummary` snapshot from `work_sessions` |
-| submitted_at | timestamptz | |
-| created_at / updated_at | timestamptz | trigger |
-| | | UNIQUE `(user_id, work_date)` |
+
+| Column                  | Type          | Notes                                              |
+| ----------------------- | ------------- | -------------------------------------------------- |
+| id                      | uuid PK       |                                                    |
+| user_id                 | uuid NOT NULL | CASCADE                                            |
+| work_date               | date NOT NULL |                                                    |
+| session_id              | uuid          | → `work_sessions(id)` SET NULL                     |
+| summary                 | text          | `≤ 500` (`SUMMARY_MAX_LENGTH`)                     |
+| completed               | jsonb         | `TaskProgressEntry[]`                              |
+| in_progress             | jsonb         | `InProgressItem[]`                                 |
+| open_dependencies       | jsonb         | `OpenDependencyEntry[]` (id + title snapshot)      |
+| need_from_others        | jsonb         | `NeedFromOthersItem[]`                             |
+| tomorrow_plan           | jsonb         | `TomorrowPlan`                                     |
+| reflection              | jsonb         | `DailyReflection`                                  |
+| session_summary         | jsonb         | `WorkSessionSummary` snapshot from `work_sessions` |
+| submitted_at            | timestamptz   |                                                    |
+| created_at / updated_at | timestamptz   | trigger                                            |
+|                         |               | UNIQUE `(user_id, work_date)`                      |
 
 - Indexes: `(user_id, work_date DESC)`, `(work_date)`.
 - Write: **RPC `submit_eod_report(_payload jsonb)`** — reads
@@ -359,6 +379,7 @@ Closes the day; one per Work Session. Service shell already exists — this plan
   keep them decoupled — the `finish-summary-dialog` offers EOD as the next step).
 
 ### Reconciliation of the existing scaffold
+
 `services/reports/reports.service.ts` currently uses `userId/sessionId/workDate`
 (camelCase) and `defaultOrderBy='workDate'`. Change to snake_case
 (`user_id/session_id/work_date`) to match the migration; update
@@ -368,17 +389,21 @@ feature-level `EodDraft → EodReportInsert` mapping moves into
 `features/eod/api.ts`.
 
 ### APIs — `features/eod/api.ts`
+
 `getTodayEod(userId)`, `getEodBySession(sessionId)`, `submitEod(draft, sessionId)`,
 `updateEod(id, draft)`, `listEodByDate(workDate)`, `listEodByUser(userId)`.
 
 ### Queries — `features/eod/queries.ts`
+
 `eodKeys`; `todayEodQuery`, `eodHistoryQuery(userId)`, `eodByDateQuery(date)`.
 
 ### Services / Repositories
+
 `ReportsService` (rename-friendly) / `ReportRepository` — already present;
 keep `eod_reports` binding, fix casing, add `getToday(userId)`.
 
 ### UI flow
+
 `eod-widget` → `eod-wizard` (summary → completed → in-progress → open deps →
 need-from-others → tomorrow plan → reflection; `session_summary` shown read-only
 from attendance) → `eod-summary`. `eod.index.tsx` gates on `todayEodQuery`;
@@ -386,10 +411,12 @@ from attendance) → `eod-summary`. `eod.index.tsx` gates on `todayEodQuery`;
 `eodByDateQuery`.
 
 ### Validation
+
 `zod` `eodDraftSchema`: `summary ≤ 500`, arrays well-formed,
 `needFromOthers[].department ∈ NEED_DEPARTMENTS`. DB `UNIQUE` + RPC edit window.
 
 ### Permissions
+
 Self submit/update (`reports:write`); team read via `can_review_reports`.
 
 ---
@@ -400,6 +427,7 @@ Cross-team request/blocker entity referenced by check-in / midday / eod. Land a
 real table (currently in-memory). Mirrors DATABASE_DESIGN §16.
 
 ### Database — `public.dependencies` 🆕 + `public.dependency_activity` 🆕
+
 **`dependencies`**
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -420,7 +448,7 @@ real table (currently in-memory). Mirrors DATABASE_DESIGN §16.
 - Indexes: `(state)`, `(requester_id)`, `(owner_id)`, `(department_id)`,
   `(project_id)`, GIN `(tags)`.
 - Enum `dependency_state` (9): `draft, pending, accepted, in_progress, blocked,
-  resolved, rejected, cancelled, closed`. Enum `dependency_type` (13) and
+resolved, rejected, cancelled, closed`. Enum `dependency_type` (13) and
   `priority_level` (4) per `dependencies/types.ts`.
 
 **`dependency_activity`** (append-only): `id, dependency_id → dependencies CASCADE,
@@ -439,22 +467,28 @@ created_at)` keeps `dep-comments.tsx` working. Pick one in §14.
 - Realtime: add `dependencies` to `supabase_realtime` (kanban board).
 
 ### APIs — `features/dependencies/api.ts` (replaces in-memory `store.ts`)
+
 `listDependencies(filters)`, `getDependency(id)`, `createDependency(input)`,
 `setDependencyState(id, state)` → `rpc('set_dependency_state')`,
 `setDependencyPriority(id, priority)`, `addComment(id, body, parentId)`.
 
 ### Queries — `features/dependencies/queries.ts`
+
 `dependencyKeys = { all, list(filters), detail(id), board() }`;
 `dependenciesQuery(filters)`, `dependencyQuery(id)`.
 
 ### Services — `services/dependencies/dependencies.service.ts`
+
 `DependenciesService extends BaseService<DependencyRow, …>` `table='dependencies'`
-+ `setState`, `setPriority`, `addComment`, `listForBoard`, `listForUser`.
+
+- `setState`, `setPriority`, `addComment`, `listForBoard`, `listForUser`.
 
 ### Repositories — `repositories/dependency.repository.ts`
+
 `DependencyRepository` wraps the service singleton.
 
 ### UI flow
+
 `dep-create-dialog` → list/board: `dep-table`, `dep-kanban` (columns =
 `KANBAN_COLUMNS`), `dep-card`, `dep-filters`, `dep-widgets`; detail
 `dependencies.$id.tsx` with `dep-timeline` (activity) + `dep-comments`.
@@ -462,12 +496,14 @@ created_at)` keeps `dep-comments.tsx` working. Pick one in §14.
 becomes `useQuery(dependenciesQuery)`.
 
 ### Validation
+
 `zod` `dependencyCreateSchema` (title required, valid `type`/`priority`,
 owner/department references). State transitions validated **server-side** in
 `set_dependency_state` (single source of truth) — client `utils.ts`
 (`isOpen`/`isOverdue`) stays for display only.
 
 ### Permissions
+
 - Read: requester, owner, same-department, or reviewers (`can_access_dependency`).
 - Create: any `authenticated` (`reports:write` employee can raise a blocker).
 - State/priority write: requester, owner, or admins.
@@ -481,6 +517,7 @@ breaks, midday, dependencies raised/resolved, EOD). **Read-only composite** — 
 new base table.
 
 ### Database — `public.daily_timeline` 🆕 (view)
+
 `UNION ALL` of event rows keyed `(user_id, work_date)` over:
 `work_sessions` (clock-in/out), `work_session_breaks` (break start/end),
 `daily_checkins.submitted_at`, `midday_reports.submitted_at`,
@@ -493,18 +530,22 @@ ref_type text, ref_id uuid`. Ordered by `at`.
   `security_invoker = true` so caller's RLS applies.
 
 ### APIs / Queries
+
 `features/dashboard` (or a small `features/timeline`) `api.ts`:
 `getDailyTimeline(userId, workDate)`; `queries.ts` `timelineQuery(userId, date)`.
 
 ### Services / Repositories
+
 Optional thin `TimelineService extends BaseService` bound to the view (read-only;
 override mutations to throw), or fold into `AttendanceRepository.getTimeline()`.
 
 ### UI flow
+
 New `daily-timeline` component on the employee dashboard + the manager
 `employee-drawer`; renders the ordered events with per-`kind` icons. Read-only.
 
 ### Validation / Permissions
+
 No writes. Read = self or `can_review_reports` (inherited from base tables).
 
 ---
@@ -515,6 +556,7 @@ Team-wide roll-up the manager uses to review attendance + reports + blockers.
 Read models over the report tables; **no employee data is duplicated**.
 
 ### Database — views 🆕
+
 - `public.report_compliance` — per `(user_id, work_date)`: booleans
   `checked_in`, `midday_done`, `eod_done` (LEFT JOINs of the three report tables
   onto `work_sessions`) for the compliance grid.
@@ -526,23 +568,27 @@ Read models over the report tables; **no employee data is duplicated**.
   — single source for every report-read policy above.
 
 ### APIs / Queries — `features/manager/api.ts` (replaces `mock-data.ts`)
+
 `getTeamToday()` (extends attendance team query), `getReportCompliance(date)`,
 `getTeamBlockers()` (open dependencies), `getTeamReports(date)`. `queries.ts`:
 `managerKeys`, `teamComplianceQuery(date)`, `teamBlockersQuery()`.
 
 ### Services / Repositories
+
 `services/manager/manager.service.ts` reading the views (`BaseService` bound to
 each view, read-only) → `repositories/manager.repository.ts`. Where it just
 re-reads attendance/report/dependency data, **compose existing repositories**
 rather than duplicating queries.
 
 ### UI flow
+
 `manager.tsx` route assembles: `attendance-overview`, `report-compliance`
 (`teamComplianceQuery`), `blockers-panel` (`teamBlockersQuery`), `team-health`,
 `team-status-board`, `live-activity-feed` (timeline/realtime), `employee-drawer`
 (per-person check-in/midday/eod + `daily-timeline`). All read-only roll-ups.
 
 ### Validation / Permissions
+
 - Read-only. Gate the whole route + queries on `can_review_reports` /
   `hasAnyRole([...managers])`; wire `reports:read` into the sidebar entry.
 - Manager **cannot** edit an employee's report (no write path exposed). Any
@@ -572,15 +618,15 @@ to `dependencies` + `work_sessions` (already published).
 
 **Permissions matrix (summary)**
 
-| Action | Roles |
-| --- | --- |
-| Submit/edit own check-in / midday / eod | self (`reports:write`) |
-| Read own reports | self |
+| Action                                    | Roles                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Submit/edit own check-in / midday / eod   | self (`reports:write`)                                                                     |
+| Read own reports                          | self                                                                                       |
 | Read team reports / compliance / timeline | `can_review_reports` = owner, super_admin, hr, project_manager, team_lead (`reports:read`) |
-| Raise a dependency | any authenticated |
-| Change dependency state/priority | requester, owner, admins |
-| Read dependency | requester, owner, same-dept, reviewers |
-| Edit company attendance settings | owner, super_admin, hr |
+| Raise a dependency                        | any authenticated                                                                          |
+| Change dependency state/priority          | requester, owner, admins                                                                   |
+| Read dependency                           | requester, owner, same-dept, reviewers                                                     |
+| Edit company attendance settings          | owner, super_admin, hr                                                                     |
 
 Keep `features/auth/permissions.ts` in lockstep with the seeded
 `role_permissions` table (the HR migration already seeded `reports:read` /
@@ -633,7 +679,6 @@ After **each** migration: regenerate `src/integrations/supabase/types.ts`.
 
 ---
 
-*This plan is derived from the live `auth`/`attendance`/`hr` migrations, the
-existing service/repository layer (`BaseService`, `*.service.ts`,
-`*.repository.ts`), the feature `types.ts`/`store.ts` modules, and
-`docs/DATABASE_DESIGN.md` §7, §15, §16. It changes no application code.*
+_This plan is derived from the live `auth`/`attendance`/`hr` migrations, the
+existing service/repository layer (`BaseService`, `_.service.ts`,
+`_.repository.ts`), the feature `types.ts`/`store.ts`modules, and`docs/DATABASE_DESIGN.md` §7, §15, §16. It changes no application code._

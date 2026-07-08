@@ -2,13 +2,7 @@ import { useMemo, useState } from "react";
 import { CheckCheck, Filter, Inbox, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,16 +16,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { getCurrentUserId } from "../directory";
 import { notificationStore, useMinuteTick, useNotifications } from "../store";
-import {
-  BUCKET_LABEL,
-  CATEGORY_LABEL,
-  bucketOf,
-} from "../ui";
-import type {
-  NotificationPriority,
-  NotificationType,
-  PreferenceCategory,
-} from "../types";
+import { BUCKET_LABEL, CATEGORY_LABEL, bucketOf } from "../ui";
+import type { NotificationPriority, NotificationType, PreferenceCategory } from "../types";
 import { NotificationRow } from "./notification-dropdown";
 
 type Tab = "all" | "unread" | "archived";
@@ -79,9 +65,7 @@ export function NotificationCenter() {
             <CardTitle className="flex items-center gap-2 text-base">
               <Filter className="size-4 text-primary" aria-hidden /> Filter
             </CardTitle>
-            <CardDescription>
-              {unread > 0 ? `${unread} unread` : "All caught up."}
-            </CardDescription>
+            <CardDescription>{unread > 0 ? `${unread} unread` : "All caught up."}</CardDescription>
           </div>
           <Button
             variant="outline"

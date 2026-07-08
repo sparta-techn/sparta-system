@@ -2,13 +2,7 @@ import { AlertTriangle, GaugeCircle, Users } from "lucide-react";
 
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 import { MOCK_TEAM_MIDDAY } from "../mock-data";
@@ -27,9 +21,7 @@ export function ManagerMiddayOverview({ hrMode = false }: Props) {
   const avgProgress =
     submitted.length === 0
       ? 0
-      : Math.round(
-          submitted.reduce((a, t) => a + (t.progress ?? 0), 0) / submitted.length,
-        );
+      : Math.round(submitted.reduce((a, t) => a + (t.progress ?? 0), 0) / submitted.length);
 
   const atRisk = submitted.filter(
     (t) => t.outlook === "blocked" || t.outlook === "need_manager_help",
@@ -97,7 +89,7 @@ export function ManagerMiddayOverview({ hrMode = false }: Props) {
                         </p>
                       </div>
                     </div>
-                    <StatusBadge  label="Pending" size="sm" />
+                    <StatusBadge label="Pending" size="sm" />
                   </li>
                 ))}
               </ul>
@@ -124,7 +116,7 @@ export function ManagerMiddayOverview({ hrMode = false }: Props) {
                       className="flex items-center justify-between gap-3 rounded-md border bg-card p-2.5 text-sm"
                     >
                       <span className="min-w-0 flex-1 truncate text-foreground">{b.label}</span>
-                      <StatusBadge  label={`${b.count}×`} size="sm" withDot={false} />
+                      <StatusBadge label={`${b.count}×`} size="sm" withDot={false} />
                     </li>
                   ))}
                 </ul>
@@ -216,17 +208,20 @@ const OUTLOOK_ORDER: EndOfDayOutlook[] = [
 function aggregateByDepartment(submitted: typeof MOCK_TEAM_MIDDAY) {
   const map = new Map<
     string,
-    { department: string; totalProgress: number; count: number; outlook: Record<EndOfDayOutlook, number> }
+    {
+      department: string;
+      totalProgress: number;
+      count: number;
+      outlook: Record<EndOfDayOutlook, number>;
+    }
   >();
   for (const t of submitted) {
-    const entry =
-      map.get(t.department) ??
-      {
-        department: t.department,
-        totalProgress: 0,
-        count: 0,
-        outlook: { on_track: 0, need_more_time: 0, blocked: 0, need_manager_help: 0 },
-      };
+    const entry = map.get(t.department) ?? {
+      department: t.department,
+      totalProgress: 0,
+      count: 0,
+      outlook: { on_track: 0, need_more_time: 0, blocked: 0, need_manager_help: 0 },
+    };
     entry.totalProgress += t.progress ?? 0;
     entry.count += 1;
     if (t.outlook) entry.outlook[t.outlook] += 1;

@@ -32,14 +32,9 @@ export function KanbanFiltersBar({
     !!filters.priorities?.length ||
     !!filters.epicIds?.length;
 
-  const toggle = <K extends keyof KanbanFilters>(
-    key: K,
-    value: string,
-  ) => {
+  const toggle = <K extends keyof KanbanFilters>(key: K, value: string) => {
     const list = (filters[key] as string[] | undefined) ?? [];
-    const next = list.includes(value)
-      ? list.filter((v) => v !== value)
-      : [...list, value];
+    const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
     onChange({ ...filters, [key]: next.length ? next : undefined });
   };
 

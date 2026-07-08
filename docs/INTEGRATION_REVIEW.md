@@ -18,24 +18,24 @@ recommendations, not blockers.
 
 ## Severity legend
 
-| Level | Meaning |
-|---|---|
-| **Critical (P0)** | Live crash, data loss, or security exposure. Fix now. |
-| **High** | Latent defect or design risk that will bite once the backend is wired. |
-| **Medium** | Quality / maintainability / minor runtime concern. |
-| **Low** | Polish / nice-to-have. |
+| Level             | Meaning                                                                |
+| ----------------- | ---------------------------------------------------------------------- |
+| **Critical (P0)** | Live crash, data loss, or security exposure. Fix now.                  |
+| **High**          | Latent defect or design risk that will bite once the backend is wired. |
+| **Medium**        | Quality / maintainability / minor runtime concern.                     |
+| **Low**           | Polish / nice-to-have.                                                 |
 
 ## Findings at a glance
 
-| ID | Dimension | Severity | Status |
-|---|---|---|---|
-| A1 | Architecture — top barrel couples core with React UI | High | Open (not fixed — latent) |
-| A2 | Architecture — process-singleton container | Medium | Open (safe today; see note) |
-| Q1 | Quality — zero automated tests | Medium | Open |
-| P1 | Performance — mock telemetry uses wall-clock (SSR-unsafe if `ssr` re-enabled) | Low | Open (mitigated by `ssr:false`) |
-| T1 | TypeScript — `unsupported()` relies on structural widening | Low | Open (by design) |
-| X1 | Extensibility — capability resolution returns only first match | Low | Open |
-| D1 | Docs — no central capability/provider index | Low | Open |
+| ID  | Dimension                                                                     | Severity | Status                          |
+| --- | ----------------------------------------------------------------------------- | -------- | ------------------------------- |
+| A1  | Architecture — top barrel couples core with React UI                          | High     | Open (not fixed — latent)       |
+| A2  | Architecture — process-singleton container                                    | Medium   | Open (safe today; see note)     |
+| Q1  | Quality — zero automated tests                                                | Medium   | Open                            |
+| P1  | Performance — mock telemetry uses wall-clock (SSR-unsafe if `ssr` re-enabled) | Low      | Open (mitigated by `ssr:false`) |
+| T1  | TypeScript — `unsupported()` relies on structural widening                    | Low      | Open (by design)                |
+| X1  | Extensibility — capability resolution returns only first match                | Low      | Open                            |
+| D1  | Docs — no central capability/provider index                                   | Low      | Open                            |
 
 No row is Critical → **no fixes applied.**
 
@@ -44,6 +44,7 @@ No row is Critical → **no fixes applied.**
 ## 1. Architecture — strong
 
 **Strengths**
+
 - Clean **ports-and-adapters** layering: `types` (contracts) → `models` (value
   objects) → `providers` (adapters + factory/registry) → `services`
   (manager/settings/store/container) → `ports` (capability interfaces) → `hooks`/
@@ -57,19 +58,20 @@ No row is Critical → **no fixes applied.**
   the `AccountStore` interface is a clean seam for the future Supabase repository.
 
 **Findings**
+
 - **A1 (High) — the top barrel mixes the platform core with React UI.**
   `src/integrations/index.ts` re-exports `./components` and `./hooks` (TSX/React)
-  alongside `./services`/`./providers`/`./ports`. Any *server* module that later
+  alongside `./services`/`./providers`/`./ports`. Any _server_ module that later
   imports `getIntegrationManager` from `@/integrations` would transitively pull the
   entire React component tree into the server bundle (webhook handlers, cron jobs,
-  server functions). *Not a live defect* — verified that nothing outside the folder
+  server functions). _Not a live defect_ — verified that nothing outside the folder
   imports the top barrel today (the route imports the `./components` subpath).
-  *Recommendation:* import platform logic from `@/integrations/services` etc., or
+  _Recommendation:_ import platform logic from `@/integrations/services` etc., or
   split a UI-free `@/integrations/core` barrel. Left unfixed because changing the
   barrel is a rippling, non-critical change with no current caller at risk.
 - **A2 (Medium) — the container is a module-level singleton.** Fine under the
   current model: the UI is `ssr:false` (client-only), so the singleton is
-  per-browser-tab = per-user, and the store is in-memory/mock. *Watch-out:* when a
+  per-browser-tab = per-user, and the store is in-memory/mock. _Watch-out:_ when a
   real, per-request Supabase-backed `AccountStore` replaces `InMemoryAccountStore`,
   a shared singleton must **not** hold request-scoped auth/state on the server.
   Plan a per-request container (or keep the store stateless and pass auth per call)
@@ -78,7 +80,8 @@ No row is Critical → **no fixes applied.**
 ## 2. Extensibility — excellent
 
 **Strengths**
-- Adding a provider is genuinely **one line** in `PROVIDER_TABLE` +  a folder; this
+
+- Adding a provider is genuinely **one line** in `PROVIDER_TABLE` + a folder; this
   was demonstrated 15 times without touching an existing adapter or the core
   interface — the Open/Closed guarantee held in practice.
 - New capabilities were added as **new ports + a new capability tag** without
@@ -89,15 +92,17 @@ No row is Critical → **no fixes applied.**
   providers coexist with full ones behind one interface.
 
 **Findings**
+
 - **X1 (Low) — `registry.firstWithCapability` returns only the first available
   provider.** Correct for "resolve the one configured channel," but multi-target
-  fan-out (e.g. notify Slack *and* email) is left to callers to assemble by
+  fan-out (e.g. notify Slack _and_ email) is left to callers to assemble by
   filtering the catalog. Consider a `allWithCapability(cap)` helper to formalize
   the pattern shown in `docs/NOTIFICATIONS.md`.
 
 ## 3. Code reuse — excellent
 
 **Strengths**
+
 - `BaseIntegration` implements the entire lifecycle once; adapters write only 4
   vendor hooks.
 - Reliability logic lives once in `AutomationService` + `InMemoryRetryQueue` +
@@ -113,6 +118,7 @@ No duplication worth flagging.
 ## 4. Performance — good
 
 **Strengths**
+
 - Both reactive stores (`IntegrationManager`, `MockTelemetryService`) **cache their
   snapshot array** and invalidate on publish — `useSyncExternalStore` gets a stable
   reference, avoiding the "getSnapshot should be cached" infinite-loop trap.
@@ -121,6 +127,7 @@ No duplication worth flagging.
 - No N+1 or unbounded loops; logs are capped (`slice(0, 50)`).
 
 **Findings**
+
 - **P1 (Low) — mock telemetry uses `Date.now()`/`new Date()` at seed and render
   (`relativeTime`).** Under SSR this would cause hydration mismatches, but the
   Integration Center route is `ssr:false`, so it renders client-only and the point
@@ -130,6 +137,7 @@ No duplication worth flagging.
 ## 5. Security — strong
 
 **Strengths**
+
 - **Credentials never leak:** `IntegrationAccount.toPublic` strips `credentialRef`;
   the plaintext token is never on the account object. Client configs expose only a
   `resolveToken` seam that is never invoked (all vendor calls are `notImplemented`).
@@ -144,6 +152,7 @@ No duplication worth flagging.
   `validate()`/`checkRequiredFields` before any action.
 
 **Findings**
+
 - None critical. When the backend lands, enforce the doc's stated controls
   (app-layer credential encryption, constant-time webhook signature verification —
   currently `notImplemented` seams, RLS on `integration_accounts`).
@@ -151,6 +160,7 @@ No duplication worth flagging.
 ## 6. TypeScript — excellent
 
 **Strengths**
+
 - `strict: true`, **zero `any`**, zero `@ts-ignore`. The only casts are
   `value as Record<string, unknown>` inside `is*Port` type guards (after a
   `typeof === "object"` check) and one guarded `JSON.parse` result — all safe.
@@ -159,6 +169,7 @@ No duplication worth flagging.
 - `npx tsc --noEmit` passes clean across all 122 files.
 
 **Findings**
+
 - **T1 (Low) — `InfrastructureService.unsupported()` returns `InfraStatusBase`
   where a `DeploymentStatus`/`SslStatus`/`ServerInfo` is expected**, relying on the
   extra fields being optional (structural widening). Correct and intentional, but a
@@ -167,13 +178,15 @@ No duplication worth flagging.
 ## 7. Documentation — very strong
 
 **Strengths**
+
 - Every capability family has a dedicated doc (`GITHUB.md`,
   `ACTIVITY_INTEGRATIONS.md`, `NOTIFICATIONS.md`, `AUTOMATION.md`,
   `INFRASTRUCTURE.md`, `INTEGRATION_CENTER.md`) plus the platform `README.md` and
   `INTEGRATION_ARCHITECTURE.md`. File-level JSDoc is consistent and explains the
-  *why*, not just the *what*.
+  _why_, not just the _what_.
 
 **Findings**
+
 - **Q1 (Medium) — no automated tests.** The platform is offline/deterministic and
   highly testable (pure mappers, `InMemoryRetryQueue` backoff, `is*Port` guards,
   `MockTelemetryService` determinism, `BaseIntegration` lifecycle) yet has zero
@@ -189,14 +202,14 @@ No duplication worth flagging.
 **None.** No P0 (crash / data-loss / security-exposure) issue was found, so no code
 was modified. The review verified the previously plausible criticals are non-issues:
 
-| Suspected critical | Resolution |
-|---|---|
-| SSR hydration mismatch from mock wall-clock times | Route is `ssr:false` (client-only) → not rendered on the server. |
-| XSS via error/log/config rendering | All React-escaped; no `dangerouslySetInnerHTML`; secrets masked. |
-| Credential leakage to client | `toPublic` strips `credentialRef`; tokens never on returned objects. |
-| `getSnapshot` infinite loop | Both stores cache + invalidate the snapshot array. |
-| `settings("")` with empty account id | `BaseIntegration.settings` returns the schema before any account lookup. |
-| Cross-user state bleed via singleton | `ssr:false` ⇒ per-browser (per-user); store is in-memory today. |
+| Suspected critical                                | Resolution                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| SSR hydration mismatch from mock wall-clock times | Route is `ssr:false` (client-only) → not rendered on the server.         |
+| XSS via error/log/config rendering                | All React-escaped; no `dangerouslySetInnerHTML`; secrets masked.         |
+| Credential leakage to client                      | `toPublic` strips `credentialRef`; tokens never on returned objects.     |
+| `getSnapshot` infinite loop                       | Both stores cache + invalidate the snapshot array.                       |
+| `settings("")` with empty account id              | `BaseIntegration.settings` returns the schema before any account lookup. |
+| Cross-user state bleed via singleton              | `ssr:false` ⇒ per-browser (per-user); store is in-memory today.          |
 
 ---
 

@@ -10,14 +10,14 @@
 
 ## 1. Workflows
 
-| Workflow | File | Trigger | Purpose |
-|---|---|---|---|
-| **Lint** | `.github/workflows/lint.yml` | PR, non-main push, `workflow_call` | ESLint, Prettier check, `tsc` typecheck |
-| **Test** | `.github/workflows/test.yml` | PR, non-main push, `workflow_call` | Vitest unit + component (blocking); Playwright e2e (best-effort) |
-| **Build** | `.github/workflows/build.yml` | `workflow_call`, manual | Build & push the production Docker image to GHCR |
-| **Security Scan** | `.github/workflows/security-scan.yml` | PR, main push, weekly, manual | CodeQL, dependency review, npm audit, Gitleaks, Trivy FS |
-| **Deploy** | `.github/workflows/deploy.yml` | main push, `v*.*.*` tag, manual | Gated Lint→Test→Build→Deploy with health-check auto-rollback |
-| **Rollback** | `.github/workflows/rollback.yml` | manual | Redeploy a previous image to an environment |
+| Workflow          | File                                  | Trigger                            | Purpose                                                          |
+| ----------------- | ------------------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
+| **Lint**          | `.github/workflows/lint.yml`          | PR, non-main push, `workflow_call` | ESLint, Prettier check, `tsc` typecheck                          |
+| **Test**          | `.github/workflows/test.yml`          | PR, non-main push, `workflow_call` | Vitest unit + component (blocking); Playwright e2e (best-effort) |
+| **Build**         | `.github/workflows/build.yml`         | `workflow_call`, manual            | Build & push the production Docker image to GHCR                 |
+| **Security Scan** | `.github/workflows/security-scan.yml` | PR, main push, weekly, manual      | CodeQL, dependency review, npm audit, Gitleaks, Trivy FS         |
+| **Deploy**        | `.github/workflows/deploy.yml`        | main push, `v*.*.*` tag, manual    | Gated Lint→Test→Build→Deploy with health-check auto-rollback     |
+| **Rollback**      | `.github/workflows/rollback.yml`      | manual                             | Redeploy a previous image to an environment                      |
 
 Lint/Test/Build are **reusable** (`workflow_call`) so Deploy runs them as gates
 in one pipeline — no duplicate runs on `main` (their `push` triggers use
@@ -64,17 +64,17 @@ reviewers** (this is the manual-approval gate) and optionally a deployment branc
 Repository or per-environment secrets (per-environment is preferred so staging
 and production use different targets/keys):
 
-| Secret | Used by | Notes |
-|---|---|---|
-| `VITE_SUPABASE_URL` | Build | Inlined into the browser bundle at build time |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Build | Public/publishable key |
-| `VITE_SUPABASE_PROJECT_ID` | Build | |
-| `VPS_HOST` | Deploy, Rollback | VPS hostname/IP |
-| `VPS_USER` | Deploy, Rollback | SSH user |
-| `VPS_SSH_KEY` | Deploy, Rollback | Private key (deploy key) for that user |
-| `VPS_SSH_PORT` | Deploy, Rollback | Optional; defaults to `22` |
-| `GHCR_TOKEN` | Deploy, Rollback | Optional PAT for the VPS to pull from GHCR; falls back to `GITHUB_TOKEN` |
-| `SLACK_WEBHOOK_URL` | Deploy, Rollback | Optional; enables Slack notifications |
+| Secret                          | Used by          | Notes                                                                    |
+| ------------------------------- | ---------------- | ------------------------------------------------------------------------ |
+| `VITE_SUPABASE_URL`             | Build            | Inlined into the browser bundle at build time                            |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Build            | Public/publishable key                                                   |
+| `VITE_SUPABASE_PROJECT_ID`      | Build            |                                                                          |
+| `VPS_HOST`                      | Deploy, Rollback | VPS hostname/IP                                                          |
+| `VPS_USER`                      | Deploy, Rollback | SSH user                                                                 |
+| `VPS_SSH_KEY`                   | Deploy, Rollback | Private key (deploy key) for that user                                   |
+| `VPS_SSH_PORT`                  | Deploy, Rollback | Optional; defaults to `22`                                               |
+| `GHCR_TOKEN`                    | Deploy, Rollback | Optional PAT for the VPS to pull from GHCR; falls back to `GITHUB_TOKEN` |
+| `SLACK_WEBHOOK_URL`             | Deploy, Rollback | Optional; enables Slack notifications                                    |
 
 > `GITHUB_TOKEN` is provided automatically for pushing to GHCR from the runner
 > (Build has `packages: write`). The **server-side** Supabase secrets
@@ -83,8 +83,8 @@ and production use different targets/keys):
 
 ### 3.3 Variables (Settings → Variables)
 
-| Variable | Used by | Notes |
-|---|---|---|
+| Variable     | Used by          | Notes                                                                                        |
+| ------------ | ---------------- | -------------------------------------------------------------------------------------------- |
 | `DEPLOY_DIR` | Deploy, Rollback | Absolute path on the VPS holding `docker-compose.prod.yml` + `.env` (e.g. `/opt/spartaflow`) |
 
 ### 3.4 VPS prerequisites
@@ -129,8 +129,8 @@ Two paths (both satisfy the rollback requirement):
 
 - **Automatic** — a failed post-deploy health check rolls back to the previous
   good image within the same Deploy run (§4.5).
-- **Manual** — run the **Rollback** workflow (Actions → Rollback → *Run
-  workflow*): pick the environment and either paste an image ref to roll back to,
+- **Manual** — run the **Rollback** workflow (Actions → Rollback → _Run
+  workflow_): pick the environment and either paste an image ref to roll back to,
   or leave it blank to use the host's previous-good image (`.rollback_image`).
   It pulls, `up -d`, health-checks, updates the baseline, and notifies.
 
@@ -143,13 +143,13 @@ build by tag.
 
 `security-scan.yml` runs five independent checks:
 
-| Check | Tool | Blocking? |
-|---|---|---|
-| Static analysis | **CodeQL** (`security-and-quality`) | Findings surface in the Security tab |
-| PR dependency diff | **dependency-review-action** | Blocks PR on `high`+ new vulns |
-| Dependency vulns | **npm audit** (uses committed `package-lock.json`) | Non-blocking (triage in log) |
-| Secrets | **Gitleaks** | Blocks on leaked secrets |
-| FS vuln/secret/misconfig | **Trivy** (`HIGH,CRITICAL`, SARIF → code scanning) | Reports to Security tab |
+| Check                    | Tool                                               | Blocking?                            |
+| ------------------------ | -------------------------------------------------- | ------------------------------------ |
+| Static analysis          | **CodeQL** (`security-and-quality`)                | Findings surface in the Security tab |
+| PR dependency diff       | **dependency-review-action**                       | Blocks PR on `high`+ new vulns       |
+| Dependency vulns         | **npm audit** (uses committed `package-lock.json`) | Non-blocking (triage in log)         |
+| Secrets                  | **Gitleaks**                                       | Blocks on leaked secrets             |
+| FS vuln/secret/misconfig | **Trivy** (`HIGH,CRITICAL`, SARIF → code scanning) | Reports to Security tab              |
 
 Runs on PRs, `main`, and weekly. It's reusable (`workflow_call`) — add it to
 Deploy's `needs` if you want deploys gated on a clean scan.

@@ -10,13 +10,7 @@
  */
 
 import { notImplemented } from "../services/errors";
-import type {
-  DeploymentStatus,
-  DnsStatus,
-  ServerInfo,
-  SslStatus,
-  StorageStatus,
-} from "../ports";
+import type { DeploymentStatus, DnsStatus, ServerInfo, SslStatus, StorageStatus } from "../ports";
 import type { InfrastructureTransport } from "../infrastructure";
 import type { SupabasePlatformClientConfig } from "./types";
 

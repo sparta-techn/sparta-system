@@ -19,7 +19,7 @@ UI. Each template declares:
 - **which variables it takes** (`{{placeholder}}` tokens with defaults/required flags),
 - **the instruction body** itself.
 
-A rendered template becomes the *user message*; its `surface` tells the Context
+A rendered template becomes the _user message_; its `surface` tells the Context
 Engine what to gather. Templates never contain data — they reference the
 `<context>` block the Context Engine injects, so the same template works for every
 user and stays grounded, authorized (RLS-scoped), and reusable.
@@ -53,31 +53,31 @@ Contracts (`PromptTemplate`, `PromptVariable`, `PromptAudience`) live in
 
 ### Employee (`EMPLOYEE_TEMPLATES`)
 
-| id | Title | Surface | Vars | Purpose |
-| --- | --- | --- | --- | --- |
-| `morning-plan` | Morning Plan | `global` | `date`=today | Plan the day from tasks, yesterday's EOD, attendance, blockers |
-| `midday-report` | Midday Report | `reports` | `date`=today | Draft a midday status: progress, focus, new blockers, on-track check |
-| `end-of-day-report` | End-of-Day Report | `reports` | `date`=today | Draft an EOD: summary, completed, in-progress, blockers, tomorrow |
-| `weekly-summary` | Weekly Summary | `reports` | `week_start`⚑, `week_end`⚑ | Summarize the week from reports, tasks, time, attendance |
+| id                  | Title             | Surface   | Vars                       | Purpose                                                              |
+| ------------------- | ----------------- | --------- | -------------------------- | -------------------------------------------------------------------- |
+| `morning-plan`      | Morning Plan      | `global`  | `date`=today               | Plan the day from tasks, yesterday's EOD, attendance, blockers       |
+| `midday-report`     | Midday Report     | `reports` | `date`=today               | Draft a midday status: progress, focus, new blockers, on-track check |
+| `end-of-day-report` | End-of-Day Report | `reports` | `date`=today               | Draft an EOD: summary, completed, in-progress, blockers, tomorrow    |
+| `weekly-summary`    | Weekly Summary    | `reports` | `week_start`⚑, `week_end`⚑ | Summarize the week from reports, tasks, time, attendance             |
 
 ### Manager (`MANAGER_TEMPLATES`)
 
-| id | Title | Surface | Vars | Purpose |
-| --- | --- | --- | --- | --- |
-| `team-summary` | Team Summary | `reports` | `date`=today | Current team status from reports, tasks, attendance, dependencies |
-| `sprint-review` | Sprint Review | `sprints` | `sprint_name`⚑ | Goal, completed vs carried-over, scope changes, risks, actions |
-| `team-risks` | Team Risks | `dependencies` | — | Top 5 team risks from dependencies, tasks, sprints, reports |
-| `missing-reports` | Missing Reports | `reports` | `date`=today | Who's missing check-in/midday/EOD reports + a reminder message |
-| `workload-analysis` | Workload Analysis | `analytics` | — | Balance across the team from tasks, time, projects, attendance |
+| id                  | Title             | Surface        | Vars           | Purpose                                                           |
+| ------------------- | ----------------- | -------------- | -------------- | ----------------------------------------------------------------- |
+| `team-summary`      | Team Summary      | `reports`      | `date`=today   | Current team status from reports, tasks, attendance, dependencies |
+| `sprint-review`     | Sprint Review     | `sprints`      | `sprint_name`⚑ | Goal, completed vs carried-over, scope changes, risks, actions    |
+| `team-risks`        | Team Risks        | `dependencies` | —              | Top 5 team risks from dependencies, tasks, sprints, reports       |
+| `missing-reports`   | Missing Reports   | `reports`      | `date`=today   | Who's missing check-in/midday/EOD reports + a reminder message    |
+| `workload-analysis` | Workload Analysis | `analytics`    | —              | Balance across the team from tasks, time, projects, attendance    |
 
 ### Owner (`OWNER_TEMPLATES`)
 
-| id | Title | Surface | Vars | Purpose |
-| --- | --- | --- | --- | --- |
-| `company-health` | Company Health | `analytics` | `date`=today | Overall health from projects, analytics, attendance, dependencies |
-| `executive-summary` | Executive Summary | `analytics` | `period`=this week | One-page leadership summary: delivery, metrics, risks, decisions |
-| `weekly-report` | Weekly Report | `analytics` | `week_start`⚑, `week_end`⚑ | Company weekly: exec summary, per-project, people, risks, priorities |
-| `monthly-report` | Monthly Report | `analytics` | `month`⚑ | Company monthly: delivery, operational trends, wins/setbacks, strategy |
+| id                  | Title             | Surface     | Vars                       | Purpose                                                                |
+| ------------------- | ----------------- | ----------- | -------------------------- | ---------------------------------------------------------------------- |
+| `company-health`    | Company Health    | `analytics` | `date`=today               | Overall health from projects, analytics, attendance, dependencies      |
+| `executive-summary` | Executive Summary | `analytics` | `period`=this week         | One-page leadership summary: delivery, metrics, risks, decisions       |
+| `weekly-report`     | Weekly Report     | `analytics` | `week_start`⚑, `week_end`⚑ | Company weekly: exec summary, per-project, people, risks, priorities   |
+| `monthly-report`    | Monthly Report    | `analytics` | `month`⚑                   | Company monthly: delivery, operational trends, wins/setbacks, strategy |
 
 > **Grounding & authorization.** Manager and owner templates rely on the service
 > layer returning team-/company-scoped rows under RLS — a manager sees their
@@ -120,7 +120,7 @@ const { surface, prompt } = renderRequest(template, { date: "2026-07-01" });
 
 const result = await aiEngine.generate({
   user: { id, displayName, roles },
-  surface,                       // "global" → Context Engine gathers the right sources
+  surface, // "global" → Context Engine gathers the right sources
   contextHints: { workDate: "2026-07-01" },
   prompt,
 });
@@ -136,15 +136,15 @@ provider is the only missing piece — see `docs/AI_INFRASTRUCTURE.md §4`.
 
 From `@/ai` (or `@/ai/prompts`):
 
-| Export | Description |
-| --- | --- |
-| `ALL_PROMPT_TEMPLATES` | Every template, in declaration order |
-| `PROMPT_TEMPLATES` | Templates keyed by id |
-| `getPrompt(id)` | Resolve one template (throws if unknown) |
-| `listPrompts(audience?)` | All templates, or those for `employee`/`manager`/`owner` |
-| `renderPrompt(template, values?)` | Fill tokens → final prompt string |
-| `renderRequest(template, values?)` | → `{ surface, prompt }` for `aiEngine` |
-| `EMPLOYEE_TEMPLATES` · `MANAGER_TEMPLATES` · `OWNER_TEMPLATES` | The per-role sets |
+| Export                                                         | Description                                              |
+| -------------------------------------------------------------- | -------------------------------------------------------- |
+| `ALL_PROMPT_TEMPLATES`                                         | Every template, in declaration order                     |
+| `PROMPT_TEMPLATES`                                             | Templates keyed by id                                    |
+| `getPrompt(id)`                                                | Resolve one template (throws if unknown)                 |
+| `listPrompts(audience?)`                                       | All templates, or those for `employee`/`manager`/`owner` |
+| `renderPrompt(template, values?)`                              | Fill tokens → final prompt string                        |
+| `renderRequest(template, values?)`                             | → `{ surface, prompt }` for `aiEngine`                   |
+| `EMPLOYEE_TEMPLATES` · `MANAGER_TEMPLATES` · `OWNER_TEMPLATES` | The per-role sets                                        |
 
 Driving a role-scoped picker UI:
 

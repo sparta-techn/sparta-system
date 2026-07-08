@@ -107,8 +107,8 @@ function seeded(seed: number) {
   };
 }
 const rand = seeded(20260629);
-const pick = <T,>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)] as T;
-const pickMany = <T,>(arr: readonly T[], n: number) => {
+const pick = <T>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)] as T;
+const pickMany = <T>(arr: readonly T[], n: number) => {
   const copy = [...arr];
   const out: T[] = [];
   for (let i = 0; i < n && copy.length; i += 1) {
@@ -126,9 +126,27 @@ const daysAhead = (n: number) => new Date(now + n * 86_400_000).toISOString();
 export const seedEpics: Epic[] = seedProjects.flatMap((p, idx) => {
   const owner = employees[(idx * 3) % employees.length]!;
   return [
-    { id: `${p.id}-epic-core`, projectId: p.id, name: "Core platform", color: p.color, ownerId: owner.id },
-    { id: `${p.id}-epic-growth`, projectId: p.id, name: "Growth & onboarding", color: p.color, ownerId: owner.id },
-    { id: `${p.id}-epic-quality`, projectId: p.id, name: "Quality & reliability", color: p.color, ownerId: owner.id },
+    {
+      id: `${p.id}-epic-core`,
+      projectId: p.id,
+      name: "Core platform",
+      color: p.color,
+      ownerId: owner.id,
+    },
+    {
+      id: `${p.id}-epic-growth`,
+      projectId: p.id,
+      name: "Growth & onboarding",
+      color: p.color,
+      ownerId: owner.id,
+    },
+    {
+      id: `${p.id}-epic-quality`,
+      projectId: p.id,
+      name: "Quality & reliability",
+      color: p.color,
+      ownerId: owner.id,
+    },
   ];
 });
 
@@ -154,7 +172,9 @@ function makeTask(idx: number, parent?: Task): Task {
   const project = seedProjects[idx % seedProjects.length]!;
   const projectEpics = seedEpics.filter((e) => e.projectId === project.id);
   const projectMs = seedMilestones.filter((m) => m.projectId === project.id);
-  const status = parent ? pick(["todo", "in_progress", "review", "done"] as TaskStatus[]) : pick(STATUSES);
+  const status = parent
+    ? pick(["todo", "in_progress", "review", "done"] as TaskStatus[])
+    : pick(STATUSES);
   const priority = pick(PRIORITIES);
   const assignee = rand() > 0.15 ? employees[Math.floor(rand() * employees.length)]! : null;
   const reporter = employees[(idx + 7) % employees.length]!;
@@ -212,9 +232,7 @@ const subtasks: Task[] = topLevel.flatMap((parent, i) => {
   );
   // second-level nesting on ~20% of children
   const grand = children.flatMap((c, gIdx) =>
-    rand() > 0.8
-      ? [makeTask(TOP_LEVEL_COUNT * 4 + i * 9 + gIdx, c)]
-      : [],
+    rand() > 0.8 ? [makeTask(TOP_LEVEL_COUNT * 4 + i * 9 + gIdx, c)] : [],
   );
   return [...children, ...grand];
 });

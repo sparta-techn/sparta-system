@@ -17,12 +17,7 @@ import type {
   SyncResult,
 } from "../types";
 import type { AccountStore } from "../services/account-store";
-import type {
-  DeliveryResult,
-  NotificationKind,
-  NotificationRequest,
-  NotifierPort,
-} from "../ports";
+import type { DeliveryResult, NotificationKind, NotificationRequest, NotifierPort } from "../ports";
 import { BaseIntegration, type AuthenticatedIdentity } from "../providers/base-integration";
 import { notImplemented } from "../services/errors";
 import { SlackClient } from "./slack-client";

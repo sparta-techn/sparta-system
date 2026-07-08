@@ -16,7 +16,12 @@ export type ApprovalType =
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "cancelled" | "expired";
 
 export type ApprovalActionKind =
-  "requested" | "approved" | "rejected" | "cancelled" | "commented" | "reassigned";
+  | "requested"
+  | "approved"
+  | "rejected"
+  | "cancelled"
+  | "commented"
+  | "reassigned";
 
 // ── approval_requests ────────────────────────────────────────────────────────
 

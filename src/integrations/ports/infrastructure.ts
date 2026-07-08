@@ -28,12 +28,7 @@ export const INFRASTRUCTURE_CHECKS: readonly InfrastructureCheck[] = [
 ];
 
 /** Normalized status of a single infrastructure aspect. */
-export type InfraState =
-  | "operational"
-  | "degraded"
-  | "down"
-  | "unknown"
-  | "not_supported";
+export type InfraState = "operational" | "degraded" | "down" | "unknown" | "not_supported";
 
 /** Shared fields on every status DTO. */
 export interface InfraStatusBase {

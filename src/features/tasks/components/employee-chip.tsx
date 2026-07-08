@@ -15,12 +15,16 @@ export const EmployeeChip = memo(function EmployeeChip({
   className?: string;
 }) {
   const emp = employeeById(id ?? undefined);
-  const dim = size === "xs" ? "size-5 text-[10px]" : size === "md" ? "size-7 text-xs" : "size-6 text-[11px]";
+  const dim =
+    size === "xs" ? "size-5 text-[10px]" : size === "md" ? "size-7 text-xs" : "size-6 text-[11px]";
 
   if (!emp) {
     return (
       <span className={cn("inline-flex items-center gap-1.5 text-muted-foreground", className)}>
-        <span className={cn("grid place-items-center rounded-full bg-muted text-muted-foreground", dim)} aria-hidden>
+        <span
+          className={cn("grid place-items-center rounded-full bg-muted text-muted-foreground", dim)}
+          aria-hidden
+        >
           ?
         </span>
         {showName ? <span className="text-xs">Unassigned</span> : null}

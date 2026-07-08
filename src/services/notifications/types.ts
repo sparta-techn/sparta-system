@@ -10,7 +10,13 @@ export type NotificationType = "info" | "success" | "warning" | "critical" | "re
 export type NotificationPriority = "low" | "normal" | "high" | "critical";
 export type NotificationState = "unseen" | "seen" | "read" | "archived" | "dismissed";
 export type NotificationCategory =
-  "attendance" | "dependencies" | "announcements" | "reports" | "mentions" | "system" | "approvals";
+  | "attendance"
+  | "dependencies"
+  | "announcements"
+  | "reports"
+  | "mentions"
+  | "system"
+  | "approvals";
 export type MentionSource = "comment" | "task" | "dependency" | "project" | "report";
 
 export interface NotificationAction {

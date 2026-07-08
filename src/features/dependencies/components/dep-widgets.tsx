@@ -22,11 +22,21 @@ export function DepStatGrid({ items }: { items: Dependency[] }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       <StatCard label="Open" value={open.length} icon={Inbox} hint="Across all teams" />
-      <StatCard label="Blocked" value={blocked.length} icon={AlertOctagon} hint="Needs unblocking" />
+      <StatCard
+        label="Blocked"
+        value={blocked.length}
+        icon={AlertOctagon}
+        hint="Needs unblocking"
+      />
       <StatCard label="Critical" value={critical.length} icon={Zap} hint="Priority = critical" />
       <StatCard label="Overdue" value={overdue.length} icon={Clock} hint="Past due date" />
       <StatCard label="Waiting on me" value={waitingOnMe.length} icon={Send} hint="You own" />
-      <StatCard label="Waiting on others" value={waitingOnOthers.length} icon={CheckCircle2} hint="You requested" />
+      <StatCard
+        label="Waiting on others"
+        value={waitingOnOthers.length}
+        icon={CheckCircle2}
+        hint="You requested"
+      />
     </div>
   );
 }
@@ -34,9 +44,7 @@ export function DepStatGrid({ items }: { items: Dependency[] }) {
 /** Compact dashboard widget — used on /app. */
 export function DependenciesDashboardWidget() {
   const all = useDependencies();
-  const waitingOnMe = all
-    .filter((d) => d.ownerId === CURRENT_USER_ID && isOpen(d))
-    .slice(0, 4);
+  const waitingOnMe = all.filter((d) => d.ownerId === CURRENT_USER_ID && isOpen(d)).slice(0, 4);
   const waitingOnOthers = all
     .filter((d) => d.requesterId === CURRENT_USER_ID && d.ownerId !== CURRENT_USER_ID && isOpen(d))
     .slice(0, 4);
@@ -48,15 +56,16 @@ export function DependenciesDashboardWidget() {
           <CardTitle className="text-sm">Dependencies</CardTitle>
           <p className="text-xs text-muted-foreground">Inbound and outbound asks</p>
         </div>
-        <Link
-          to="/app/dependencies"
-          className="text-xs font-medium text-primary hover:underline"
-        >
+        <Link to="/app/dependencies" className="text-xs font-medium text-primary hover:underline">
           Open board →
         </Link>
       </CardHeader>
       <CardContent className="space-y-4">
-        <DepMiniList title="Waiting on me" items={waitingOnMe} emptyLabel="Nothing assigned to you" />
+        <DepMiniList
+          title="Waiting on me"
+          items={waitingOnMe}
+          emptyLabel="Nothing assigned to you"
+        />
         <DepMiniList
           title="Waiting on others"
           items={waitingOnOthers}

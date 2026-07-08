@@ -1,13 +1,7 @@
 import { BellRing, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -83,8 +77,7 @@ export function NotificationPreferencesPanel() {
         <CardHeader>
           <CardTitle className="text-base">Delivery channels</CardTitle>
           <CardDescription>
-            In-app is live. Other channels plug into the same event bus once
-            integrated.
+            In-app is live. Other channels plug into the same event bus once integrated.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-1">
@@ -94,10 +87,7 @@ export function NotificationPreferencesPanel() {
               <div className="flex items-center justify-between gap-4 py-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <Label
-                      htmlFor={`ch-${ch.id}`}
-                      className="text-sm font-medium"
-                    >
+                    <Label htmlFor={`ch-${ch.id}`} className="text-sm font-medium">
                       {CHANNEL_LABEL[ch.id]}
                     </Label>
                     {ch.enabled ? (
@@ -149,7 +139,9 @@ export function NotificationPreferencesPanel() {
             </Label>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="qh-start" className="text-xs">Start</Label>
+            <Label htmlFor="qh-start" className="text-xs">
+              Start
+            </Label>
             <Input
               id="qh-start"
               type="time"
@@ -165,7 +157,9 @@ export function NotificationPreferencesPanel() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="qh-end" className="text-xs">End</Label>
+            <Label htmlFor="qh-end" className="text-xs">
+              End
+            </Label>
             <Input
               id="qh-end"
               type="time"

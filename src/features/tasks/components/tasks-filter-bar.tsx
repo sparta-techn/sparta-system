@@ -131,7 +131,9 @@ export function TasksFilterBar({
                       }
                       className={cn(
                         "rounded-full border px-2 py-0.5 text-xs",
-                        active ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground",
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "text-muted-foreground",
                       )}
                     >
                       {l}
@@ -268,7 +270,9 @@ export function TasksFilterBar({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
       <div className="space-y-1.5">{children}</div>
     </div>
   );

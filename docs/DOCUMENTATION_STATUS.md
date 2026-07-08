@@ -15,15 +15,15 @@ _Audit date: 2026-07-02._
 The documentation comes in **two generations**, and conflating them causes most
 "the docs are wrong" confusion:
 
-| Convention | Nature | Trust for "what exists today" |
-| --- | --- | --- |
+| Convention                                                                                                                        | Nature                                                                                                | Trust for "what exists today"                 |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `UPPER_SNAKE_CASE.md` (ARCHITECTURE, SERVICES, REPOSITORIES, LOGGING, TESTING, ERROR_HANDLING, `*_PLAN`, `*_REVIEW`, `*_BACKEND`) | Newer, **code-aware** — as-built snapshots or explicitly-scoped design/plan docs that cite real files | **High** (as-built) or clearly-labeled design |
-| `PascalCase.md` (DatabaseSchema, FolderStructure, AuthFlow, Tasks, Attendance, …) | Older **product/target specs**, mostly written before the build | **Target intent**, not current state |
+| `PascalCase.md` (DatabaseSchema, FolderStructure, AuthFlow, Tasks, Attendance, …)                                                 | Older **product/target specs**, mostly written before the build                                       | **Target intent**, not current state          |
 
 Most `PascalCase` docs are **aspirational specs**, not defects — they describe
 where the product is going. They become a problem only when they assert current
 state that contradicts the code (e.g. `FolderStructure.md`). This report
-separates *inconsistent* from *intentionally-forward-looking*.
+separates _inconsistent_ from _intentionally-forward-looking_.
 
 ### Status legend
 
@@ -52,9 +52,9 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
   UIs still read localStorage **mock stores** (services/repos built, not yet
   wired in).
 - **AI**: `src/ai/` (context, models, prompts, providers, services, types, utils)
-  + `src/services/ai/`.
+  - `src/services/ai/`.
 - **Integrations**: `src/integrations/` with ports/adapters and many providers
-  (github, slack, discord, email, figma, google-*, make, n8n, zapier,
+  (github, slack, discord, email, figma, google-\*, make, n8n, zapier,
   hostinger, cloudflare, supabase-platform, automation).
 - **Cross-cutting libs** (recently added): `src/lib/errors.ts`,
   `src/lib/logging/`, error boundary/screens, and a Vitest(unit+component) +
@@ -65,6 +65,7 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
 ## 3. Pillar-by-pillar consistency
 
 ### 3.1 CLAUDE.md — 🔧 Updated
+
 - **Was**: stack listed "TanStack Router" but not **TanStack Start (SSR)**; no
   testing stack. Architecture rules said each feature contains
   `services`/`pages`, implying per-feature services — but services/repositories
@@ -76,6 +77,7 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
   API calls) is preserved and now literally matched by the code.
 
 ### 3.2 Architecture — 🔧 Updated / ❌→banner
+
 - `ARCHITECTURE.md` (the as-built doc) had three stale claims, all corrected:
   §5 "**no class-based service layer**" (there are 35 service modules + ~35 repos now);
   §10 "live tables" listed ~8 (now ~35); §15 "only attendance/HR tables exist".
@@ -90,6 +92,7 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
   current state.
 
 ### 3.3 Database — ⚠️ / 📋
+
 - `DatabaseSchema.md`, `DatabaseArchitecture.md`, `DATABASE_DESIGN.md`,
   `DB_RULES.md`, `RLSPolicies.md`, `Triggers.md`, `DatabaseFunctions.md` are
   **design/target** docs. Their conventions (uuid PKs, RLS everywhere,
@@ -101,6 +104,7 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
   authoritative "what's live" list.
 
 ### 3.4 Services — 🔧 Updated
+
 - `SERVICES.md` accurately described `BaseService`/`core`/error model, but §2
   listed only **8** domains; the code has **35** service modules across `hr`,
   `sprints`, `approvals`, `activity`, `kpi`, and many `projects/*` sub-services.
@@ -110,12 +114,14 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
 - `KPI_SERVICES.md` — ✅ matches `services/kpi/executive-kpi.service.ts`.
 
 ### 3.5 Repositories — 🔧 Updated
+
 - `REPOSITORIES.md` correctly described the layer's purpose and the **original 7**
   root repositories, but the layer has grown to **~35** across nested folders
   (`hr/`, `projects/`, `notifications/`, `reports/`, `activity/`, `attendance/`).
   Updated §2 to reflect the grown structure.
 
 ### 3.6 AI — 📋 / ✅ (consistent design)
+
 - `AI_ARCHITECTURE.md`, `AI_INFRASTRUCTURE.md`, `AI_FEATURES.md`,
   `CONTEXT_ENGINE.md`, `PROMPTS.md` are **code-aware design** docs that correctly
   cite `src/services/ai` and `src/ai/providers`. The actual `src/ai/` subsystem
@@ -124,6 +130,7 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
   build on latest Claude models, e.g. `claude-opus-4-8`.)
 
 ### 3.7 Integrations — ⚠️ (minor path drift)
+
 - `INTEGRATION_ARCHITECTURE.md` (design) and `Integrations.md` describe a
   ports-&-adapters layer that **matches** `src/integrations/` (ports/, providers/,
   per-provider adapters). Minor drift: `Integrations.md` references `domain/ports/`
@@ -137,14 +144,14 @@ Established by reading `src/`, `supabase/migrations/`, and `package.json`:
 
 ## 4. Changes applied in this pass
 
-| File | Change |
-| --- | --- |
-| `CLAUDE.md` | Stack: +TanStack Start (SSR), +testing tools. Architecture Rules: feature-first UI + `repositories → services → Supabase` layers + top-level dirs. API Rules: repository entry point, `ServiceError`, logging/error libs. |
-| `docs/ARCHITECTURE.md` | Intro snapshot rewritten (DB/layers/wiring status). §5 rewritten to document the service + repository layers. §10 expanded to the ~35 live tables + "not yet" list. §13 adds services/repos/error surfaces. §15 items 1 & 3 updated. |
-| `docs/FolderStructure.md` | Added ⚠️ banner: aspirational Next.js/DDD, **not adopted**; points to `ARCHITECTURE.md §1`. |
-| `docs/SERVICES.md` | §2 folder list expanded to all 35 service modules; §4 schema-status note (landed vs. pending tables). |
-| `docs/REPOSITORIES.md` | §2 updated: original 7 + the grown ~35-repo nested structure. |
-| `docs/DOCUMENTATION_STATUS.md` | This report (new). |
+| File                           | Change                                                                                                                                                                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CLAUDE.md`                    | Stack: +TanStack Start (SSR), +testing tools. Architecture Rules: feature-first UI + `repositories → services → Supabase` layers + top-level dirs. API Rules: repository entry point, `ServiceError`, logging/error libs.            |
+| `docs/ARCHITECTURE.md`         | Intro snapshot rewritten (DB/layers/wiring status). §5 rewritten to document the service + repository layers. §10 expanded to the ~35 live tables + "not yet" list. §13 adds services/repos/error surfaces. §15 items 1 & 3 updated. |
+| `docs/FolderStructure.md`      | Added ⚠️ banner: aspirational Next.js/DDD, **not adopted**; points to `ARCHITECTURE.md §1`.                                                                                                                                          |
+| `docs/SERVICES.md`             | §2 folder list expanded to all 35 service modules; §4 schema-status note (landed vs. pending tables).                                                                                                                                |
+| `docs/REPOSITORIES.md`         | §2 updated: original 7 + the grown ~35-repo nested structure.                                                                                                                                                                        |
+| `docs/DOCUMENTATION_STATUS.md` | This report (new).                                                                                                                                                                                                                   |
 
 No application code was modified. No docs were deleted (per "extend existing").
 
@@ -152,13 +159,13 @@ No application code was modified. No docs were deleted (per "extend existing").
 
 ## 5. Consistency matrix (post-update)
 
-| | CLAUDE.md | ARCHITECTURE | Database | Services | Repositories | AI | Integrations |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| **CLAUDE.md** | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ARCHITECTURE** | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Database** | ✅ | ✅ | — | ✅ | ✅ | ✅ | n/a |
-| **Services** | ✅ | ✅ | ✅ | — | ✅ | ✅ | n/a |
-| **Repositories** | ✅ | ✅ | ✅ | ✅ | — | n/a | n/a |
+|                  | CLAUDE.md | ARCHITECTURE | Database | Services | Repositories | AI  | Integrations |
+| ---------------- | --------- | ------------ | -------- | -------- | ------------ | --- | ------------ |
+| **CLAUDE.md**    | —         | ✅           | ✅       | ✅       | ✅           | ✅  | ✅           |
+| **ARCHITECTURE** | ✅        | —            | ✅       | ✅       | ✅           | ✅  | ✅           |
+| **Database**     | ✅        | ✅           | —        | ✅       | ✅           | ✅  | n/a          |
+| **Services**     | ✅        | ✅           | ✅       | —        | ✅           | ✅  | n/a          |
+| **Repositories** | ✅        | ✅           | ✅       | ✅       | —            | n/a | n/a          |
 
 `FolderStructure.md` was the one hard **contradiction** across pillars; it is now
 explicitly demoted to aspirational, so the pillar docs no longer conflict.

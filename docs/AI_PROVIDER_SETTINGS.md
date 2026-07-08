@@ -48,11 +48,11 @@ so model lists and limits stay in one place.
 
 ## 3. Providers & fields
 
-| Provider | Key format | Temp ceiling | Models (from catalog) |
-| --- | --- | --- | --- |
-| **OpenAI** | `sk-…` | 2.0 | `gpt-4.1`, `gpt-4.1-mini` |
-| **Anthropic** | `sk-ant-…` | 1.0 | `claude-opus-4-8`, `claude-sonnet-5`, `claude-haiku-4-5-20251001` |
-| **Google Gemini** | `AIza…` | 2.0 | `gemini-2.5-pro`, `gemini-2.5-flash` |
+| Provider          | Key format | Temp ceiling | Models (from catalog)                                             |
+| ----------------- | ---------- | ------------ | ----------------------------------------------------------------- |
+| **OpenAI**        | `sk-…`     | 2.0          | `gpt-4.1`, `gpt-4.1-mini`                                         |
+| **Anthropic**     | `sk-ant-…` | 1.0          | `claude-opus-4-8`, `claude-sonnet-5`, `claude-haiku-4-5-20251001` |
+| **Google Gemini** | `AIza…`    | 2.0          | `gemini-2.5-pro`, `gemini-2.5-flash`                              |
 
 Each provider config: `{ provider, model, temperature, maxTokens, systemPrompt }`.
 
@@ -89,7 +89,7 @@ store:
 - **Not logged, not in config** — the key is never toasted, logged, or copied into
   the non-secret store.
 - **Read for use only** — `getApiKey(provider)` returns the real key for
-  *programmatic* use (a future provider adapter), via the non-UI
+  _programmatic_ use (a future provider adapter), via the non-UI
   `effective-config.ts`. The reactive `useSecretStatus()` hook the UI consumes
   exposes **only** `{ set, preview }`.
 
@@ -122,7 +122,7 @@ render path):
 ```ts
 import { getEffectiveConfig } from "@/features/ai-settings";
 
-const cfg = getEffectiveConfig();          // active provider
+const cfg = getEffectiveConfig(); // active provider
 // { provider, model, temperature, maxTokens, systemPrompt, hasApiKey, apiKey }
 ```
 

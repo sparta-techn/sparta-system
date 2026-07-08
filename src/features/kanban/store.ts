@@ -113,9 +113,7 @@ export function placeInColumn(
   }
   const current = cleaned[column] ?? [];
   // Seed unknown ids so manual order is stable.
-  const seeded = visibleIds.filter(
-    (id) => id !== taskId && !current.includes(id),
-  );
+  const seeded = visibleIds.filter((id) => id !== taskId && !current.includes(id));
   const merged = [...current, ...seeded];
   const clamped = Math.max(0, Math.min(targetIndex, merged.length));
   merged.splice(clamped, 0, taskId);

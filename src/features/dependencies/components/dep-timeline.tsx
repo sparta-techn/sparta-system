@@ -10,12 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { personById } from "../mock-data";
-import {
-  PRIORITY_LABEL,
-  STATE_LABEL,
-  type ActivityKind,
-  type Dependency,
-} from "../types";
+import { PRIORITY_LABEL, STATE_LABEL, type ActivityKind, type Dependency } from "../types";
 import { timeAgo } from "../utils";
 
 const ICONS: Record<ActivityKind, typeof Plus> = {

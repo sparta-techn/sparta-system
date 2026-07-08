@@ -51,8 +51,7 @@ function runRules(event: DomainEvent): NotificationSpec[] {
 function hasUserRecipient(specs: NotificationSpec[], userId: string): boolean {
   return specs.some((s) =>
     s.recipients.some(
-      (r: RecipientRule) =>
-        (r.kind === "user" || r.kind === "employee") && r.userId === userId,
+      (r: RecipientRule) => (r.kind === "user" || r.kind === "employee") && r.userId === userId,
     ),
   );
 }

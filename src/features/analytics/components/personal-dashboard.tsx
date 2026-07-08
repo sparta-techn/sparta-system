@@ -23,16 +23,34 @@ export function PersonalDashboard() {
 
       <section aria-label="Trends" className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Attendance trend" description="Weekly rate over the last 8 weeks">
-          <LineChart data={personalAnalytics.attendanceTrend} colorClass="stroke-success" formatValue={(n) => `${n}%`} ariaLabel="Attendance" />
+          <LineChart
+            data={personalAnalytics.attendanceTrend}
+            colorClass="stroke-success"
+            formatValue={(n) => `${n}%`}
+            ariaLabel="Attendance"
+          />
         </ChartCard>
         <ChartCard title="Working hours" description="Hours logged this week">
-          <BarChart data={personalAnalytics.workingHoursTrend} colorClasses={["fill-primary"]} ariaLabel="Working hours" />
+          <BarChart
+            data={personalAnalytics.workingHoursTrend}
+            colorClasses={["fill-primary"]}
+            ariaLabel="Working hours"
+          />
         </ChartCard>
         <ChartCard title="Work health" description="Composite of attendance, focus, and reporting">
-          <LineChart data={personalAnalytics.workHealthTrend} colorClass="stroke-primary" ariaLabel="Health" />
+          <LineChart
+            data={personalAnalytics.workHealthTrend}
+            colorClass="stroke-primary"
+            ariaLabel="Health"
+          />
         </ChartCard>
         <ChartCard title="Avg resolution time" description="Hours to resolve dependencies you own">
-          <LineChart data={personalAnalytics.resolutionTimeTrend} colorClass="stroke-warning" formatValue={(n) => `${n}h`} ariaLabel="Resolution time" />
+          <LineChart
+            data={personalAnalytics.resolutionTimeTrend}
+            colorClass="stroke-warning"
+            formatValue={(n) => `${n}h`}
+            ariaLabel="Resolution time"
+          />
         </ChartCard>
       </section>
 
@@ -55,7 +73,11 @@ export function PersonalDashboard() {
           </CardContent>
         </Card>
         <ChartCard title="Dependencies created" description="Weekly volume">
-          <BarChart data={personalAnalytics.dependencies} colorClasses={["fill-info"]} ariaLabel="Dependencies created" />
+          <BarChart
+            data={personalAnalytics.dependencies}
+            colorClasses={["fill-info"]}
+            ariaLabel="Dependencies created"
+          />
         </ChartCard>
         <Card>
           <CardHeader>
@@ -63,15 +85,32 @@ export function PersonalDashboard() {
             <CardDescription>Last 30 days</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Metric label="Created" value={String(k.depsCreated.current)} sub={`was ${k.depsCreated.previous}`} />
-            <Metric label="Resolved" value={String(k.depsResolved.current)} sub={`was ${k.depsResolved.previous}`} positive />
-            <Metric label="Avg resolution" value={`${k.avgResolutionHrs.current}h`} sub={`was ${k.avgResolutionHrs.previous}h`} positive />
+            <Metric
+              label="Created"
+              value={String(k.depsCreated.current)}
+              sub={`was ${k.depsCreated.previous}`}
+            />
+            <Metric
+              label="Resolved"
+              value={String(k.depsResolved.current)}
+              sub={`was ${k.depsResolved.previous}`}
+              positive
+            />
+            <Metric
+              label="Avg resolution"
+              value={`${k.avgResolutionHrs.current}h`}
+              sub={`was ${k.avgResolutionHrs.previous}h`}
+              positive
+            />
           </CardContent>
         </Card>
       </section>
 
       <section aria-label="Activity pattern">
-        <ChartCard title="When you do focused work" description="Daily activity intensity by hour band (mock).">
+        <ChartCard
+          title="When you do focused work"
+          description="Daily activity intensity by hour band (mock)."
+        >
           <Heatmap
             data={personalAnalytics.activityHeatmap}
             rowLabels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]}
@@ -83,7 +122,17 @@ export function PersonalDashboard() {
   );
 }
 
-function Metric({ label, value, sub, positive }: { label: string; value: string; sub: string; positive?: boolean }) {
+function Metric({
+  label,
+  value,
+  sub,
+  positive,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  positive?: boolean;
+}) {
   return (
     <div className="rounded-lg border border-border bg-surface/40 p-3">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>

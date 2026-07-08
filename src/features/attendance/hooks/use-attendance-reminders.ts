@@ -37,10 +37,7 @@ function loadFired(): Record<string, true> {
 function saveFired(map: Record<string, true>) {
   if (typeof window === "undefined") return;
   const today = new Date().toISOString().slice(0, 10);
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({ date: today, keys: Object.keys(map) }),
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, keys: Object.keys(map) }));
 }
 
 /**
@@ -78,16 +75,14 @@ export function useAttendanceReminders(today: TodaySession | undefined) {
         minute: 30,
         key: "eod-1730",
         message: "Heads up — submit your end-of-day report before checkout.",
-        shouldFire: (t) =>
-          !!t?.session && t.session.session_status !== "finished",
+        shouldFire: (t) => !!t?.session && t.session.session_status !== "finished",
       },
       {
         hour: 18,
         minute: 0,
         key: "checkout-1800",
         message: "You haven't checked out yet. Wrap up and finish your session.",
-        shouldFire: (t) =>
-          !!t?.session && t.session.session_status !== "finished",
+        shouldFire: (t) => !!t?.session && t.session.session_status !== "finished",
       },
     ];
 

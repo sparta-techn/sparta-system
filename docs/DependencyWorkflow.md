@@ -37,33 +37,33 @@ Employee identifies blocker
 
 ## State transitions allowed
 
-| From → To | Who |
-|---|---|
-| Draft → Pending | Requester |
-| Pending → Accepted / Rejected | Owner |
-| Pending → Cancelled | Requester |
-| Accepted → In Progress / Blocked | Owner |
-| In Progress ↔ Blocked | Owner |
-| In Progress / Blocked → Resolved | Owner |
-| Resolved → Closed | Requester (or auto after grace period — future) |
-| Resolved → In Progress | Requester (re-open if unsatisfied) |
+| From → To                        | Who                                             |
+| -------------------------------- | ----------------------------------------------- |
+| Draft → Pending                  | Requester                                       |
+| Pending → Accepted / Rejected    | Owner                                           |
+| Pending → Cancelled              | Requester                                       |
+| Accepted → In Progress / Blocked | Owner                                           |
+| In Progress ↔ Blocked            | Owner                                           |
+| In Progress / Blocked → Resolved | Owner                                           |
+| Resolved → Closed                | Requester (or auto after grace period — future) |
+| Resolved → In Progress           | Requester (re-open if unsatisfied)              |
 
 The current UI exposes all states through the Status select for flexibility; production enforcement will live server-side as a state-machine RPC mirroring this table.
 
 ## Timeline events emitted
 
-| Event | Triggered by |
-|---|---|
-| `created` | New dependency |
-| `assigned` | Owner set or changed |
-| `accepted` | Owner accepts |
-| `status_changed` | Any state move except terminal-specific ones below |
-| `priority_changed` | Priority edit |
-| `comment_added` | New comment |
-| `resolved` | Move to Resolved |
-| `closed` | Move to Closed |
-| `rejected` | Move to Rejected |
-| `cancelled` | Move to Cancelled |
+| Event              | Triggered by                                       |
+| ------------------ | -------------------------------------------------- |
+| `created`          | New dependency                                     |
+| `assigned`         | Owner set or changed                               |
+| `accepted`         | Owner accepts                                      |
+| `status_changed`   | Any state move except terminal-specific ones below |
+| `priority_changed` | Priority edit                                      |
+| `comment_added`    | New comment                                        |
+| `resolved`         | Move to Resolved                                   |
+| `closed`           | Move to Closed                                     |
+| `rejected`         | Move to Rejected                                   |
+| `cancelled`        | Move to Cancelled                                  |
 
 ## Notification triggers (future)
 

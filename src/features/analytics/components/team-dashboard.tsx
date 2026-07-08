@@ -19,24 +19,41 @@ export function TeamDashboard() {
         <TrendCard label="Team health" value={k.healthScore} hint="composite" />
       </section>
 
-      <section><InsightGrid insights={insightsByScope.team} /></section>
+      <section>
+        <InsightGrid insights={insightsByScope.team} />
+      </section>
 
       <section aria-label="Trends" className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Attendance trend" description="Weekly team attendance rate">
-          <LineChart data={teamAnalytics.attendanceTrend} colorClass="stroke-success" formatValue={(n) => `${n}%`} />
+          <LineChart
+            data={teamAnalytics.attendanceTrend}
+            colorClass="stroke-success"
+            formatValue={(n) => `${n}%`}
+          />
         </ChartCard>
         <ChartCard title="Report completion trend" description="Across all daily reports">
-          <LineChart data={teamAnalytics.reportTrend} colorClass="stroke-primary" formatValue={(n) => `${n}%`} />
+          <LineChart
+            data={teamAnalytics.reportTrend}
+            colorClass="stroke-primary"
+            formatValue={(n) => `${n}%`}
+          />
         </ChartCard>
         <ChartCard title="Dependencies opened vs resolved" description="Weekly flow">
           <BarChart
             data={teamAnalytics.dependencyFlow}
-            series={[{ label: "opened", values: [] }, { label: "resolved", values: [] }]}
+            series={[
+              { label: "opened", values: [] },
+              { label: "resolved", values: [] },
+            ]}
             colorClasses={["fill-warning", "fill-success"]}
           />
         </ChartCard>
         <ChartCard title="Avg blocker duration" description="Hours from open to resolved">
-          <LineChart data={teamAnalytics.blockerDurationTrend} colorClass="stroke-warning" formatValue={(n) => `${n}h`} />
+          <LineChart
+            data={teamAnalytics.blockerDurationTrend}
+            colorClass="stroke-warning"
+            formatValue={(n) => `${n}h`}
+          />
         </ChartCard>
       </section>
 
@@ -60,7 +77,11 @@ export function TeamDashboard() {
                   </div>
                   <div className="flex h-2 overflow-hidden rounded-full bg-muted">
                     <div className="bg-warning" style={{ width: `${openPct}%` }} aria-hidden />
-                    <div className="bg-success" style={{ width: `${100 - openPct}%` }} aria-hidden />
+                    <div
+                      className="bg-success"
+                      style={{ width: `${100 - openPct}%` }}
+                      aria-hidden
+                    />
                   </div>
                 </div>
               );

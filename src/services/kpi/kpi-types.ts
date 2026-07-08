@@ -43,7 +43,11 @@ export interface Kpi {
 // ── Company inputs ───────────────────────────────────────────────────────────
 
 export type EmployeeLifecycleStatus =
-  "active" | "on_leave" | "invited" | "deactivated" | "offboarding";
+  | "active"
+  | "on_leave"
+  | "invited"
+  | "deactivated"
+  | "offboarding";
 
 export interface EmployeeStatusSnapshot {
   id: string;
@@ -59,7 +63,14 @@ export interface PresenceSnapshot {
 }
 
 export type AttendanceMark =
-  "on_time" | "late" | "absent" | "weekend" | "holiday" | "half_day" | "leave" | "in_progress";
+  | "on_time"
+  | "late"
+  | "absent"
+  | "weekend"
+  | "holiday"
+  | "half_day"
+  | "leave"
+  | "in_progress";
 
 /** One employee-day of attendance (from `work_sessions` for a date range). */
 export interface AttendanceDaySnapshot {
@@ -112,7 +123,12 @@ export interface CompanyKpis {
 // ── Project inputs ───────────────────────────────────────────────────────────
 
 export type ProjectStatusLite =
-  "planning" | "active" | "on_hold" | "completed" | "archived" | "cancelled";
+  | "planning"
+  | "active"
+  | "on_hold"
+  | "completed"
+  | "archived"
+  | "cancelled";
 
 export type ProjectHealthLite = "healthy" | "at_risk" | "blocked" | "delayed" | "completed";
 
@@ -128,7 +144,10 @@ export interface ProjectSnapshot {
 }
 
 export type ProjectKpiKey =
-  "activeProjects" | "delayedProjects" | "completionRate" | "deliverySuccessRate";
+  | "activeProjects"
+  | "delayedProjects"
+  | "completionRate"
+  | "deliverySuccessRate";
 
 export interface ProjectKpiInput {
   projects: ProjectSnapshot[];
@@ -203,7 +222,10 @@ export interface EngineeringKpiInput {
 }
 
 export type EngineeringKpiKey =
-  "sprintVelocity" | "blockedTasks" | "teamCapacity" | "workloadBalance";
+  | "sprintVelocity"
+  | "blockedTasks"
+  | "teamCapacity"
+  | "workloadBalance";
 
 export interface EngineeringKpis {
   sprintVelocity: Kpi;

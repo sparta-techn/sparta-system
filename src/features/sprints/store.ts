@@ -84,9 +84,7 @@ export function tasksInSprint(sprintId: string): Task[] {
 }
 
 export function backlogForProject(projectId: string): Task[] {
-  return listTasks().filter(
-    (t) => t.projectId === projectId && !t.sprintId && !t.parentTaskId,
-  );
+  return listTasks().filter((t) => t.projectId === projectId && !t.sprintId && !t.parentTaskId);
 }
 
 // ---------- mutations ----------

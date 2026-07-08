@@ -47,7 +47,9 @@ export function DepTable({ items }: { items: Dependency[] }) {
   const pageItems = sorted.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   function toggleSort(key: SortKey) {
-    setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" }));
+    setSort((s) =>
+      s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" },
+    );
     setPage(0);
   }
 
@@ -79,13 +81,21 @@ export function DepTable({ items }: { items: Dependency[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[28%]"><SortBtn k="title">Dependency</SortBtn></TableHead>
+              <TableHead className="w-[28%]">
+                <SortBtn k="title">Dependency</SortBtn>
+              </TableHead>
               <TableHead>Status</TableHead>
-              <TableHead><SortBtn k="priority">Priority</SortBtn></TableHead>
+              <TableHead>
+                <SortBtn k="priority">Priority</SortBtn>
+              </TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Project</TableHead>
-              <TableHead><SortBtn k="dueAt">Due</SortBtn></TableHead>
-              <TableHead><SortBtn k="updatedAt">Updated</SortBtn></TableHead>
+              <TableHead>
+                <SortBtn k="dueAt">Due</SortBtn>
+              </TableHead>
+              <TableHead>
+                <SortBtn k="updatedAt">Updated</SortBtn>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -101,26 +111,42 @@ export function DepTable({ items }: { items: Dependency[] }) {
                       className="block max-w-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                     >
                       <p className="font-mono text-[11px] text-muted-foreground">{d.id}</p>
-                      <p className="line-clamp-1 text-sm font-medium text-foreground hover:underline">{d.title}</p>
+                      <p className="line-clamp-1 text-sm font-medium text-foreground hover:underline">
+                        {d.title}
+                      </p>
                       <div className="mt-1 flex items-center gap-1.5">
                         <TypePill type={d.type} />
                       </div>
                     </Link>
                   </TableCell>
-                  <TableCell><StatePill state={d.state} /></TableCell>
-                  <TableCell><PriorityPill priority={d.priority} /></TableCell>
+                  <TableCell>
+                    <StatePill state={d.state} />
+                  </TableCell>
+                  <TableCell>
+                    <PriorityPill priority={d.priority} />
+                  </TableCell>
                   <TableCell>
                     {owner ? (
-                      <PersonChip name={owner.name} color={owner.avatarColor} sub={owner.department} />
+                      <PersonChip
+                        name={owner.name}
+                        color={owner.avatarColor}
+                        sub={owner.department}
+                      />
                     ) : (
                       <span className="text-xs italic text-muted-foreground">Unassigned</span>
                     )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{d.project}</TableCell>
-                  <TableCell className={overdue ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
+                  <TableCell
+                    className={
+                      overdue ? "text-xs text-destructive" : "text-xs text-muted-foreground"
+                    }
+                  >
                     {dueLabel(d)}
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{timeAgo(d.updatedAt)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {timeAgo(d.updatedAt)}
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -129,11 +155,18 @@ export function DepTable({ items }: { items: Dependency[] }) {
       </div>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          {sorted.length === 0 ? "0" : `${page * PAGE_SIZE + 1}–${Math.min(sorted.length, (page + 1) * PAGE_SIZE)}`} of{" "}
-          {sorted.length}
+          {sorted.length === 0
+            ? "0"
+            : `${page * PAGE_SIZE + 1}–${Math.min(sorted.length, (page + 1) * PAGE_SIZE)}`}{" "}
+          of {sorted.length}
         </span>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+          >
             Previous
           </Button>
           <span className="tabular-nums">

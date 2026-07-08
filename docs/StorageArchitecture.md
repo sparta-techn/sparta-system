@@ -4,14 +4,14 @@ Supabase Storage organizes files by **purpose**, not by uploader. Every object a
 
 ## 1. Bucket Catalogue
 
-| Bucket | Public? | Purpose | Max size | Allowed MIME | Retention |
-|---|---|---|---|---|---|
-| `avatars` | Public read | User profile pictures | 2 MB | `image/png`, `image/jpeg`, `image/webp` | Until user replaces/offboarded |
-| `announcement-assets` | Private | Images, PDFs attached to announcements | 10 MB | image/*, application/pdf | Tied to announcement; deleted when announcement hard-deleted |
-| `documents` | Private | Internal documents shared via the directory | 25 MB | docs, pdf, image | 3 years then archive |
-| `attachments` | Private | Files attached to dependencies, EOD reports, comments | 25 MB | docs, images, archives | Tied to parent row |
-| `exports` | Private | Generated CSV/PDF exports (manager reports) | 50 MB | csv, pdf, xlsx | 30 days hard delete |
-| `company-assets` | Public read | Branding, logos, default avatars | 5 MB | image/* | Manual |
+| Bucket                | Public?     | Purpose                                               | Max size | Allowed MIME                            | Retention                                                    |
+| --------------------- | ----------- | ----------------------------------------------------- | -------- | --------------------------------------- | ------------------------------------------------------------ |
+| `avatars`             | Public read | User profile pictures                                 | 2 MB     | `image/png`, `image/jpeg`, `image/webp` | Until user replaces/offboarded                               |
+| `announcement-assets` | Private     | Images, PDFs attached to announcements                | 10 MB    | image/\*, application/pdf               | Tied to announcement; deleted when announcement hard-deleted |
+| `documents`           | Private     | Internal documents shared via the directory           | 25 MB    | docs, pdf, image                        | 3 years then archive                                         |
+| `attachments`         | Private     | Files attached to dependencies, EOD reports, comments | 25 MB    | docs, images, archives                  | Tied to parent row                                           |
+| `exports`             | Private     | Generated CSV/PDF exports (manager reports)           | 50 MB    | csv, pdf, xlsx                          | 30 days hard delete                                          |
+| `company-assets`      | Public read | Branding, logos, default avatars                      | 5 MB     | image/\*                                | Manual                                                       |
 
 ## 2. Path Conventions
 
@@ -54,14 +54,14 @@ This eliminates direct browser writes that bypass validation.
 
 Defined per bucket; full predicates in `RLSPolicies.md` §4. Summary:
 
-| Bucket | Read | Write | Delete |
-|---|---|---|---|
-| `avatars` | authenticated, all | owner only | owner only |
-| `announcement-assets` | audience members (via `is_audience_of`) | author w/ scope perm | author or admin |
-| `documents` | dept members + managers + HR | uploader + HR | uploader + HR |
-| `attachments` | per linked parent row | parent participants | owner + admin |
-| `exports` | owner only | owner only (via Edge Function) | retention job |
-| `company-assets` | authenticated, all | admin (`admin.config`) | admin |
+| Bucket                | Read                                    | Write                          | Delete          |
+| --------------------- | --------------------------------------- | ------------------------------ | --------------- |
+| `avatars`             | authenticated, all                      | owner only                     | owner only      |
+| `announcement-assets` | audience members (via `is_audience_of`) | author w/ scope perm           | author or admin |
+| `documents`           | dept members + managers + HR            | uploader + HR                  | uploader + HR   |
+| `attachments`         | per linked parent row                   | parent participants            | owner + admin   |
+| `exports`             | owner only                              | owner only (via Edge Function) | retention job   |
+| `company-assets`      | authenticated, all                      | admin (`admin.config`)         | admin           |
 
 ## 6. Lifecycle & Retention
 
@@ -89,11 +89,11 @@ Defined per bucket; full predicates in `RLSPolicies.md` §4. Summary:
 
 ## 10. Threats Addressed
 
-| Threat | Mitigation |
-|---|---|
-| Malware upload | AV scan on `documents`/`attachments`. |
-| MIME spoofing | Magic-byte validation post-upload. |
-| Traversal / collision | UUID paths, server-generated names. |
-| Quota exhaustion | Per-user + per-bucket quotas. |
-| Stolen signed URL | 60 s TTL on download URLs. |
+| Threat                          | Mitigation                                                              |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| Malware upload                  | AV scan on `documents`/`attachments`.                                   |
+| MIME spoofing                   | Magic-byte validation post-upload.                                      |
+| Traversal / collision           | UUID paths, server-generated names.                                     |
+| Quota exhaustion                | Per-user + per-bucket quotas.                                           |
+| Stolen signed URL               | 60 s TTL on download URLs.                                              |
 | Public exposure of private docs | Bucket private; signed URLs only; storage policies + RLS on parent row. |

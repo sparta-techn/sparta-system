@@ -57,22 +57,52 @@ const PRIMARY: NavItem[] = [
   { id: "midday", title: "Midday", url: "/app/midday", icon: GaugeCircle },
   { id: "eod", title: "End-of-day", url: "/app/eod", icon: ClipboardCheck },
   { id: "attendance", title: "Attendance", url: "/app/attendance", icon: Calendar },
-  { id: "workflow", title: "Workflow", url: "/app/workflow", icon: ClipboardList, whenOutOfMvp: "hide" },
-  { id: "dependencies", title: "Dependencies", url: "/app/dependencies", icon: Workflow, whenOutOfMvp: "future" },
+  {
+    id: "workflow",
+    title: "Workflow",
+    url: "/app/workflow",
+    icon: ClipboardList,
+    whenOutOfMvp: "hide",
+  },
+  {
+    id: "dependencies",
+    title: "Dependencies",
+    url: "/app/dependencies",
+    icon: Workflow,
+    whenOutOfMvp: "future",
+  },
   { id: "projects", title: "Projects", url: "/app/projects", icon: Briefcase },
   { id: "tasks", title: "Tasks", url: "/app/tasks", icon: CheckSquare },
   { id: "sprints", title: "Sprints", url: "/app/sprints", icon: Target, whenOutOfMvp: "future" },
-  { id: "announcements", title: "Announcements", url: "/app/announcements", icon: Megaphone, whenOutOfMvp: "hide" },
+  {
+    id: "announcements",
+    title: "Announcements",
+    url: "/app/announcements",
+    icon: Megaphone,
+    whenOutOfMvp: "hide",
+  },
   { id: "notifications", title: "Notifications", url: "/app/notifications", icon: Bell },
 ];
 
 const TEAM: NavItem[] = [
-  { id: "executive", title: "Executive", url: "/app/executive", icon: Gauge, whenOutOfMvp: "future" },
+  {
+    id: "executive",
+    title: "Executive",
+    url: "/app/executive",
+    icon: Gauge,
+    whenOutOfMvp: "future",
+  },
   { id: "manager", title: "Manager", url: "/app/manager", icon: LayoutDashboard },
   { id: "report-review", title: "Report reviews", url: "/app/report-review", icon: ClipboardList },
   { id: "hr", title: "HR workspace", url: "/app/hr", icon: HeartHandshake },
   { id: "directory", title: "Directory", url: "/app/hr/employees", icon: Users },
-  { id: "analytics", title: "Analytics", url: "/app/analytics", icon: BarChart3, whenOutOfMvp: "future" },
+  {
+    id: "analytics",
+    title: "Analytics",
+    url: "/app/analytics",
+    icon: BarChart3,
+    whenOutOfMvp: "future",
+  },
   { id: "audit", title: "Audit log", url: "/app/audit", icon: ShieldCheck, whenOutOfMvp: "future" },
   { id: "admin", title: "Admin Console", url: "/app/admin", icon: ShieldHalf },
 ];
@@ -92,9 +122,7 @@ function SectionMenu({
   currentPath: string;
 }) {
   // Out-of-MVP items are hidden unless they opt into the "future" display.
-  const visible = items.filter(
-    (item) => isFeatureInMvp(item.id) || item.whenOutOfMvp === "future",
-  );
+  const visible = items.filter((item) => isFeatureInMvp(item.id) || item.whenOutOfMvp === "future");
   if (visible.length === 0) return null;
 
   return (

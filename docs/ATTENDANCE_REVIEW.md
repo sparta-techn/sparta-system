@@ -14,8 +14,8 @@
 
 ## 0. What was fixed (critical, this pass)
 
-| Fix | File | Why critical |
-| --- | --- | --- |
+| Fix                                                                    | File                                               | Why critical                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`checkIn` now rejects a second open session** (`already_checked_in`) | `repositories/attendance/attendance.repository.ts` | Without it, calling `checkIn` while a session was already open created a **duplicate `working` session** → orphaned open sessions, ambiguous `getActive`, and **double-counted worked hours** at checkout. Mirrors the legacy `start_work_session` uniqueness guard. |
 
 Nothing else was changed. tsc / eslint / vitest (26 tests) all pass.
@@ -24,16 +24,16 @@ Nothing else was changed. tsc / eslint / vitest (26 tests) all pass.
 
 ## 1. Findings summary
 
-| # | Area | Severity | Status |
-| --- | --- | --- | --- |
-| F1 | Security / RLS — business rules enforced **client-side**, writes self-grantable | **Critical (architectural)** | Documented — fix = RPC-ification (redesign, out of scope) |
-| F2 | Repositories — duplicate open session on repeat `checkIn` | **Critical** | ✅ Fixed |
-| F3 | Business rules — late calc uses **runtime timezone**, not company timezone | High | Documented (latent — new path not yet UI-wired) |
-| F4 | Performance — non-atomic, sequential round-trips per verb | Medium | Documented |
-| F5 | Repositories — `ensureForDate` get-then-create race | Low | Documented |
-| F6 | Performance — `company_settings` re-fetched every check-in/out | Low | Documented |
-| F7 | RLS — managers read **all** attendance company-wide (not team-scoped) | Low (by design) | Documented |
-| F8 | TypeScript — relaxed `db` client casts in services | Info | Acceptable |
+| #   | Area                                                                            | Severity                     | Status                                                    |
+| --- | ------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------- |
+| F1  | Security / RLS — business rules enforced **client-side**, writes self-grantable | **Critical (architectural)** | Documented — fix = RPC-ification (redesign, out of scope) |
+| F2  | Repositories — duplicate open session on repeat `checkIn`                       | **Critical**                 | ✅ Fixed                                                  |
+| F3  | Business rules — late calc uses **runtime timezone**, not company timezone      | High                         | Documented (latent — new path not yet UI-wired)           |
+| F4  | Performance — non-atomic, sequential round-trips per verb                       | Medium                       | Documented                                                |
+| F5  | Repositories — `ensureForDate` get-then-create race                             | Low                          | Documented                                                |
+| F6  | Performance — `company_settings` re-fetched every check-in/out                  | Low                          | Documented                                                |
+| F7  | RLS — managers read **all** attendance company-wide (not team-scoped)           | Low (by design)              | Documented                                                |
+| F8  | TypeScript — relaxed `db` client casts in services                              | Info                         | Acceptable                                                |
 
 ---
 
@@ -48,8 +48,8 @@ live `company_settings` row, so admin changes apply without code edits. ✅
 
 **F3 (High, latent).** `lateMinutes` / `attendanceStatusForCheckIn` derive the
 wall clock via `Date.getHours()/getMinutes()`, i.e. the **JS runtime timezone**.
-The work *date* is resolved server-side in the company timezone
-(`current_work_date()`), but the late *classification* uses local time. A user
+The work _date_ is resolved server-side in the company timezone
+(`current_work_date()`), but the late _classification_ uses local time. A user
 whose browser timezone differs from the company (`Africa/Cairo`) would be
 mis-classified on/around the 10:00 boundary. The **legacy** `start_work_session`
 RPC computes this correctly server-side; the new repository path does not.
@@ -85,6 +85,7 @@ reporting** and keep using the legacy `work_sessions` path for anything
 authoritative.
 
 **Verified correct:**
+
 - **Owners read-only (rule #9):** ✅ owner reads all via `can_review_reports`
   (the `*_read_reviewers` policies); migration `20260630140000` removed `owner`
   from the `*_admin_write` policies, so owner cannot mutate others' attendance.

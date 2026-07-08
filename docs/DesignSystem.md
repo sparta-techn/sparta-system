@@ -21,18 +21,19 @@ A change at layer 1 ripples through 2 and 3 without touching components.
 
 ## 3. Categories
 
-| Category | Source | Surface in code |
-|---|---|---|
-| Colors | `:root` / `.dark` in `src/styles.css` | `bg-*`, `text-*`, `ring-*`, `border-*` |
-| Typography | `--font-sans`, `--font-mono`, `--font-display` | Tailwind size utilities + `.font-display` |
-| Spacing | Tailwind 4 default scale (`p-2` = 0.5rem) | `p-*`, `m-*`, `gap-*` |
-| Radius | `--radius` + computed scale | `rounded-{sm,md,lg,xl,2xl,3xl}` |
-| Elevation | `--shadow-{xs..xl,pop,focus}` | `shadow-*` |
-| Motion | tw-animate-css + custom variants | `transition-*`, `animate-*` |
-| Z-index | Tailwind defaults + reserved layers | `z-30` topbar, `z-40` overlay, `z-50` toast |
-| Breakpoints | Tailwind default `sm/md/lg/xl/2xl` | responsive prefixes |
+| Category    | Source                                         | Surface in code                             |
+| ----------- | ---------------------------------------------- | ------------------------------------------- |
+| Colors      | `:root` / `.dark` in `src/styles.css`          | `bg-*`, `text-*`, `ring-*`, `border-*`      |
+| Typography  | `--font-sans`, `--font-mono`, `--font-display` | Tailwind size utilities + `.font-display`   |
+| Spacing     | Tailwind 4 default scale (`p-2` = 0.5rem)      | `p-*`, `m-*`, `gap-*`                       |
+| Radius      | `--radius` + computed scale                    | `rounded-{sm,md,lg,xl,2xl,3xl}`             |
+| Elevation   | `--shadow-{xs..xl,pop,focus}`                  | `shadow-*`                                  |
+| Motion      | tw-animate-css + custom variants               | `transition-*`, `animate-*`                 |
+| Z-index     | Tailwind defaults + reserved layers            | `z-30` topbar, `z-40` overlay, `z-50` toast |
+| Breakpoints | Tailwind default `sm/md/lg/xl/2xl`             | responsive prefixes                         |
 
 Detailed docs:
+
 - `Colors.md`, `Typography.md`, `Spacing.md`, `Animations.md`, `Accessibility.md`, `ResponsiveGuidelines.md`, `LayoutGuidelines.md`, `ComponentLibrary.md`.
 
 ## 4. File Map

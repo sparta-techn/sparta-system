@@ -8,11 +8,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import type {
-  DeliveryChannel,
-  NotificationPreferences,
-  PreferenceCategory,
-} from "./types";
+import type { DeliveryChannel, NotificationPreferences, PreferenceCategory } from "./types";
 
 const KEY = "sf:notifications:prefs:v1";
 const listeners = new Set<() => void>();

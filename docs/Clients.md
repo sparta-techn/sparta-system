@@ -11,23 +11,23 @@ A **Client** is the organization (external or internal) that a project is delive
 
 ## Surfaces
 
-| Route | Purpose |
-| --- | --- |
-| `/app/projects/clients` | Directory of all clients with search and project counts |
-| `/app/projects/clients/$id` | Client header, contact card, notes, linked projects |
+| Route                       | Purpose                                                 |
+| --------------------------- | ------------------------------------------------------- |
+| `/app/projects/clients`     | Directory of all clients with search and project counts |
+| `/app/projects/clients/$id` | Client header, contact card, notes, linked projects     |
 
 ## Fields
 
-| Field | Notes |
-| --- | --- |
-| Company | Required; used as the display name. |
-| Contact person | Primary contact at the client. |
-| Email | Primary email for correspondence. |
-| Phone | International format recommended. |
-| Address | Free-text. |
-| Notes | Markdown-friendly free-text for context (steering cadence, contract terms, etc.). |
-| Logo | Auto-derived monogram tinted from a stable hue per client. |
-| Projects | Computed from `projects.clientId`. |
+| Field          | Notes                                                                             |
+| -------------- | --------------------------------------------------------------------------------- |
+| Company        | Required; used as the display name.                                               |
+| Contact person | Primary contact at the client.                                                    |
+| Email          | Primary email for correspondence.                                                 |
+| Phone          | International format recommended.                                                 |
+| Address        | Free-text.                                                                        |
+| Notes          | Markdown-friendly free-text for context (steering cadence, contract terms, etc.). |
+| Logo           | Auto-derived monogram tinted from a stable hue per client.                        |
+| Projects       | Computed from `projects.clientId`.                                                |
 
 Create flow: a single dialog with one required field (company). Everything else can be added later from the detail page.
 

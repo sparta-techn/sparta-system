@@ -1,11 +1,4 @@
-import {
-  Bell,
-  CheckCircle2,
-  Clock,
-  Hourglass,
-  ListChecks,
-  Workflow,
-} from "lucide-react";
+import { Bell, CheckCircle2, Clock, Hourglass, ListChecks, Workflow } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
 import { mockSummary } from "../mock-data";
 
@@ -24,12 +17,7 @@ export function QuickSummary() {
         icon={CheckCircle2}
         trend={{ direction: "up", value: "+1", intent: "positive" }}
       />
-      <StatCard
-        label="Pending"
-        value={mockSummary.pending}
-        icon={Hourglass}
-        hint="2 due today"
-      />
+      <StatCard label="Pending" value={mockSummary.pending} icon={Hourglass} hint="2 due today" />
       <StatCard
         label="Dependencies"
         value={mockSummary.dependenciesWaiting}

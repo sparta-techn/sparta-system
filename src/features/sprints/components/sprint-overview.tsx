@@ -1,4 +1,12 @@
-import { CalendarDays, CheckCircle2, CircleDashed, ListChecks, Loader2, OctagonAlert, Target } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  CircleDashed,
+  ListChecks,
+  Loader2,
+  OctagonAlert,
+  Target,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useProjectsState } from "@/features/projects/store";
@@ -77,7 +85,9 @@ export function SprintOverview({ sprint }: { sprint: Sprint }) {
         <div className="mt-5 space-y-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Completion</span>
-            <span className="font-medium">{stats.progress}% · {stats.completed}/{stats.total} tasks</span>
+            <span className="font-medium">
+              {stats.progress}% · {stats.completed}/{stats.total} tasks
+            </span>
           </div>
           <Progress value={stats.progress} className="h-2" />
         </div>
@@ -85,7 +95,12 @@ export function SprintOverview({ sprint }: { sprint: Sprint }) {
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
         <Metric icon={ListChecks} label="Total tasks" value={stats.total} />
-        <Metric icon={CheckCircle2} label="Completed" value={stats.completed} tone="text-emerald-500" />
+        <Metric
+          icon={CheckCircle2}
+          label="Completed"
+          value={stats.completed}
+          tone="text-emerald-500"
+        />
         <Metric icon={Loader2} label="In progress" value={stats.inProgress} tone="text-amber-500" />
         <Metric icon={CircleDashed} label="To do" value={stats.todo} tone="text-muted-foreground" />
         <Metric icon={OctagonAlert} label="Blocked" value={stats.blocked} tone="text-rose-500" />

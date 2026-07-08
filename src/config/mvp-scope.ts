@@ -91,7 +91,13 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     path: "/app/announcements",
     note: "Company hub announcements; no backing route at this path.",
   },
-  { id: "notifications", label: "Notifications", inMvp: true, kind: "nav", path: "/app/notifications" },
+  {
+    id: "notifications",
+    label: "Notifications",
+    inMvp: true,
+    kind: "nav",
+    path: "/app/notifications",
+  },
 
   // ---------- Team (primary nav) ----------
   {
@@ -110,7 +116,13 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     path: "/app/manager",
     note: "Manager dashboard for daily-report review — in MVP.",
   },
-  { id: "report-review", label: "Report reviews", inMvp: true, kind: "nav", path: "/app/report-review" },
+  {
+    id: "report-review",
+    label: "Report reviews",
+    inMvp: true,
+    kind: "nav",
+    path: "/app/report-review",
+  },
   { id: "hr", label: "HR workspace", inMvp: true, kind: "nav", path: "/app/hr" },
   { id: "directory", label: "Directory", inMvp: true, kind: "nav", path: "/app/hr/employees" },
   {

@@ -10,19 +10,19 @@ Single source of truth for visual and interaction conventions. Every component, 
 
 Use semantic tokens only. Roles:
 
-| Token | Use |
-|---|---|
-| `background` / `foreground` | App shell base |
-| `surface` | Subtle elevated surfaces (panels, toolbars) |
-| `card` / `card-foreground` | Card containers |
-| `popover` | Menus, dropdowns, tooltips, command palette |
-| `primary` (+ `-foreground`, `-soft`) | Brand actions, active states, links |
-| `secondary` | Low-emphasis surfaces |
-| `muted` / `muted-foreground` | Quiet backgrounds, secondary text |
-| `accent` | Hover/selected backgrounds |
-| `success`, `warning`, `info`, `destructive` (+ `-foreground`, `-soft`) | Status |
-| `border`, `border-strong`, `input`, `ring` | Lines + focus |
-| `chart-1..5` | Charts only |
+| Token                                                                  | Use                                         |
+| ---------------------------------------------------------------------- | ------------------------------------------- |
+| `background` / `foreground`                                            | App shell base                              |
+| `surface`                                                              | Subtle elevated surfaces (panels, toolbars) |
+| `card` / `card-foreground`                                             | Card containers                             |
+| `popover`                                                              | Menus, dropdowns, tooltips, command palette |
+| `primary` (+ `-foreground`, `-soft`)                                   | Brand actions, active states, links         |
+| `secondary`                                                            | Low-emphasis surfaces                       |
+| `muted` / `muted-foreground`                                           | Quiet backgrounds, secondary text           |
+| `accent`                                                               | Hover/selected backgrounds                  |
+| `success`, `warning`, `info`, `destructive` (+ `-foreground`, `-soft`) | Status                                      |
+| `border`, `border-strong`, `input`, `ring`                             | Lines + focus                               |
+| `chart-1..5`                                                           | Charts only                                 |
 
 **Status `-soft` variants** are for badges, callouts, pill backgrounds. Text on `-soft` uses the matching solid color (e.g. `bg-success-soft text-success`).
 
@@ -39,16 +39,17 @@ Families (already wired via `--font-sans`, `--font-mono`):
 
 Scale (Tailwind utilities):
 
-| Use | Class |
-|---|---|
-| Page H1 | `text-2xl font-semibold tracking-tight` (mobile) → `sm:text-3xl` |
-| Section H2 | `text-lg font-semibold` |
-| Card title | `text-sm font-medium` |
-| Body | `text-sm` (default) |
-| Small / meta | `text-xs text-muted-foreground` |
-| Numeric | add `tabular-nums` for time, money, counts |
+| Use          | Class                                                            |
+| ------------ | ---------------------------------------------------------------- |
+| Page H1      | `text-2xl font-semibold tracking-tight` (mobile) → `sm:text-3xl` |
+| Section H2   | `text-lg font-semibold`                                          |
+| Card title   | `text-sm font-medium`                                            |
+| Body         | `text-sm` (default)                                              |
+| Small / meta | `text-xs text-muted-foreground`                                  |
+| Numeric      | add `tabular-nums` for time, money, counts                       |
 
 Rules:
+
 - One `<h1>` per page (SEO + a11y).
 - Use `text-muted-foreground` for secondary text, never lighter grays.
 - Never use serif fonts. Never load additional Google Fonts.
@@ -60,15 +61,16 @@ Rules:
 
 Use Tailwind's 4px scale. Standard rhythm:
 
-| Context | Padding | Gap |
-|---|---|---|
-| Page container | `px-4 sm:px-6 lg:px-8 py-6` | `gap-6` between sections |
-| Card | `p-4` or `p-6` (dense vs. comfortable) | `gap-3` internal |
-| Form fields | — | `gap-4` between fields, `gap-1.5` label→input |
-| Toolbar/header row | `px-4 py-3` | `gap-2` |
-| List rows | `px-4 py-3` | `gap-3` |
+| Context            | Padding                                | Gap                                           |
+| ------------------ | -------------------------------------- | --------------------------------------------- |
+| Page container     | `px-4 sm:px-6 lg:px-8 py-6`            | `gap-6` between sections                      |
+| Card               | `p-4` or `p-6` (dense vs. comfortable) | `gap-3` internal                              |
+| Form fields        | —                                      | `gap-4` between fields, `gap-1.5` label→input |
+| Toolbar/header row | `px-4 py-3`                            | `gap-2`                                       |
+| List rows          | `px-4 py-3`                            | `gap-3`                                       |
 
 Rules:
+
 - Prefer `gap-*` over margin between siblings inside flex/grid.
 - Never mix arbitrary pixel values (`mt-[7px]`). Snap to the scale.
 - Vertical rhythm: section→section `gap-6`/`gap-8`; subsection `gap-4`.
@@ -77,13 +79,13 @@ Rules:
 
 ## 4. Radius & Elevation
 
-| Token | When |
-|---|---|
-| `rounded-sm` | Inputs, badges |
-| `rounded-md` | Buttons, small cards |
-| `rounded-lg` | Cards (default), dialogs |
+| Token                        | When                                  |
+| ---------------------------- | ------------------------------------- |
+| `rounded-sm`                 | Inputs, badges                        |
+| `rounded-md`                 | Buttons, small cards                  |
+| `rounded-lg`                 | Cards (default), dialogs              |
 | `rounded-xl` / `rounded-2xl` | Hero cards, sheets, modals on desktop |
-| `rounded-full` | Avatars, status dots, icon buttons |
+| `rounded-full`               | Avatars, status dots, icon buttons    |
 
 Shadows (tokens): `shadow-xs` for resting cards, `shadow-sm` for buttons, `shadow-md` for hover lift, `shadow-pop` for popovers/menus, `shadow-xl` for modals. Never use `shadow-2xl` or raw blur values.
 
@@ -105,18 +107,19 @@ Use the shared `<Button>` (`src/components/ui/button.tsx`). Never roll a custom 
 
 Variants:
 
-| Variant | Use |
-|---|---|
+| Variant             | Use                               |
+| ------------------- | --------------------------------- |
 | `default` (primary) | Single primary action per surface |
-| `secondary` | Neutral confirm |
-| `outline` | Secondary action next to primary |
-| `ghost` | Tertiary / toolbar / icon buttons |
-| `destructive` | Delete, remove, irreversible |
-| `link` | Inline navigation in prose |
+| `secondary`         | Neutral confirm                   |
+| `outline`           | Secondary action next to primary  |
+| `ghost`             | Tertiary / toolbar / icon buttons |
+| `destructive`       | Delete, remove, irreversible      |
+| `link`              | Inline navigation in prose        |
 
 Sizes: `sm` (toolbars), `default` (forms/dialogs), `lg` (hero CTAs), `icon` (icon-only — REQUIRES `aria-label`).
 
 Rules:
+
 - One primary action per dialog/page surface. Everything else is `outline`/`ghost`.
 - Order in dialogs: `[Cancel][Primary]`, primary on the right.
 - Show loading state via the built-in `disabled` + spinner pattern; never swap text without indicator.
@@ -129,17 +132,20 @@ Rules:
 Stack: `react-hook-form` + `zod` + shadcn `Form` primitives.
 
 Layout:
+
 - Single column on mobile; two columns at `md:` only for related short fields.
 - Label above input. `gap-1.5` label→input. Helper text under input in `text-xs text-muted-foreground`.
 - Required marker: `*` after label in `text-destructive`.
 - Group related fields with a `Card` or a subtle `<fieldset>` (`border rounded-lg p-4`).
 
 Inputs:
+
 - Height: `h-9` default, `h-10` for large forms.
 - Use the matching shadcn component for each input type (no native styling).
 - Disabled inputs use the built-in disabled styling; never gray manually.
 
 Submission:
+
 - Submit button on the right, aligned with form footer.
 - Autosave drafts for long flows (check-ins, EOD, project create) via debounced `localStorage` or server fn.
 
@@ -187,15 +193,16 @@ Use the shared `<Table>` (`src/components/ui/table.tsx`).
 
 Pick by intent:
 
-| Component | Use |
-|---|---|
-| `Dialog` | Focused single task (confirm, short form, destructive action) |
-| `Sheet` | Side panel for filters, secondary forms, contextual editing |
-| `Drawer` | Mobile-first slide-up (replaces Dialog on small screens for long content) |
-| `Popover` / `DropdownMenu` | Lightweight contextual actions |
-| `Tooltip` | One-line hints; never for tap targets on touch |
+| Component                  | Use                                                                       |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `Dialog`                   | Focused single task (confirm, short form, destructive action)             |
+| `Sheet`                    | Side panel for filters, secondary forms, contextual editing               |
+| `Drawer`                   | Mobile-first slide-up (replaces Dialog on small screens for long content) |
+| `Popover` / `DropdownMenu` | Lightweight contextual actions                                            |
+| `Tooltip`                  | One-line hints; never for tap targets on touch                            |
 
 Rules:
+
 - Always include a title and a description (or `sr-only` description) for a11y.
 - ESC closes; backdrop click closes non-destructive dialogs only.
 - Destructive confirms use `AlertDialog` with explicit verb (`Delete project`, not `OK`).
@@ -209,6 +216,7 @@ Rules:
 Every list, table, board, and chart MUST handle empty.
 
 Anatomy:
+
 - Centered block, `py-12`.
 - Icon in a soft circle: `h-12 w-12 rounded-full bg-muted text-muted-foreground` with a `lucide` icon `h-6 w-6`.
 - Title: `text-base font-medium`.
@@ -244,13 +252,13 @@ Never show a blank area or "No data".
 
 Use `<StatusBadge>` for entity status. Color mapping:
 
-| Status family | Token |
-|---|---|
-| Success / done / online | `success` |
-| In progress / info | `info` |
+| Status family            | Token         |
+| ------------------------ | ------------- |
+| Success / done / online  | `success`     |
+| In progress / info       | `info`        |
 | Blocked / urgent / error | `destructive` |
-| Warning / waiting | `warning` |
-| Neutral / draft | `muted` |
+| Warning / waiting        | `warning`     |
+| Neutral / draft          | `muted`       |
 
 Pattern: `bg-{role}-soft text-{role} border border-{role}/20 rounded-full px-2 py-0.5 text-xs font-medium`.
 
@@ -275,6 +283,7 @@ Status dots: use the `status-dot` utility from `styles.css`.
 Breakpoints (Tailwind): `sm 640`, `md 768`, `lg 1024`, `xl 1280`, `2xl 1536`.
 
 Rules:
+
 - Mobile-first. Write base styles for mobile; layer `sm:`/`md:`/`lg:` for larger.
 - Page header rows containing both text and widgets MUST follow the pattern:
   ```tsx

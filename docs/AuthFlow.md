@@ -33,6 +33,7 @@
 ```
 
 ## Sign-in
+
 ```text
 /auth ── signInWithPassword ──► supabase.auth ──► session in localStorage
                                           │
@@ -47,6 +48,7 @@
 ```
 
 ## Forgot / reset
+
 ```text
 /auth/forgot-password
   ── resetPasswordForEmail(redirectTo=/auth/reset-password)
@@ -58,9 +60,11 @@
 /auth/reset-password
   ── updateUser({ password })  ── signOut()  ── /auth
 ```
+
 Failure to reveal account existence: `/auth/forgot-password` always shows the success screen even on `user_not_found`.
 
 ## Protected navigation
+
 ```text
 visit /app/anything
    │
@@ -72,10 +76,12 @@ visit /app/anything
 ```
 
 ## Session expiry
+
 - Background: `supabase-js` auto-refreshes the access token via the refresh token. Multi-tab is handled by `localStorage` events.
 - On hard expiry (refresh token rejected): next navigation triggers `beforeLoad` → `redirect("/auth")`. Optional UX: surface `/auth/session-expired` first via an idle timer.
 
 ## Sign-out
+
 ```text
 useAuth().signOut()
    │
@@ -85,13 +91,14 @@ useAuth().signOut()
 ```
 
 ## Threat model summary
-| Threat                                   | Mitigation |
-| ---------------------------------------- | ---------- |
-| Public self-signup                       | `disable_signup=true` on the auth project. |
-| Account enumeration via "forgot password"| Always show "check your inbox". |
-| Privilege escalation through profile edit| Roles live in a separate table; `profiles` cannot grant access. |
-| Compromised HR account assigning Owner   | Only Owner / Super Admin can write `user_roles`. |
-| Password reuse / weak passwords          | Client `strongPasswordSchema` + HIBP server check. |
-| Stolen reset link replay                 | Single-use, time-limited Supabase recovery token. |
-| Open redirects post-login                | `redirect` search param consumed locally (TanStack types), no `window.location.href = ext_url`. |
-| XSS                                      | No `dangerouslySetInnerHTML`; all rendered content escaped by React. |
+
+| Threat                                    | Mitigation                                                                                      |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Public self-signup                        | `disable_signup=true` on the auth project.                                                      |
+| Account enumeration via "forgot password" | Always show "check your inbox".                                                                 |
+| Privilege escalation through profile edit | Roles live in a separate table; `profiles` cannot grant access.                                 |
+| Compromised HR account assigning Owner    | Only Owner / Super Admin can write `user_roles`.                                                |
+| Password reuse / weak passwords           | Client `strongPasswordSchema` + HIBP server check.                                              |
+| Stolen reset link replay                  | Single-use, time-limited Supabase recovery token.                                               |
+| Open redirects post-login                 | `redirect` search param consumed locally (TanStack types), no `window.location.href = ext_url`. |
+| XSS                                       | No `dangerouslySetInnerHTML`; all rendered content escaped by React.                            |

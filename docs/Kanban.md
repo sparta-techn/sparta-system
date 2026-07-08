@@ -11,6 +11,7 @@
 ## 1. Scope
 
 **In scope**
+
 - Render existing tasks grouped by `Task.status`.
 - Drag and drop a card between columns → write the new status through
   `updateTask(taskId, { status })`.
@@ -26,6 +27,7 @@
   limit per column (visual indicator, never blocks a move).
 
 **Out of scope (owned elsewhere)**
+
 - Task CRUD, checklist, comments, subtasks, activity — Tasks module.
 - Sprint planning — future Sprints module.
 - Time tracking — future Time Tracking module.
@@ -35,8 +37,8 @@
 
 ## 2. Routes
 
-| Route | Purpose |
-|---|---|
+| Route               | Purpose                                               |
+| ------------------- | ----------------------------------------------------- |
 | `/app/tasks/kanban` | Kanban board view, accessible from the Tasks tab nav. |
 
 The page mounts inside the existing `tasks.tsx` layout, so the page

@@ -5,7 +5,13 @@
  */
 
 export type ActivitySource =
-  "task" | "dependency" | "project" | "sprint" | "report" | "membership" | "comment";
+  | "task"
+  | "dependency"
+  | "project"
+  | "sprint"
+  | "report"
+  | "membership"
+  | "comment";
 
 export interface ActivityFeedRow {
   id: string;

@@ -4,20 +4,20 @@
 
 ### `public.work_sessions`
 
-| Column | Notes |
-|---|---|
-| `id` | uuid PK |
-| `user_id` | uuid, owner |
-| `work_date` | date in **company timezone** — UNIQUE with `user_id` |
-| `started_at` | timestamptz, set on Start Work |
-| `finished_at` | timestamptz, set on Finish Work |
-| `session_status` | enum: `not_started` / `working` / `on_break` / `finished` |
-| `attendance_status` | enum: `in_progress` / `on_time` / `late` / `half_day` / `absent` / `weekend` / `holiday` / `leave` |
-| `late_minutes` | int — minutes after `work_start_time` |
-| `working_seconds` | int — final value computed at finish |
-| `break_seconds` | int — final value computed at finish |
-| `overtime_seconds` | int — `max(0, working_seconds - expected)` |
-| `timezone`, `device`, `browser`, `ip`, `location` | captured at start |
+| Column                                            | Notes                                                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `id`                                              | uuid PK                                                                                            |
+| `user_id`                                         | uuid, owner                                                                                        |
+| `work_date`                                       | date in **company timezone** — UNIQUE with `user_id`                                               |
+| `started_at`                                      | timestamptz, set on Start Work                                                                     |
+| `finished_at`                                     | timestamptz, set on Finish Work                                                                    |
+| `session_status`                                  | enum: `not_started` / `working` / `on_break` / `finished`                                          |
+| `attendance_status`                               | enum: `in_progress` / `on_time` / `late` / `half_day` / `absent` / `weekend` / `holiday` / `leave` |
+| `late_minutes`                                    | int — minutes after `work_start_time`                                                              |
+| `working_seconds`                                 | int — final value computed at finish                                                               |
+| `break_seconds`                                   | int — final value computed at finish                                                               |
+| `overtime_seconds`                                | int — `max(0, working_seconds - expected)`                                                         |
+| `timezone`, `device`, `browser`, `ip`, `location` | captured at start                                                                                  |
 
 ### `public.work_session_breaks`
 
@@ -54,13 +54,13 @@ Any other transition raises an exception with a human-readable message.
 
 ## RPCs (all `SECURITY DEFINER`, granted to `authenticated`)
 
-| Function | Returns | Errors |
-|---|---|---|
-| `start_work_session(_device, _browser, _ip, _location)` | `work_sessions` row | `Work session already started today` (unique violation) |
-| `start_break()` | `work_session_breaks` row | `No active work session` / `Already on break` / `Work already finished` |
-| `end_break()` | `work_session_breaks` row (closed) | `Not currently on break` |
-| `finish_work_session()` | `work_sessions` row (totals computed) | `Already finished` / `Cannot finish a session that never started` |
-| `current_work_date()` | `date` in company timezone | — |
+| Function                                                | Returns                               | Errors                                                                  |
+| ------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------- |
+| `start_work_session(_device, _browser, _ip, _location)` | `work_sessions` row                   | `Work session already started today` (unique violation)                 |
+| `start_break()`                                         | `work_session_breaks` row             | `No active work session` / `Already on break` / `Work already finished` |
+| `end_break()`                                           | `work_session_breaks` row (closed)    | `Not currently on break`                                                |
+| `finish_work_session()`                                 | `work_sessions` row (totals computed) | `Already finished` / `Cannot finish a session that never started`       |
+| `current_work_date()`                                   | `date` in company timezone            | —                                                                       |
 
 ## Computed fields
 

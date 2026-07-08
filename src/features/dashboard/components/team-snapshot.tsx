@@ -1,17 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { mockTeam, type MockTeammate } from "../mock-data";
 
@@ -49,8 +38,7 @@ export function TeamSnapshot() {
           {(["working", "on_break", "late", "offline"] as const).map((s) => (
             <span key={s} className="flex items-center gap-1.5">
               <span className={cn("size-1.5 rounded-full", DOT[s])} aria-hidden />
-              <span className="tabular-nums text-foreground">{counts[s] ?? 0}</span>{" "}
-              {LABEL[s]}
+              <span className="tabular-nums text-foreground">{counts[s] ?? 0}</span> {LABEL[s]}
             </span>
           ))}
         </div>

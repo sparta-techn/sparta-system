@@ -1,6 +1,12 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useProjectsState } from "@/features/projects/store";
 import type { SprintFilters, SprintStatus } from "../types";
@@ -39,11 +45,15 @@ export function SprintsFilterBar({
         value={project}
         onValueChange={(v) => onChange({ ...value, projectIds: v === "all" ? undefined : [v] })}
       >
-        <SelectTrigger className="w-full sm:w-[200px]"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectValue />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All projects</SelectItem>
           {projects.map((p) => (
-            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            <SelectItem key={p.id} value={p.id}>
+              {p.name}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -54,10 +64,14 @@ export function SprintsFilterBar({
           onChange({ ...value, statuses: v === "all" ? undefined : [v as SprintStatus] })
         }
       >
-        <SelectTrigger className="w-full sm:w-[170px]"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="w-full sm:w-[170px]">
+          <SelectValue />
+        </SelectTrigger>
         <SelectContent>
           {STATUS_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -67,7 +81,10 @@ export function SprintsFilterBar({
           type="date"
           value={value.from?.slice(0, 10) ?? ""}
           onChange={(e) =>
-            onChange({ ...value, from: e.target.value ? new Date(e.target.value).toISOString() : undefined })
+            onChange({
+              ...value,
+              from: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+            })
           }
           className="w-full sm:w-[150px]"
         />
@@ -75,14 +92,23 @@ export function SprintsFilterBar({
           type="date"
           value={value.to?.slice(0, 10) ?? ""}
           onChange={(e) =>
-            onChange({ ...value, to: e.target.value ? new Date(e.target.value).toISOString() : undefined })
+            onChange({
+              ...value,
+              to: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+            })
           }
           className="w-full sm:w-[150px]"
         />
       </div>
 
-      {(value.search || value.statuses?.length || value.projectIds?.length || value.from || value.to) ? (
-        <Button variant="ghost" size="sm" onClick={() => onChange({})}>Clear</Button>
+      {value.search ||
+      value.statuses?.length ||
+      value.projectIds?.length ||
+      value.from ||
+      value.to ? (
+        <Button variant="ghost" size="sm" onClick={() => onChange({})}>
+          Clear
+        </Button>
       ) : null}
     </div>
   );

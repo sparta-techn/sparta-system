@@ -11,13 +11,7 @@
  * for checks the provider advertises.
  */
 
-import type {
-  DeploymentStatus,
-  DnsStatus,
-  ServerInfo,
-  SslStatus,
-  StorageStatus,
-} from "../ports";
+import type { DeploymentStatus, DnsStatus, ServerInfo, SslStatus, StorageStatus } from "../ports";
 
 export interface InfrastructureTransport {
   getDeploymentStatus(accountId: string): Promise<DeploymentStatus>;

@@ -33,7 +33,7 @@ interface CounterState {
   labels: MetricLabels;
   value: number;
 }
-interface GaugeState extends CounterState {}
+type GaugeState = CounterState;
 interface HistogramState {
   name: string;
   help?: string;
@@ -112,7 +112,15 @@ export class MetricRegistry {
     let h = this.histograms.get(key);
     if (!h) {
       const sorted = [...bounds].sort((a, b) => a - b);
-      h = { name, help, labels, bounds: sorted, counts: new Array(sorted.length + 1).fill(0), sum: 0, count: 0 };
+      h = {
+        name,
+        help,
+        labels,
+        bounds: sorted,
+        counts: new Array(sorted.length + 1).fill(0),
+        sum: 0,
+        count: 0,
+      };
       this.histograms.set(key, h);
     }
     // Find the first bucket whose upper bound >= value; else the +Inf overflow.

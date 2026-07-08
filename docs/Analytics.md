@@ -4,15 +4,16 @@ Comprehensive analytics experience for SpartaFlow Hub. Helps employees, team lea
 
 ## Scopes & Role Visibility
 
-| Scope        | Route                          | Visible to                          | Focus                                    |
-| ------------ | ------------------------------ | ----------------------------------- | ---------------------------------------- |
-| Personal     | `/app/analytics`               | Every employee (own data only)      | My attendance, reporting, deps, health   |
-| Team         | `/app/analytics/team`          | Team leads, managers                | A team's flow, blockers, workload        |
-| HR           | `/app/analytics/hr`            | HR, owners                          | Compliance, lifecycle, hiring funnel     |
-| Executive    | `/app/analytics/executive`     | Owners, exec stakeholders           | Company health, risks, project portfolio |
-| Saved reports| `/app/analytics/saved`         | All authenticated users             | Pinned dashboards, scheduled exports     |
+| Scope         | Route                      | Visible to                     | Focus                                    |
+| ------------- | -------------------------- | ------------------------------ | ---------------------------------------- |
+| Personal      | `/app/analytics`           | Every employee (own data only) | My attendance, reporting, deps, health   |
+| Team          | `/app/analytics/team`      | Team leads, managers           | A team's flow, blockers, workload        |
+| HR            | `/app/analytics/hr`        | HR, owners                     | Compliance, lifecycle, hiring funnel     |
+| Executive     | `/app/analytics/executive` | Owners, exec stakeholders      | Company health, risks, project portfolio |
+| Saved reports | `/app/analytics/saved`     | All authenticated users        | Pinned dashboards, scheduled exports     |
 
 All routes live under `_authenticated/app/analytics` and share:
+
 - `AnalyticsFiltersProvider` context for filters
 - `AnalyticsSubnav` for switching scopes
 - `ExportMenu` for PDF / Excel / CSV / Print
@@ -21,6 +22,7 @@ All routes live under `_authenticated/app/analytics` and share:
 ## Metric Surfaces
 
 ### Employee (personal)
+
 - Attendance trend (weekly)
 - Working hours trend (daily)
 - Morning check-in / Midday / EoD completion rates
@@ -30,6 +32,7 @@ All routes live under `_authenticated/app/analytics` and share:
 - Daily activity heatmap (day × hour intensity)
 
 ### Team
+
 - Attendance rate
 - Report completion rate
 - Open vs resolved dependencies
@@ -39,6 +42,7 @@ All routes live under `_authenticated/app/analytics` and share:
 - Team health composite + breakdown (flow / focus / wellbeing / collaboration)
 
 ### HR
+
 - Attendance compliance
 - Leave trends (sick / vacation / personal)
 - New hires by month
@@ -48,6 +52,7 @@ All routes live under `_authenticated/app/analytics` and share:
 - Onboarding completion by cohort
 
 ### Executive
+
 - Company health score (composite)
 - Department health
 - Project health table
@@ -57,6 +62,7 @@ All routes live under `_authenticated/app/analytics` and share:
 ## Filters
 
 `FiltersBar` exposes role-aware controls:
+
 - **Date range** — 7d / 30d / QTD / YTD / Custom (placeholder)
 - **Benchmark period** — WoW / MoM / QoQ (drives TrendCard comparison labels)
 - **Department / Team / Role / Employee / Project** — hidden on `personal`
@@ -66,6 +72,7 @@ State lives in `AnalyticsFiltersProvider` (React context). All charts read the *
 ## Insights
 
 `InsightCard` renders deterministic mock insights from `insightsByScope`. Each entry carries:
+
 - `title`, `description`
 - `intent` (positive / negative / warning / neutral)
 - optional `delta` (e.g. `+11pp`, `-31%`)
@@ -81,6 +88,7 @@ Goal: each scope ships with 4 high-signal insights that highlight **change**, **
 `ExportMenu` is a UI placeholder for PDF / Excel / CSV / Print. The Print action is real (`window.print`). The others emit toasts and are ready to be wired to a server-fn generator.
 
 `SavedReportsList` supports:
+
 - Saving the current view as a named report
 - Pinning / unpinning
 - Deleting

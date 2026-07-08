@@ -125,9 +125,7 @@ export const defaultRules: AutomationRule[] = [
           title: `New dependency assigned to you`,
           body: (e.payload.title as string) ?? "A dependency was routed to you.",
           href: `/app/dependencies/${e.subjectId}`,
-          actions: [
-            { label: "Open", href: `/app/dependencies/${e.subjectId}`, kind: "primary" },
-          ],
+          actions: [{ label: "Open", href: `/app/dependencies/${e.subjectId}`, kind: "primary" }],
         },
       ];
     },
@@ -218,9 +216,7 @@ export const defaultRules: AutomationRule[] = [
     build: (e) => {
       const ownerId = e.payload.ownerId as string | undefined;
       const requesterId = e.payload.requesterId as string | undefined;
-      const targets = [ownerId, requesterId].filter(
-        (id): id is string => !!id && id !== e.actorId,
-      );
+      const targets = [ownerId, requesterId].filter((id): id is string => !!id && id !== e.actorId);
       return targets.map((userId) => ({
         recipients: [{ kind: "user" as const, userId }],
         category: "dependencies" as const,
@@ -240,7 +236,10 @@ export const defaultRules: AutomationRule[] = [
     on: ["announcement.published"],
     build: (e) => [
       {
-        recipients: [{ kind: "role", role: "employee" }, { kind: "role", role: "manager" }],
+        recipients: [
+          { kind: "role", role: "employee" },
+          { kind: "role", role: "manager" },
+        ],
         category: "announcements",
         type: "info",
         priority: "normal",
@@ -443,8 +442,7 @@ export const defaultRules: AutomationRule[] = [
         priority: "normal",
         title: "Leave approved",
         body:
-          (e.payload.summary as string) ??
-          "Your leave request was approved. Enjoy your time off.",
+          (e.payload.summary as string) ?? "Your leave request was approved. Enjoy your time off.",
         href: "/app/leave",
       },
     ],

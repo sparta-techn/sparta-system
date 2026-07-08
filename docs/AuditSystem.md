@@ -17,6 +17,7 @@ Every sensitive action leaves an immutable, queryable trail. Used by HR, Owner, 
 - `occurred_at timestamptz` — DB clock.
 
 Hardening:
+
 - `UPDATE` and `DELETE` grants revoked from every role.
 - BEFORE UPDATE/DELETE trigger `tg_prevent_audit_mutation` raises `feature_not_supported`.
 - Partitioned by month (`PARTITION BY RANGE (occurred_at)`) once volume warrants — keeps indexes small.
@@ -24,22 +25,23 @@ Hardening:
 
 ## 2. What Gets Audited
 
-| Domain | Events |
-|---|---|
-| Auth | sign-in, sign-out, failed sign-in (rate-limited), password change, MFA enroll/disable. |
-| Identity | profile updates (any field), employee_profiles changes. |
-| Roles | role grant / revoke (`user_roles` insert/update). |
-| Attendance | override, manual edit, auto-close. |
-| Workflow | corrections to morning/midday/eod (admin path). |
-| Leaves | request, approve, reject, cancel. |
-| Dependencies | create, status transitions, escalate, cancel, reassign. |
-| Announcements | publish company-wide, edit after publish, delete. |
-| Settings | any `settings` change, `working_rules` change. |
-| Integrations | connect, disconnect, token rotate, webhook signature failure. |
-| Storage | privileged downloads of `documents` / `exports`. |
-| Admin | impersonation, role assignment via admin UI, offboarding. |
+| Domain        | Events                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------- |
+| Auth          | sign-in, sign-out, failed sign-in (rate-limited), password change, MFA enroll/disable. |
+| Identity      | profile updates (any field), employee_profiles changes.                                |
+| Roles         | role grant / revoke (`user_roles` insert/update).                                      |
+| Attendance    | override, manual edit, auto-close.                                                     |
+| Workflow      | corrections to morning/midday/eod (admin path).                                        |
+| Leaves        | request, approve, reject, cancel.                                                      |
+| Dependencies  | create, status transitions, escalate, cancel, reassign.                                |
+| Announcements | publish company-wide, edit after publish, delete.                                      |
+| Settings      | any `settings` change, `working_rules` change.                                         |
+| Integrations  | connect, disconnect, token rotate, webhook signature failure.                          |
+| Storage       | privileged downloads of `documents` / `exports`.                                       |
+| Admin         | impersonation, role assignment via admin UI, offboarding.                              |
 
 System events (no `actor_id`):
+
 - pg_cron job runs that wrote to audited tables (e.g. `close_open_attendance`).
 - Outbox dispatcher actions.
 - Auth Admin API calls from Edge Functions (actor_id = the human who triggered the Edge Function).
@@ -72,11 +74,11 @@ Request context (`actor_id`, `ip`, `user_agent`, `correlation_id`) is injected p
 
 ## 6. Retention
 
-| Class | Minimum retention | Storage |
-|---|---|---|
-| All audit rows | 1 year | hot Postgres partition |
-| Role grants/revokes, offboarding, integration changes | 3 years | hot + cold export monthly |
-| Failed sign-in / security events | 1 year | hot |
+| Class                                                 | Minimum retention | Storage                   |
+| ----------------------------------------------------- | ----------------- | ------------------------- |
+| All audit rows                                        | 1 year            | hot Postgres partition    |
+| Role grants/revokes, offboarding, integration changes | 3 years           | hot + cold export monthly |
+| Failed sign-in / security events                      | 1 year            | hot                       |
 
 Retention enforced by a monthly job that drops the oldest partition after exporting it to `exports/audit/YYYY-MM.parquet` for cold storage.
 

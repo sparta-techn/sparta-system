@@ -8,9 +8,9 @@ Turns domain events into notifications using declarative rules.
 interface AutomationRule {
   id: string;
   description: string;
-  on: EventName[];                          // events this rule reacts to
-  when?: (event) => boolean;                // optional predicate
-  build: (event) => NotificationSpec[];     // 0..n specs per event
+  on: EventName[]; // events this rule reacts to
+  when?: (event) => boolean; // optional predicate
+  build: (event) => NotificationSpec[]; // 0..n specs per event
 }
 ```
 
@@ -31,21 +31,21 @@ optional deep-link. The engine:
 
 ## Built-in rules
 
-| Rule | Trigger | Recipients |
-| --- | --- | --- |
-| `att.late.notify-self` | `attendance.late` | employee |
-| `att.absent.notify-manager` | `attendance.absent` | manager |
-| `att.checked_in.welcome` | `attendance.checked_in` | employee |
-| `checkin.missing.reminder` | `checkin.missing` | employee |
-| `midday.missing.reminder` | `midday.missing` | employee |
-| `eod.missing.reminder` | `eod.missing` | employee |
-| `dep.assigned.owner` | `dependency.assigned` | owner |
-| `dep.mentioned` | `dependency.mentioned` | each mentioned user |
-| `dep.overdue.escalate` | `dependency.overdue` | owner + manager + requester |
-| `dep.resolved.requester` | `dependency.resolved` | requester |
-| `dep.comment.owner` | `dependency.comment_added` | owner + requester (excl. actor) |
-| `announcement.published.everyone` | `announcement.published` | employees + managers |
-| `user.invited` / `user.role_changed` | account events | the target user |
+| Rule                                 | Trigger                    | Recipients                      |
+| ------------------------------------ | -------------------------- | ------------------------------- |
+| `att.late.notify-self`               | `attendance.late`          | employee                        |
+| `att.absent.notify-manager`          | `attendance.absent`        | manager                         |
+| `att.checked_in.welcome`             | `attendance.checked_in`    | employee                        |
+| `checkin.missing.reminder`           | `checkin.missing`          | employee                        |
+| `midday.missing.reminder`            | `midday.missing`           | employee                        |
+| `eod.missing.reminder`               | `eod.missing`              | employee                        |
+| `dep.assigned.owner`                 | `dependency.assigned`      | owner                           |
+| `dep.mentioned`                      | `dependency.mentioned`     | each mentioned user             |
+| `dep.overdue.escalate`               | `dependency.overdue`       | owner + manager + requester     |
+| `dep.resolved.requester`             | `dependency.resolved`      | requester                       |
+| `dep.comment.owner`                  | `dependency.comment_added` | owner + requester (excl. actor) |
+| `announcement.published.everyone`    | `announcement.published`   | employees + managers            |
+| `user.invited` / `user.role_changed` | account events             | the target user                 |
 
 ## Time-based rules (mock scheduling)
 

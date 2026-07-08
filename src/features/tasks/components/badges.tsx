@@ -16,8 +16,14 @@ export const TaskStatusBadge = memo(function TaskStatusBadge({ status }: { statu
   return <StatusBadge tone={STATUS_TONE[status]} label={STATUS_LABEL[status]} withDot />;
 });
 
-export const TaskPriorityBadge = memo(function TaskPriorityBadge({ priority }: { priority: TaskPriority }) {
-  return <StatusBadge tone={PRIORITY_TONE[priority]} label={PRIORITY_LABEL[priority]} withDot={false} />;
+export const TaskPriorityBadge = memo(function TaskPriorityBadge({
+  priority,
+}: {
+  priority: TaskPriority;
+}) {
+  return (
+    <StatusBadge tone={PRIORITY_TONE[priority]} label={PRIORITY_LABEL[priority]} withDot={false} />
+  );
 });
 
 export const TaskLabelChip = memo(function TaskLabelChip({ label }: { label: TaskLabel }) {

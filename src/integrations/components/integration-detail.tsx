@@ -23,7 +23,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProviderStatusBadge } from "./provider-status-badge";
 import { healthDotClass, logLevelVariant, relativeTime } from "./format";
@@ -219,7 +226,10 @@ export function IntegrationDetail({
                 <ul className="divide-y">
                   {telemetry.logs.map((log, i) => (
                     <li key={i} className="flex items-start gap-2 px-3 py-2 text-xs">
-                      <Badge variant={logLevelVariant(log.level)} className="font-mono text-[10px] uppercase">
+                      <Badge
+                        variant={logLevelVariant(log.level)}
+                        className="font-mono text-[10px] uppercase"
+                      >
                         {log.level}
                       </Badge>
                       <span className="whitespace-nowrap text-muted-foreground">
@@ -257,7 +267,11 @@ function DefinitionList({ rows }: { rows: Array<[string, ReactNode]> }) {
 }
 
 function EmptyState({ message }: { message: string }) {
-  return <p className="rounded-md border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">{message}</p>;
+  return (
+    <p className="rounded-md border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">
+      {message}
+    </p>
+  );
 }
 
 /** Render a settings field's default value for display (secrets masked). */

@@ -2,11 +2,7 @@ import { CheckCircle2, Target } from "lucide-react";
 
 import { StatusBadge } from "@/components/status-badge";
 import { MOCK_DEPARTMENTS, MOCK_EMPLOYEES, MOCK_PLANNED_TASKS } from "../mock-data";
-import {
-  EFFORT_META,
-  MOOD_OPTIONS,
-  type CheckInDraft,
-} from "../types";
+import { EFFORT_META, MOOD_OPTIONS, type CheckInDraft } from "../types";
 
 interface Props {
   draft: CheckInDraft;
@@ -16,9 +12,7 @@ export function CheckInSummary({ draft }: Props) {
   const mood = MOOD_OPTIONS.find((m) => m.value === draft.mood);
   const dept = MOCK_DEPARTMENTS.find((d) => d.id === draft.help.departmentId);
   const emp = MOCK_EMPLOYEES.find((e) => e.id === draft.help.employeeId);
-  const selectedTasks = MOCK_PLANNED_TASKS.filter((t) =>
-    draft.taskIds.includes(t.id),
-  );
+  const selectedTasks = MOCK_PLANNED_TASKS.filter((t) => draft.taskIds.includes(t.id));
 
   return (
     <div className="space-y-5">
@@ -59,16 +53,12 @@ export function CheckInSummary({ draft }: Props) {
                 key={p.id}
                 className="flex items-center gap-3 rounded-lg border bg-card p-2.5 text-sm"
               >
-                <span className="font-display tabular-nums text-muted-foreground">
-                  {i + 1}
-                </span>
+                <span className="font-display tabular-nums text-muted-foreground">{i + 1}</span>
                 <span className="flex-1 truncate font-medium text-foreground">
                   {p.title || <em className="text-muted-foreground">untitled</em>}
                 </span>
                 <StatusBadge tone="neutral" label={p.level} size="sm" withDot={false} />
-                <span className="text-xs text-muted-foreground">
-                  {EFFORT_META[p.effort].label}
-                </span>
+                <span className="text-xs text-muted-foreground">{EFFORT_META[p.effort].label}</span>
               </li>
             ))}
           </ol>
@@ -86,12 +76,8 @@ export function CheckInSummary({ draft }: Props) {
                 className="flex items-center gap-2 rounded-lg border bg-card p-2.5 text-sm"
               >
                 <CheckCircle2 className="size-4 text-success" aria-hidden />
-                <span className="font-mono text-[11px] text-muted-foreground">
-                  {t.id}
-                </span>
-                <span className="flex-1 truncate font-medium text-foreground">
-                  {t.title}
-                </span>
+                <span className="font-mono text-[11px] text-muted-foreground">{t.id}</span>
+                <span className="flex-1 truncate font-medium text-foreground">{t.title}</span>
               </li>
             ))}
           </ul>

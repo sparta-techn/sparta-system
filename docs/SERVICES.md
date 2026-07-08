@@ -85,18 +85,18 @@ class ProjectsService extends BaseService<Project, ProjectInsert, ProjectUpdate>
 
 Inherited methods:
 
-| Method | Description |
-| --- | --- |
-| `list(params?)` | Rows with optional equality `filters`, `orderBy`, `direction`, `limit`/`offset`, `select`. |
-| `paginate(params)` | Page-addressed list with an exact `count` (`{ rows, count, page, pageSize }`). |
-| `getById(id, select?)` | Single row or `null`. |
-| `getByIdOrThrow(id, select?)` | Single row, throws `ServiceError("not_found")` if missing. |
-| `create(input)` | Insert one row, returns it. |
-| `createMany(input[])` | Bulk insert. |
-| `update(id, patch)` | Patch by id, returns the updated row. |
-| `upsert(input)` | Insert or update on primary key. |
-| `remove(id)` | Hard delete by id. |
-| `count(filters?)` | Count rows matching equality filters. |
+| Method                        | Description                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `list(params?)`               | Rows with optional equality `filters`, `orderBy`, `direction`, `limit`/`offset`, `select`. |
+| `paginate(params)`            | Page-addressed list with an exact `count` (`{ rows, count, page, pageSize }`).             |
+| `getById(id, select?)`        | Single row or `null`.                                                                      |
+| `getByIdOrThrow(id, select?)` | Single row, throws `ServiceError("not_found")` if missing.                                 |
+| `create(input)`               | Insert one row, returns it.                                                                |
+| `createMany(input[])`         | Bulk insert.                                                                               |
+| `update(id, patch)`           | Patch by id, returns the updated row.                                                      |
+| `upsert(input)`               | Insert or update on primary key.                                                           |
+| `remove(id)`                  | Hard delete by id.                                                                         |
+| `count(filters?)`             | Count rows matching equality filters.                                                      |
 
 Subclasses can override `defaultOrderBy` (defaults to `created_at`) and reach
 the relaxed client via `this.client` for bespoke queries.
@@ -143,94 +143,94 @@ _(live)_ compose existing, fully-typed feature APIs.
 Authentication, the current session, and profile/role records. CRUD targets
 `profiles`; session/credential calls compose `features/auth/auth-service`.
 
-| Method | Purpose |
-| --- | --- |
-| `signIn(email, password)` / `signOut()` | Password auth. |
-| `requestPasswordReset(email)` | Send reset email. |
-| `updatePassword(pw, metadata?)` | Update signed-in user's password. |
-| `getCurrentUser()` / `getSession()` | Current auth user / session. |
-| `getProfile(userId)` | Fetch a profile row. |
-| `getRoles(userId)` | List a user's `AppRole`s. |
-| _+ inherited CRUD on `profiles`_ | |
+| Method                                  | Purpose                           |
+| --------------------------------------- | --------------------------------- |
+| `signIn(email, password)` / `signOut()` | Password auth.                    |
+| `requestPasswordReset(email)`           | Send reset email.                 |
+| `updatePassword(pw, metadata?)`         | Update signed-in user's password. |
+| `getCurrentUser()` / `getSession()`     | Current auth user / session.      |
+| `getProfile(userId)`                    | Fetch a profile row.              |
+| `getRoles(userId)`                      | List a user's `AppRole`s.         |
+| _+ inherited CRUD on `profiles`_        |                                   |
 
 ### `attendanceService` — _(live)_
 
 Work sessions, breaks and team presence. CRUD targets `work_sessions`; lifecycle
 transitions are RPC-backed via `features/attendance/api`.
 
-| Method | Purpose |
-| --- | --- |
-| `clockIn()` / `clockOut()` | Open / finalize today's session. |
-| `startBreak()` / `endBreak()` | Break lifecycle. |
-| `getCurrentWorkDate()` | Server-defined work date. |
-| `getTodaySession(userId)` | Session + breaks for today. |
-| `getHistory(userId, filters)` | Paginated, filterable history. |
-| `getTeamToday()` | Everyone's sessions today. |
-| `getCompanySettings()` | Attendance configuration. |
-| _+ inherited CRUD on `work_sessions`_ | |
+| Method                                | Purpose                          |
+| ------------------------------------- | -------------------------------- |
+| `clockIn()` / `clockOut()`            | Open / finalize today's session. |
+| `startBreak()` / `endBreak()`         | Break lifecycle.                 |
+| `getCurrentWorkDate()`                | Server-defined work date.        |
+| `getTodaySession(userId)`             | Session + breaks for today.      |
+| `getHistory(userId, filters)`         | Paginated, filterable history.   |
+| `getTeamToday()`                      | Everyone's sessions today.       |
+| `getCompanySettings()`                | Attendance configuration.        |
+| _+ inherited CRUD on `work_sessions`_ |                                  |
 
 ### `projectsService` — _(future: `projects`)_
 
-| Method | Purpose |
-| --- | --- |
-| `listByStatus(status, params?)` | Projects by lifecycle status. |
-| `listByManager(managerId, params?)` | Projects a manager owns. |
-| `setFavorite(id, favorite)` | Toggle favorite. |
-| `archive(id)` | Archive (status + `archivedAt`). |
-| `listMilestones(projectId)` | Project milestones. |
-| `listClients()` | Clients. |
-| _+ inherited CRUD on `projects`_ | |
+| Method                              | Purpose                          |
+| ----------------------------------- | -------------------------------- |
+| `listByStatus(status, params?)`     | Projects by lifecycle status.    |
+| `listByManager(managerId, params?)` | Projects a manager owns.         |
+| `setFavorite(id, favorite)`         | Toggle favorite.                 |
+| `archive(id)`                       | Archive (status + `archivedAt`). |
+| `listMilestones(projectId)`         | Project milestones.              |
+| `listClients()`                     | Clients.                         |
+| _+ inherited CRUD on `projects`_    |                                  |
 
 ### `tasksService` — _(future: `tasks`)_
 
 Subtasks are ordinary task rows with a non-null `parentTaskId`.
 
-| Method | Purpose |
-| --- | --- |
-| `listByProject(projectId, params?)` | Tasks in a project. |
-| `listByAssignee(assigneeId, params?)` | Tasks assigned to a user. |
-| `listSubtasks(parentTaskId)` | Direct children. |
-| `setStatus(id, status)` | Move status; stamps `completedAt` on `done`. |
-| `assign(id, assigneeId\|null)` | (Re)assign or unassign. |
-| `softDelete(id)` | Move to trash (`deletedAt`). |
-| `listComments(taskId)` / `addComment(taskId, authorId, body)` | Task comments. |
-| _+ inherited CRUD on `tasks`_ | |
+| Method                                                        | Purpose                                      |
+| ------------------------------------------------------------- | -------------------------------------------- |
+| `listByProject(projectId, params?)`                           | Tasks in a project.                          |
+| `listByAssignee(assigneeId, params?)`                         | Tasks assigned to a user.                    |
+| `listSubtasks(parentTaskId)`                                  | Direct children.                             |
+| `setStatus(id, status)`                                       | Move status; stamps `completedAt` on `done`. |
+| `assign(id, assigneeId\|null)`                                | (Re)assign or unassign.                      |
+| `softDelete(id)`                                              | Move to trash (`deletedAt`).                 |
+| `listComments(taskId)` / `addComment(taskId, authorId, body)` | Task comments.                               |
+| _+ inherited CRUD on `tasks`_                                 |                                              |
 
 ### `reportsService` — _(future: `eod_reports`)_
 
 One report per work session.
 
-| Method | Purpose |
-| --- | --- |
-| `submit(report)` | File the report for a session. |
-| `getBySession(sessionId)` | Report attached to a session. |
-| `listByUser(userId, params?)` | A user's reports. |
-| `listByDate(workDate, params?)` | All reports for a date (HR/manager roll-up). |
-| _+ inherited CRUD on `eod_reports`_ | |
+| Method                              | Purpose                                      |
+| ----------------------------------- | -------------------------------------------- |
+| `submit(report)`                    | File the report for a session.               |
+| `getBySession(sessionId)`           | Report attached to a session.                |
+| `listByUser(userId, params?)`       | A user's reports.                            |
+| `listByDate(workDate, params?)`     | All reports for a date (HR/manager roll-up). |
+| _+ inherited CRUD on `eod_reports`_ |                                              |
 
 ### `notificationsService` — _(future: `notifications`)_
 
-| Method | Purpose |
-| --- | --- |
-| `listForRecipient(recipientId, params?)` | A recipient's inbox. |
-| `unreadCount(recipientId)` | Badge count. |
-| `markRead(id)` / `markAllRead(recipientId)` | Read lifecycle. |
-| `archive(id)` | Archive a notification. |
-| `getPreferences(recipientId)` / `savePreferences(recipientId, prefs)` | Delivery preferences. |
-| _+ inherited CRUD on `notifications`_ | |
+| Method                                                                | Purpose                 |
+| --------------------------------------------------------------------- | ----------------------- |
+| `listForRecipient(recipientId, params?)`                              | A recipient's inbox.    |
+| `unreadCount(recipientId)`                                            | Badge count.            |
+| `markRead(id)` / `markAllRead(recipientId)`                           | Read lifecycle.         |
+| `archive(id)`                                                         | Archive a notification. |
+| `getPreferences(recipientId)` / `savePreferences(recipientId, prefs)` | Delivery preferences.   |
+| _+ inherited CRUD on `notifications`_                                 |                         |
 
 ### `analyticsService` — _(future: `saved_reports` + RPC views)_
 
 Read-mostly metrics plus CRUD for saved reports. Aggregations run server-side.
 
-| Method | Purpose |
-| --- | --- |
-| `listByScope(scope, params?)` | Saved reports for a scope. |
-| `setPinned(id, pinned)` | Pin / unpin. |
-| `getMetric(metric, filters)` | Benchmarked metric (current vs. previous). |
-| `getTrend(metric, filters)` | Trend series for charts. |
-| `getInsights(scope, filters)` | Generated insights. |
-| _+ inherited CRUD on `saved_reports`_ | |
+| Method                                | Purpose                                    |
+| ------------------------------------- | ------------------------------------------ |
+| `listByScope(scope, params?)`         | Saved reports for a scope.                 |
+| `setPinned(id, pinned)`               | Pin / unpin.                               |
+| `getMetric(metric, filters)`          | Benchmarked metric (current vs. previous). |
+| `getTrend(metric, filters)`           | Trend series for charts.                   |
+| `getInsights(scope, filters)`         | Generated insights.                        |
+| _+ inherited CRUD on `saved_reports`_ |                                            |
 
 ### `aiService` — _(future: `ai_conversations`, `ai_messages` + Edge Fn)_
 
@@ -239,12 +239,12 @@ Assistant conversations and completions. The model call is delegated to the
 persists the exchange and returns the reply. (Per `CLAUDE.md`, build AI features
 on the latest Claude models — e.g. `claude-opus-4-8`.)
 
-| Method | Purpose |
-| --- | --- |
-| `listForUser(userId, params?)` | A user's conversations. |
-| `listMessages(conversationId)` | Messages in a thread. |
-| `ask(request)` | Send a prompt; returns `{ conversationId, message }`. |
-| _+ inherited CRUD on `ai_conversations`_ | |
+| Method                                   | Purpose                                               |
+| ---------------------------------------- | ----------------------------------------------------- |
+| `listForUser(userId, params?)`           | A user's conversations.                               |
+| `listMessages(conversationId)`           | Messages in a thread.                                 |
+| `ask(request)`                           | Send a prompt; returns `{ conversationId, message }`. |
+| _+ inherited CRUD on `ai_conversations`_ |                                                       |
 
 ---
 

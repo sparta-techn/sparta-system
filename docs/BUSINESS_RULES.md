@@ -9,17 +9,17 @@
 
 ## Rule → implementation → test
 
-| # | Rule | Implemented in | Enforced / wired at | Tested in |
-| --- | --- | --- | --- | --- |
-| 1 | Working hours start at **09:00** | `services/attendance/rules.ts` (`DEFAULT_ATTENDANCE_POLICY.workStart`, `lateThresholdMinutes`) | `attendanceRepository.checkIn`; `company_settings.work_start_time`; `start_work_session` RPC | `services/attendance/rules.test.ts` |
-| 2 | Check-in until **10:00** is **not** Absent | `rules.ts` (`isLate`, `lateMinutes`, grace = 60) | `checkIn` sets `late_minutes` + `status` | `rules.test.ts` |
-| 3 | After **10:00** → **Late** (no check-in → **Absent**) | `rules.ts` (`attendanceStatusForCheckIn`) | `checkIn` writes `attendance.status`; absent derived when no check-in | `rules.test.ts` |
-| 4 | Working duration **8 hours** (overtime beyond) | `rules.ts` (`computeWorkedSeconds`, `overtimeSeconds`, `classifyCompletedDay`, expected = 480 min) | `checkOut` writes `worked_seconds` / `overtime_seconds` / final `status` | `rules.test.ts` |
-| 5 | Break duration **max 1 hour** | `rules.ts` (`remainingBreakSeconds`, `breakLimitExceeded`, max = 60 min) | break accounting in `checkOut`; `company_settings.max_break_minutes` | `rules.test.ts` |
-| 6 | **One** Morning Check-in / Midday / EOD per day | `services/reports/rules.ts` (`resolveSubmissionMode`, `canCreateSubmission`) | `StatusUpdatesService.submit`, `DailyReportsService.submit`; DB `UNIQUE (user_id, work_date[, kind])` | `services/reports/rules.test.ts` |
-| 7 | Dependency requests stay **Open until resolved** | `services/reports/rules.ts` (`isDependencyOpen`, `TERMINAL_DEPENDENCY_STATES`, `resolvedAtFor`) | `DependencyRequestsService.setState` / `listOpen` | `services/reports/rules.test.ts` |
-| 8 | **Managers can review reports** | `features/auth/permissions.ts` (`canReviewReports`) | RLS `can_review_reports()` on report/attendance reads | `features/auth/permissions.test.ts` |
-| 9 | **Owners** have **read-only** access to all attendance | `features/auth/permissions.ts` (`canViewAllAttendance`, `canAdministerAttendance`, `isAttendanceReadOnly`) | RLS: owner reads via `can_review_reports`; **migration `20260630140000`** drops `owner` from the attendance write policies | `features/auth/permissions.test.ts` |
+| #   | Rule                                                   | Implemented in                                                                                             | Enforced / wired at                                                                                                        | Tested in                           |
+| --- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 1   | Working hours start at **09:00**                       | `services/attendance/rules.ts` (`DEFAULT_ATTENDANCE_POLICY.workStart`, `lateThresholdMinutes`)             | `attendanceRepository.checkIn`; `company_settings.work_start_time`; `start_work_session` RPC                               | `services/attendance/rules.test.ts` |
+| 2   | Check-in until **10:00** is **not** Absent             | `rules.ts` (`isLate`, `lateMinutes`, grace = 60)                                                           | `checkIn` sets `late_minutes` + `status`                                                                                   | `rules.test.ts`                     |
+| 3   | After **10:00** → **Late** (no check-in → **Absent**)  | `rules.ts` (`attendanceStatusForCheckIn`)                                                                  | `checkIn` writes `attendance.status`; absent derived when no check-in                                                      | `rules.test.ts`                     |
+| 4   | Working duration **8 hours** (overtime beyond)         | `rules.ts` (`computeWorkedSeconds`, `overtimeSeconds`, `classifyCompletedDay`, expected = 480 min)         | `checkOut` writes `worked_seconds` / `overtime_seconds` / final `status`                                                   | `rules.test.ts`                     |
+| 5   | Break duration **max 1 hour**                          | `rules.ts` (`remainingBreakSeconds`, `breakLimitExceeded`, max = 60 min)                                   | break accounting in `checkOut`; `company_settings.max_break_minutes`                                                       | `rules.test.ts`                     |
+| 6   | **One** Morning Check-in / Midday / EOD per day        | `services/reports/rules.ts` (`resolveSubmissionMode`, `canCreateSubmission`)                               | `StatusUpdatesService.submit`, `DailyReportsService.submit`; DB `UNIQUE (user_id, work_date[, kind])`                      | `services/reports/rules.test.ts`    |
+| 7   | Dependency requests stay **Open until resolved**       | `services/reports/rules.ts` (`isDependencyOpen`, `TERMINAL_DEPENDENCY_STATES`, `resolvedAtFor`)            | `DependencyRequestsService.setState` / `listOpen`                                                                          | `services/reports/rules.test.ts`    |
+| 8   | **Managers can review reports**                        | `features/auth/permissions.ts` (`canReviewReports`)                                                        | RLS `can_review_reports()` on report/attendance reads                                                                      | `features/auth/permissions.test.ts` |
+| 9   | **Owners** have **read-only** access to all attendance | `features/auth/permissions.ts` (`canViewAllAttendance`, `canAdministerAttendance`, `isAttendanceReadOnly`) | RLS: owner reads via `can_review_reports`; **migration `20260630140000`** drops `owner` from the attendance write policies | `features/auth/permissions.test.ts` |
 
 ---
 
@@ -34,7 +34,7 @@
   `Date`/seconds and an optional policy, so they are deterministic and unit-test
   without a clock or database.
 - **One-per-day** is belt-and-suspenders: the rule helper makes a repeat submit
-  an *update* (never a duplicate), and the DB `UNIQUE` keys
+  an _update_ (never a duplicate), and the DB `UNIQUE` keys
   (`daily_status_updates(user_id, work_date, kind)`,
   `daily_reports(user_id, work_date)`) make duplicates impossible at the storage
   layer.

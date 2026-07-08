@@ -37,28 +37,61 @@ export function LineChart({
   const area = `M ${x(0)},${y(min)} L ${data.map((d, i) => `${x(i)},${y(d.value)}`).join(" L ")} L ${x(data.length - 1)},${y(min)} Z`;
   const ticks = 4;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className={cn("h-auto w-full", className)} role="img" aria-label={ariaLabel}>
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      className={cn("h-auto w-full", className)}
+      role="img"
+      aria-label={ariaLabel}
+    >
       {showGrid &&
         Array.from({ length: ticks + 1 }).map((_, i) => {
           const ty = pad.t + (ih * i) / ticks;
           const tv = max - (range * i) / ticks;
           return (
             <g key={i}>
-              <line x1={pad.l} x2={w - pad.r} y1={ty} y2={ty} className="stroke-border/60" strokeDasharray="2 4" />
-              <text x={pad.l - 6} y={ty + 3} textAnchor="end" className="fill-muted-foreground text-[10px]">
+              <line
+                x1={pad.l}
+                x2={w - pad.r}
+                y1={ty}
+                y2={ty}
+                className="stroke-border/60"
+                strokeDasharray="2 4"
+              />
+              <text
+                x={pad.l - 6}
+                y={ty + 3}
+                textAnchor="end"
+                className="fill-muted-foreground text-[10px]"
+              >
                 {formatValue(Math.round(tv))}
               </text>
             </g>
           );
         })}
-      <path d={area} className={cn("fill-current opacity-10", colorClass.replace("stroke-", "text-"))} />
+      <path
+        d={area}
+        className={cn("fill-current opacity-10", colorClass.replace("stroke-", "text-"))}
+      />
       <polyline fill="none" strokeWidth={2} className={colorClass} points={points} />
       {showDots &&
         data.map((d, i) => (
-          <circle key={i} cx={x(i)} cy={y(d.value)} r={3} className={cn("fill-background", colorClass)} strokeWidth={2} />
+          <circle
+            key={i}
+            cx={x(i)}
+            cy={y(d.value)}
+            r={3}
+            className={cn("fill-background", colorClass)}
+            strokeWidth={2}
+          />
         ))}
       {data.map((d, i) => (
-        <text key={i} x={x(i)} y={h - 6} textAnchor="middle" className="fill-muted-foreground text-[10px]">
+        <text
+          key={i}
+          x={x(i)}
+          y={h - 6}
+          textAnchor="middle"
+          className="fill-muted-foreground text-[10px]"
+        >
           {d.label}
         </text>
       ))}

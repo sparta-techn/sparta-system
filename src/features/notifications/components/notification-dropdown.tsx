@@ -1,19 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Archive,
-  ArrowRight,
-  CheckCheck,
-  Inbox,
-  Settings2,
-  Trash2,
-} from "lucide-react";
+import { Archive, ArrowRight, CheckCheck, Inbox, Settings2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -36,11 +25,7 @@ export function NotificationDropdown({ trigger }: { trigger: React.ReactNode }) 
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent
-        align="end"
-        sideOffset={8}
-        className="w-[min(380px,calc(100vw-1.5rem))] p-0"
-      >
+      <PopoverContent align="end" sideOffset={8} className="w-[min(380px,calc(100vw-1.5rem))] p-0">
         <div className="flex items-center justify-between px-3 py-2.5">
           <div>
             <p className="text-sm font-semibold">Notifications</p>
@@ -127,10 +112,7 @@ export function NotificationRow({
       )}
     >
       <div
-        className={cn(
-          "grid size-8 shrink-0 place-items-center rounded-full",
-          toneClass(n.type),
-        )}
+        className={cn("grid size-8 shrink-0 place-items-center rounded-full", toneClass(n.type))}
         aria-hidden
       >
         <Icon className="size-4" />
@@ -142,12 +124,7 @@ export function NotificationRow({
             {formatRelative(n.createdAt)}
           </span>
         </div>
-        <p
-          className={cn(
-            "text-xs text-muted-foreground",
-            compact ? "line-clamp-2" : "",
-          )}
-        >
+        <p className={cn("text-xs text-muted-foreground", compact ? "line-clamp-2" : "")}>
           {n.body}
         </p>
         <div className="mt-1.5 flex items-center gap-2">

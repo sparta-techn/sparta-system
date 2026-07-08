@@ -22,14 +22,14 @@ Each provider card shows a status badge, its capability tags and a compact
 telemetry summary (**Health · Last sync · Errors**). A **Details** button opens a
 side sheet with all six views:
 
-| View | Source | Contents |
-|---|---|---|
-| **Status** | telemetry `status` | state, connected, account count, last checked, message. |
-| **Health** | telemetry `health` | probe state (healthy/degraded/down), latency, checked-at. |
-| **Last Sync** | telemetry `lastSync` | last run, result, items processed, duration, cursor. |
-| **Errors** | telemetry `errors` | table of recent errors (time, code, message). |
+| View              | Source                    | Contents                                                     |
+| ----------------- | ------------------------- | ------------------------------------------------------------ |
+| **Status**        | telemetry `status`        | state, connected, account count, last checked, message.      |
+| **Health**        | telemetry `health`        | probe state (healthy/degraded/down), latency, checked-at.    |
+| **Last Sync**     | telemetry `lastSync`      | last run, result, items processed, duration, cursor.         |
+| **Errors**        | telemetry `errors`        | table of recent errors (time, code, message).                |
 | **Configuration** | **real** `SettingsSchema` | each provider's settings fields + defaults (secrets masked). |
-| **Logs** | telemetry `logs` | scrollable, level-tagged log stream. |
+| **Logs**          | telemetry `logs`          | scrollable, level-tagged log stream.                         |
 
 Configuration is the one view backed by real platform data — it reads each
 provider's declared `SettingsManager.schema(id)`, so the form fields are accurate
@@ -84,16 +84,16 @@ Nothing leaves the browser; a footer note in the detail sheet says so.
 
 ## Files
 
-| File | Role |
-|---|---|
-| `services/mock-telemetry.ts` | Local reactive telemetry store + DTOs (status/health/last-sync/errors/logs). |
-| `services/container.ts` | Adds `getTelemetryService()` to the composition root. |
-| `hooks/use-integration-center.ts` | `useIntegrationCenter` / `useIntegrationTelemetry` view models. |
-| `components/integration-card.tsx` | Card with status badge, telemetry summary and actions. |
-| `components/integration-detail.tsx` | Sheet with the six tabbed views. |
-| `components/integration-list.tsx` | The Center grid; owns detail-sheet + action wiring. |
-| `components/format.ts` | Presentational helpers (relative time, health/log tone). |
-| `routes/_authenticated/app/integrations.tsx` | Thin route page. |
+| File                                         | Role                                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------------- |
+| `services/mock-telemetry.ts`                 | Local reactive telemetry store + DTOs (status/health/last-sync/errors/logs). |
+| `services/container.ts`                      | Adds `getTelemetryService()` to the composition root.                        |
+| `hooks/use-integration-center.ts`            | `useIntegrationCenter` / `useIntegrationTelemetry` view models.              |
+| `components/integration-card.tsx`            | Card with status badge, telemetry summary and actions.                       |
+| `components/integration-detail.tsx`          | Sheet with the six tabbed views.                                             |
+| `components/integration-list.tsx`            | The Center grid; owns detail-sheet + action wiring.                          |
+| `components/format.ts`                       | Presentational helpers (relative time, health/log tone).                     |
+| `routes/_authenticated/app/integrations.tsx` | Thin route page.                                                             |
 
 ---
 

@@ -3,26 +3,59 @@ import type { Dependency, Person } from "./types";
 export const CURRENT_USER_ID = "u-me";
 
 export const PEOPLE: Person[] = [
-  { id: "u-me", name: "You (Aylin K.)", avatarColor: "primary", role: "Flutter Developer", department: "Mobile" },
-  { id: "u-emir", name: "Emir Y.", avatarColor: "info", role: "Backend Engineer", department: "Backend" },
-  { id: "u-sena", name: "Sena B.", avatarColor: "warning", role: "Product Designer", department: "Design" },
+  {
+    id: "u-me",
+    name: "You (Aylin K.)",
+    avatarColor: "primary",
+    role: "Flutter Developer",
+    department: "Mobile",
+  },
+  {
+    id: "u-emir",
+    name: "Emir Y.",
+    avatarColor: "info",
+    role: "Backend Engineer",
+    department: "Backend",
+  },
+  {
+    id: "u-sena",
+    name: "Sena B.",
+    avatarColor: "warning",
+    role: "Product Designer",
+    department: "Design",
+  },
   { id: "u-can", name: "Can D.", avatarColor: "success", role: "QA Engineer", department: "QA" },
-  { id: "u-mert", name: "Mert A.", avatarColor: "danger", role: "DevOps Engineer", department: "DevOps" },
-  { id: "u-zeynep", name: "Zeynep T.", avatarColor: "primary", role: "Project Manager", department: "PMO" },
-  { id: "u-ali", name: "Ali R.", avatarColor: "info", role: "Frontend Engineer", department: "Web" },
-  { id: "u-deniz", name: "Deniz S.", avatarColor: "warning", role: "Product Manager", department: "Product" },
+  {
+    id: "u-mert",
+    name: "Mert A.",
+    avatarColor: "danger",
+    role: "DevOps Engineer",
+    department: "DevOps",
+  },
+  {
+    id: "u-zeynep",
+    name: "Zeynep T.",
+    avatarColor: "primary",
+    role: "Project Manager",
+    department: "PMO",
+  },
+  {
+    id: "u-ali",
+    name: "Ali R.",
+    avatarColor: "info",
+    role: "Frontend Engineer",
+    department: "Web",
+  },
+  {
+    id: "u-deniz",
+    name: "Deniz S.",
+    avatarColor: "warning",
+    role: "Product Manager",
+    department: "Product",
+  },
 ];
 
-export const DEPARTMENTS = [
-  "Mobile",
-  "Backend",
-  "Design",
-  "QA",
-  "DevOps",
-  "PMO",
-  "Web",
-  "Product",
-];
+export const DEPARTMENTS = ["Mobile", "Backend", "Design", "QA", "DevOps", "PMO", "Web", "Product"];
 
 export const PROJECTS = [
   "Atlas Mobile v3",
@@ -65,21 +98,45 @@ export const MOCK_DEPENDENCIES: Dependency[] = [
     updatedAt: iso(0, 11),
     dueAt: isoIn(2),
     comments: [
-      { id: "c1", authorId: "u-emir", body: "Picked this up. Draft response shape coming today.", createdAt: iso(2, 14) },
-      { id: "c2", authorId: "u-me", body: "Thanks @Emir Y. — please include `next_cursor`.", createdAt: iso(2, 15), mentions: ["u-emir"] },
-      { id: "c3", authorId: "u-emir", body: "Moved to in progress. ETA tomorrow EOD.", createdAt: iso(0, 11), isStatusUpdate: true },
+      {
+        id: "c1",
+        authorId: "u-emir",
+        body: "Picked this up. Draft response shape coming today.",
+        createdAt: iso(2, 14),
+      },
+      {
+        id: "c2",
+        authorId: "u-me",
+        body: "Thanks @Emir Y. — please include `next_cursor`.",
+        createdAt: iso(2, 15),
+        mentions: ["u-emir"],
+      },
+      {
+        id: "c3",
+        authorId: "u-emir",
+        body: "Moved to in progress. ETA tomorrow EOD.",
+        createdAt: iso(0, 11),
+        isStatusUpdate: true,
+      },
     ],
     activity: [
       { id: "ac1", kind: "created", actorId: "u-me", at: iso(3, 10) },
       { id: "ac2", kind: "assigned", actorId: "u-me", at: iso(3, 10), meta: { to: "u-emir" } },
       { id: "ac3", kind: "accepted", actorId: "u-emir", at: iso(2, 14) },
-      { id: "ac4", kind: "status_changed", actorId: "u-emir", at: iso(0, 11), meta: { from: "accepted", to: "in_progress" } },
+      {
+        id: "ac4",
+        kind: "status_changed",
+        actorId: "u-emir",
+        at: iso(0, 11),
+        meta: { from: "accepted", to: "in_progress" },
+      },
     ],
   },
   {
     id: "DEP-1041",
     title: "Empty-state illustrations for Atlas onboarding",
-    description: "Three illustrations needed: no-orders, no-notifications, success. Match Nova design system tokens.",
+    description:
+      "Three illustrations needed: no-orders, no-notifications, success. Match Nova design system tokens.",
     type: "ui_design",
     priority: "medium",
     state: "pending",
@@ -112,12 +169,24 @@ export const MOCK_DEPENDENCIES: Dependency[] = [
     updatedAt: iso(0, 9),
     dueAt: isoIn(0),
     comments: [
-      { id: "c1", authorId: "u-mert", body: "Vault rotation in progress, ping security.", createdAt: iso(0, 9), isStatusUpdate: true },
+      {
+        id: "c1",
+        authorId: "u-mert",
+        body: "Vault rotation in progress, ping security.",
+        createdAt: iso(0, 9),
+        isStatusUpdate: true,
+      },
     ],
     activity: [
       { id: "ac1", kind: "created", actorId: "u-can", at: iso(2, 8) },
       { id: "ac2", kind: "accepted", actorId: "u-mert", at: iso(2, 10) },
-      { id: "ac3", kind: "status_changed", actorId: "u-mert", at: iso(0, 9), meta: { from: "in_progress", to: "blocked" } },
+      {
+        id: "ac3",
+        kind: "status_changed",
+        actorId: "u-mert",
+        at: iso(0, 9),
+        meta: { from: "in_progress", to: "blocked" },
+      },
     ],
   },
   {
@@ -162,7 +231,13 @@ export const MOCK_DEPENDENCIES: Dependency[] = [
     activity: [
       { id: "ac1", kind: "created", actorId: "u-zeynep", at: iso(6, 9) },
       { id: "ac2", kind: "accepted", actorId: "u-can", at: iso(5, 10) },
-      { id: "ac3", kind: "status_changed", actorId: "u-can", at: iso(1, 17), meta: { from: "accepted", to: "in_progress" } },
+      {
+        id: "ac3",
+        kind: "status_changed",
+        actorId: "u-can",
+        at: iso(1, 17),
+        meta: { from: "accepted", to: "in_progress" },
+      },
     ],
   },
   {
@@ -183,7 +258,13 @@ export const MOCK_DEPENDENCIES: Dependency[] = [
     dueAt: isoIn(-3),
     resolvedAt: iso(2, 12),
     comments: [
-      { id: "c1", authorId: "u-emir", body: "Index shipped, p95 down from 4.2s to 180ms.", createdAt: iso(2, 12), isStatusUpdate: true },
+      {
+        id: "c1",
+        authorId: "u-emir",
+        body: "Index shipped, p95 down from 4.2s to 180ms.",
+        createdAt: iso(2, 12),
+        isStatusUpdate: true,
+      },
     ],
     activity: [
       { id: "ac1", kind: "created", actorId: "u-ali", at: iso(9, 9) },

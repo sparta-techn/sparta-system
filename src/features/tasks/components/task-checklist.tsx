@@ -36,7 +36,11 @@ export function TaskChecklist({ task }: { task: Task }) {
               onCheckedChange={() => toggleChecklistItem(task.id, item.id)}
               aria-label={item.text}
             />
-            <span className={item.done ? "flex-1 text-sm text-muted-foreground line-through" : "flex-1 text-sm"}>
+            <span
+              className={
+                item.done ? "flex-1 text-sm text-muted-foreground line-through" : "flex-1 text-sm"
+              }
+            >
               {item.text}
             </span>
             <Button

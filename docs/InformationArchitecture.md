@@ -72,14 +72,14 @@ SpartaFlow Hub
 
 ## 3. Navigation Structure by Role
 
-| Role | Primary Nav |
-|---|---|
-| Employee | Home, Workflow, Attendance, Dependencies, Announcements, Directory, Projects, Leaves |
-| Team Lead | Employee items + Team |
-| Project Manager | Team Lead items + Department |
-| HR | Employee items + HR + Admin (limited) |
-| Owner | Everything |
-| Viewer | Configurable subset of dashboards (read-only) |
+| Role            | Primary Nav                                                                          |
+| --------------- | ------------------------------------------------------------------------------------ |
+| Employee        | Home, Workflow, Attendance, Dependencies, Announcements, Directory, Projects, Leaves |
+| Team Lead       | Employee items + Team                                                                |
+| Project Manager | Team Lead items + Department                                                         |
+| HR              | Employee items + HR + Admin (limited)                                                |
+| Owner           | Everything                                                                           |
+| Viewer          | Configurable subset of dashboards (read-only)                                        |
 
 ## 4. Page Anatomy (Consistent Across the App)
 
@@ -116,6 +116,7 @@ Each layer is progressively disclosed; an employee never sees the admin layer, a
 ## 7. Empty, Loading, and Error States
 
 Every page defines:
+
 - **Loading state** — skeleton, not spinner.
 - **Empty state** — explains why it's empty and what to do next.
 - **Error state** — explains what failed and offers a retry.

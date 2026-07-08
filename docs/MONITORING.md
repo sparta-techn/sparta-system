@@ -15,13 +15,13 @@
 
 ## 1. The five pillars
 
-| Pillar | Where it lives | Status |
-|---|---|---|
-| **Health endpoint** | `src/lib/monitoring/health.ts` (+ Nginx `/healthz`) | Implemented |
-| **Application metrics** | `src/lib/monitoring/metrics.ts` + `registry.ts` | Implemented (in-memory + Prometheus render) |
-| **Performance metrics** | `metrics` histograms + `perfLog` (`src/lib/logging`) | Implemented |
-| **Error tracking** | `errorLog` + `SentryAdapter` (`src/lib/logging`) | Implemented; Sentry adapter inert until wired |
-| **Audit logs** | `auditLog` (`src/lib/logging`) + `audit_logs` table / `features/audit` | Implemented |
+| Pillar                  | Where it lives                                                         | Status                                        |
+| ----------------------- | ---------------------------------------------------------------------- | --------------------------------------------- |
+| **Health endpoint**     | `src/lib/monitoring/health.ts` (+ Nginx `/healthz`)                    | Implemented                                   |
+| **Application metrics** | `src/lib/monitoring/metrics.ts` + `registry.ts`                        | Implemented (in-memory + Prometheus render)   |
+| **Performance metrics** | `metrics` histograms + `perfLog` (`src/lib/logging`)                   | Implemented                                   |
+| **Error tracking**      | `errorLog` + `SentryAdapter` (`src/lib/logging`)                       | Implemented; Sentry adapter inert until wired |
+| **Audit logs**          | `auditLog` (`src/lib/logging`) + `audit_logs` table / `features/audit` | Implemented                                   |
 
 Two complementary subsystems:
 
@@ -33,8 +33,8 @@ Two complementary subsystems:
                      sinks: Prometheus exposition (Grafana on top)   (pull seam)
 ```
 
-Logging answers *"what happened"* (a stream of records); monitoring answers
-*"how much / how fast / is it up"* (aggregates + health). They share ambient
+Logging answers _"what happened"_ (a stream of records); monitoring answers
+_"how much / how fast / is it up"_ (aggregates + health). They share ambient
 context (correlation id, environment, release) so signals cross-link.
 
 ---
@@ -43,11 +43,11 @@ context (correlation id, environment, release) so signals cross-link.
 
 Three layers, cheapest first:
 
-| Layer | Path | Serves | Use |
-|---|---|---|---|
-| **Edge liveness** | `GET /healthz` (Nginx) | static `200 ok` | Container/LB/uptime probes — up even during app restarts (docs/NGINX.md) |
-| **App liveness** | `livenessResponse()` | JSON: status, uptime, release | "process is up" without dependency I/O |
-| **App readiness** | `readinessResponse()` | JSON: runs registered checks; `503` if unhealthy | Gate traffic on real dependency health (Supabase, etc.) |
+| Layer             | Path                   | Serves                                           | Use                                                                      |
+| ----------------- | ---------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
+| **Edge liveness** | `GET /healthz` (Nginx) | static `200 ok`                                  | Container/LB/uptime probes — up even during app restarts (docs/NGINX.md) |
+| **App liveness**  | `livenessResponse()`   | JSON: status, uptime, release                    | "process is up" without dependency I/O                                   |
+| **App readiness** | `readinessResponse()`  | JSON: runs registered checks; `503` if unhealthy | Gate traffic on real dependency health (Supabase, etc.)                  |
 
 The registry lives in `src/lib/monitoring/health.ts`. Register checks at server
 bootstrap (checks are **injected** so the module stays free of Supabase/SDK
@@ -70,9 +70,9 @@ health.register(
 
 ```json
 {
-  "status": "healthy",            // healthy | degraded | unhealthy
-  "version": "a1b2c3d",           // COMMIT_SHA / VITE_COMMIT_SHA
-  "release": "v1.4.0",            // RELEASE / VITE_RELEASE
+  "status": "healthy", // healthy | degraded | unhealthy
+  "version": "a1b2c3d", // COMMIT_SHA / VITE_COMMIT_SHA
+  "release": "v1.4.0", // RELEASE / VITE_RELEASE
   "uptimeSeconds": 3421,
   "timestamp": "2026-07-03T12:00:00.000Z",
   "checks": { "supabase": { "status": "healthy", "detail": "reachable", "durationMs": 42 } }
@@ -110,26 +110,26 @@ labels; the `metrics` facade gives call sites a consistent API:
 ```ts
 import { metrics } from "@/lib/monitoring";
 
-metrics.recordHttp("GET", "/app/tasks", 200, 34);   // count + 5xx counter + latency histogram
+metrics.recordHttp("GET", "/app/tasks", 200, 34); // count + 5xx counter + latency histogram
 metrics.recordError("render", { feature: "kanban" }); // errors_captured_total{kind,feature}
-metrics.gauge("active_sessions", 128);               // gauge
+metrics.gauge("active_sessions", 128); // gauge
 const stop = metrics.startTimer("route.tasks.load", { route: "/app/tasks" });
 // …work…
-stop();                                              // observes into operation_duration_seconds
+stop(); // observes into operation_duration_seconds
 ```
 
 Built-in series:
 
-| Metric | Type | Labels | Meaning |
-|---|---|---|---|
-| `http_requests_total` | counter | method, route, status | Request volume |
-| `http_errors_total` | counter | method, route | 5xx responses |
-| `http_request_duration_seconds` | histogram | method, route | Request latency |
-| `operation_duration_seconds` | histogram | op | Arbitrary timed operations |
-| `errors_captured_total` | counter | kind | Exceptions captured |
+| Metric                          | Type      | Labels                | Meaning                    |
+| ------------------------------- | --------- | --------------------- | -------------------------- |
+| `http_requests_total`           | counter   | method, route, status | Request volume             |
+| `http_errors_total`             | counter   | method, route         | 5xx responses              |
+| `http_request_duration_seconds` | histogram | method, route         | Request latency            |
+| `operation_duration_seconds`    | histogram | op                    | Arbitrary timed operations |
+| `errors_captured_total`         | counter   | kind                  | Exceptions captured        |
 
 **Performance metrics** are histograms (default web-latency buckets, seconds).
-`perfLog` in `@/lib/logging` still emits per-event *timing logs*; use
+`perfLog` in `@/lib/logging` still emits per-event _timing logs_; use
 `metrics.observeDuration`/`startTimer` to also aggregate them for dashboards.
 Web Vitals (LCP/CLS/INP) can be fed in from the client via `metrics.observeDuration`
 / `metrics.gauge`.
@@ -155,7 +155,7 @@ Serve it at an **internal** `/metrics` (never public — it leaks route/volume
 detail): mount `metricsResponse()` the same way as readiness, and restrict the
 path to the Prometheus scraper's IP at Nginx.
 
-> **Cardinality guard:** use bounded label values (route *templates* like
+> **Cardinality guard:** use bounded label values (route _templates_ like
 > `/app/tasks/$id`, not raw ids). Unbounded labels explode memory and Prometheus
 > series count.
 
@@ -169,9 +169,11 @@ Already provided by `@/lib/logging` — do not build a second path:
 import { errorLog } from "@/lib/logging";
 import { metrics } from "@/lib/monitoring";
 
-try { /* … */ } catch (err) {
+try {
+  /* … */
+} catch (err) {
   errorLog.capture(err, { context: { feature: "attendance" } }); // serialized + redacted
-  metrics.recordError("attendance");                              // aggregate for alerting
+  metrics.recordError("attendance"); // aggregate for alerting
 }
 ```
 
@@ -213,22 +215,27 @@ audited actions (`metrics.inc("audit_events_total", { action })`) for dashboards
 All three are **seams**, not dependencies — activate without touching call sites.
 
 ### Sentry (error tracking)
+
 Prepared: `SentryAdapter` (`src/lib/logging/adapters/sentry.ts`).
+
 ```ts
 // npm i @sentry/browser ; Sentry.init({ dsn, release, environment })
 import { configureLogging } from "@/lib/logging";
 import { SentryAdapter } from "@/lib/logging/adapters";
 configureLogging({ addAdapters: [new SentryAdapter(Sentry)] });
 ```
+
 Correlation id ↔ Sentry trace, release from `RELEASE`/`VITE_RELEASE`.
 
 ### Prometheus (metrics)
+
 Prepared: `PrometheusAdapter` (registered by default; `registry.render()` works
 now). Activation = **exposing `/metrics`** (internal path) + a Prometheus
 `scrape_config` pointing at it. Optionally push via a StatsD/OTel-metrics adapter
 implementing `MetricsAdapter.onObserve`.
 
 ### Grafana (dashboards & alerting)
+
 Grafana sits **on top of** Prometheus (metrics) and, optionally, Loki (logs) or
 Tempo (traces). No app code — add Prometheus/Loki as Grafana data sources and
 build panels for the built-in series (§3), health status, error rate, and
@@ -236,6 +243,7 @@ latency percentiles. Alert rules: `up == 0`, `errors_captured_total` rate,
 p95 `http_request_duration_seconds`, readiness `503`s.
 
 ### OpenTelemetry (traces/logs bridge)
+
 Prepared: `OtelAdapter` (`src/lib/logging/adapters/otel.ts`) — pure mapping to
 the OTel Logs Data Model; inject an exporter bridge to activate. A future
 metrics-OTel adapter can mirror the registry to an OTLP metrics exporter.

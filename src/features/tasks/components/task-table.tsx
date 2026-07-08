@@ -51,7 +51,9 @@ export function TaskTableView({
                     aria-label="Select task"
                   />
                 </TableCell>
-                <TableCell className="font-mono text-xs uppercase text-muted-foreground">{t.ref}</TableCell>
+                <TableCell className="font-mono text-xs uppercase text-muted-foreground">
+                  {t.ref}
+                </TableCell>
                 <TableCell className="max-w-[360px]">
                   <Link
                     to="/app/tasks/$id"

@@ -1,6 +1,14 @@
 import {
-  Bell, BookCheck, ClipboardCheck, Coffee, GaugeCircle,
-  LogIn, LogOut, PlayCircle, Sun, Workflow,
+  Bell,
+  BookCheck,
+  ClipboardCheck,
+  Coffee,
+  GaugeCircle,
+  LogIn,
+  LogOut,
+  PlayCircle,
+  Sun,
+  Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,15 +60,21 @@ export function LiveActivityFeed() {
               const Icon = ICONS[a.kind];
               return (
                 <li key={a.id} className="relative">
-                  <span className={`absolute -left-[26px] grid size-6 place-items-center rounded-full ${TONES[a.kind]}`} aria-hidden>
+                  <span
+                    className={`absolute -left-[26px] grid size-6 place-items-center rounded-full ${TONES[a.kind]}`}
+                    aria-hidden
+                  >
                     <Icon className="size-3" />
                   </span>
                   <div className="rounded-lg border border-border bg-card px-3 py-2">
                     <div className="flex items-center justify-between gap-3">
                       <p className="truncate text-sm text-foreground">
-                        <span className="font-medium">{a.actor}</span> · <span className="text-muted-foreground">{a.detail}</span>
+                        <span className="font-medium">{a.actor}</span> ·{" "}
+                        <span className="text-muted-foreground">{a.detail}</span>
                       </p>
-                      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{a.minutesAgo}m</span>
+                      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                        {a.minutesAgo}m
+                      </span>
                     </div>
                   </div>
                 </li>

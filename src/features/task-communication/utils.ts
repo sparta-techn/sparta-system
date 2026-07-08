@@ -15,9 +15,24 @@ export function kindFromName(name: string, mime?: string): FileKind {
   if (["doc", "docx", "txt", "md", "rtf", "odt"].includes(ext)) return "doc";
   if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "zip";
   if (
-    ["ts", "tsx", "js", "jsx", "json", "py", "go", "rs", "rb", "java", "css", "html", "sql", "sh", "yml", "yaml"].includes(
-      ext,
-    )
+    [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "py",
+      "go",
+      "rs",
+      "rb",
+      "java",
+      "css",
+      "html",
+      "sql",
+      "sh",
+      "yml",
+      "yaml",
+    ].includes(ext)
   )
     return "code";
   return "other";

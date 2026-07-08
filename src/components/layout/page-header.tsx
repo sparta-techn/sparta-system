@@ -9,13 +9,7 @@ interface PageHeaderProps {
   className?: string;
 }
 
-export function PageHeader({
-  title,
-  description,
-  eyebrow,
-  actions,
-  className,
-}: PageHeaderProps) {
+export function PageHeader({ title, description, eyebrow, actions, className }: PageHeaderProps) {
   return (
     <header
       className={cn(
@@ -36,9 +30,7 @@ export function PageHeader({
           <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {actions ? (
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
-      ) : null}
+      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
     </header>
   );
 }

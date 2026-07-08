@@ -46,7 +46,7 @@ Reactive hook:
 
 ```ts
 const comments = useCommState(selectTaskComments(taskId));
-const files    = useCommState(selectTaskFiles(taskId));
+const files = useCommState(selectTaskFiles(taskId));
 const activity = useCommState(selectTaskCommActivity(taskId));
 ```
 
@@ -54,10 +54,10 @@ const activity = useCommState(selectTaskCommActivity(taskId));
 
 Three additions to `Task Detail`:
 
-| Tab | Component | Notes |
-|---|---|---|
-| **Comments** | `<ThreadedComments />` | New tab with full thread + composer |
-| **Files** | `<TaskFilesPanel />` | Replaces the old read-only stub |
+| Tab          | Component                                                | Notes                                               |
+| ------------ | -------------------------------------------------------- | --------------------------------------------------- |
+| **Comments** | `<ThreadedComments />`                                   | New tab with full thread + composer                 |
+| **Files**    | `<TaskFilesPanel />`                                     | Replaces the old read-only stub                     |
 | **Activity** | `<TaskActivityTimeline />` + `<CommunicationActivity />` | Tasks-module events + comm events rendered together |
 
 The Tasks-module `<TaskComments />` (a flat, single-store comment list)
@@ -81,13 +81,13 @@ avoid extending the central `EventName` union in this turn.
 
 Every mutation pushes a `TaskCommActivity` record:
 
-| Action | Kind | Summary |
-|---|---|---|
-| Add comment | `comment_added` | `added a comment` / `replied to a comment` |
-| Edit comment | `comment_edited` | `edited a comment` |
-| Delete comment | `comment_deleted` | `deleted a comment` |
-| Upload file | `file_uploaded` | `uploaded {name}` |
-| Delete file | `file_deleted` | `deleted {name}` |
+| Action         | Kind              | Summary                                    |
+| -------------- | ----------------- | ------------------------------------------ |
+| Add comment    | `comment_added`   | `added a comment` / `replied to a comment` |
+| Edit comment   | `comment_edited`  | `edited a comment`                         |
+| Delete comment | `comment_deleted` | `deleted a comment`                        |
+| Upload file    | `file_uploaded`   | `uploaded {name}`                          |
+| Delete file    | `file_deleted`    | `deleted {name}`                           |
 
 Rendered by `<CommunicationActivity />` inside the Task Detail Activity
 tab, beneath the Tasks-module timeline.
@@ -102,12 +102,12 @@ tab, beneath the Tasks-module timeline.
 
 ## Notifications (UI only)
 
-| Trigger | Toast |
-|---|---|
-| New comment | `"{author} commented"` with message preview |
-| Mention parsed | `"Mention sent to {names}"` success toast |
-| File uploaded | `"{uploader} uploaded {fileName}"` success toast |
-| Mock download | `"Download started · {fileName}"` info toast |
+| Trigger        | Toast                                            |
+| -------------- | ------------------------------------------------ |
+| New comment    | `"{author} commented"` with message preview      |
+| Mention parsed | `"Mention sent to {names}"` success toast        |
+| File uploaded  | `"{uploader} uploaded {fileName}"` success toast |
+| Mock download  | `"Download started · {fileName}"` info toast     |
 
 All via `sonner`. No event-bus changes, no central notification-store
 writes — that wiring belongs to the backend phase.
@@ -124,12 +124,12 @@ writes — that wiring belongs to the backend phase.
 
 ## Future Backend Mapping
 
-| Client call | Server function | Notes |
-|---|---|---|
-| `addComment` | `add_task_comment` | RLS: project membership; parses mentions server-side |
-| `editComment` | `update_task_comment` | author-only via RLS |
-| `deleteComment` | `delete_task_comment` | soft-delete |
-| `toggleReaction` | `toggle_task_comment_reaction` | upsert/delete on `(comment_id, user_id, emoji)` |
-| `addFile` | `create_task_file_record` + Storage upload | signed PUT URL flow |
-| `deleteFile` | `delete_task_file` | also deletes Storage object |
-| Mentions → notifications | trigger / event-bus subscriber | publishes `notification.mention` |
+| Client call              | Server function                            | Notes                                                |
+| ------------------------ | ------------------------------------------ | ---------------------------------------------------- |
+| `addComment`             | `add_task_comment`                         | RLS: project membership; parses mentions server-side |
+| `editComment`            | `update_task_comment`                      | author-only via RLS                                  |
+| `deleteComment`          | `delete_task_comment`                      | soft-delete                                          |
+| `toggleReaction`         | `toggle_task_comment_reaction`             | upsert/delete on `(comment_id, user_id, emoji)`      |
+| `addFile`                | `create_task_file_record` + Storage upload | signed PUT URL flow                                  |
+| `deleteFile`             | `delete_task_file`                         | also deletes Storage object                          |
+| Mentions → notifications | trigger / event-bus subscriber             | publishes `notification.mention`                     |

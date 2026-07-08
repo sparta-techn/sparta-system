@@ -9,12 +9,7 @@
  * Registering `new PrometheusAdapter()` on a registry lets `registry.render()`
  * return exposition text. It never mutates state, so it is safe everywhere.
  */
-import type {
-  HistogramSnapshot,
-  MetricSample,
-  MetricSnapshot,
-  MetricsAdapter,
-} from "../types";
+import type { HistogramSnapshot, MetricSample, MetricSnapshot, MetricsAdapter } from "../types";
 
 /** Escape a label value per the exposition format (\\, \n, \"). */
 function escapeLabelValue(v: string): string {

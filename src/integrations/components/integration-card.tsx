@@ -74,11 +74,7 @@ export function IntegrationCard({
           <div className="space-y-0.5">
             <dt className="text-muted-foreground">Errors</dt>
             <dd className="font-medium">
-              {errorCount > 0 ? (
-                <span className="text-red-500">{errorCount}</span>
-              ) : (
-                <span>0</span>
-              )}
+              {errorCount > 0 ? <span className="text-red-500">{errorCount}</span> : <span>0</span>}
             </dd>
           </div>
         </dl>

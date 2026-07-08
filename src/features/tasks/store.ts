@@ -19,11 +19,7 @@ import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { taskRepository } from "@/repositories";
 import type { TaskRow, TaskRowInsert, TaskRowUpdate } from "@/services/tasks";
-import {
-  seedEpics,
-  seedMilestones,
-  seedSavedFilters,
-} from "./mock-data";
+import { seedEpics, seedMilestones, seedSavedFilters } from "./mock-data";
 import {
   PRIORITY_WEIGHT,
   STATUS_ORDER,
@@ -217,7 +213,10 @@ function overlayFromTask(t: Task): TaskOverlay {
 }
 
 function setOverlay(taskId: string, patch: TaskOverlay) {
-  state = { ...state, overlay: { ...state.overlay, [taskId]: { ...(state.overlay[taskId] ?? {}), ...patch } } };
+  state = {
+    ...state,
+    overlay: { ...state.overlay, [taskId]: { ...(state.overlay[taskId] ?? {}), ...patch } },
+  };
 }
 
 // ---------- Hydration ----------
@@ -514,7 +513,11 @@ export function duplicateTask(id: string) {
       status: "todo",
       projectId: project,
       reporterId: src.reporterId,
-      checklist: src.checklist.map((c) => ({ ...c, id: `cl-${Math.random().toString(36).slice(2, 8)}`, done: false })),
+      checklist: src.checklist.map((c) => ({
+        ...c,
+        id: `cl-${Math.random().toString(36).slice(2, 8)}`,
+        done: false,
+      })),
       parentTaskId: src.parentTaskId,
     },
     projectKey,
@@ -560,7 +563,11 @@ export function bulkDelete(ids: string[]) {
 export function addChecklistItem(taskId: string, text: string) {
   const t = getTask(taskId);
   if (!t) return;
-  const item: ChecklistItem = { id: `cl-${Math.random().toString(36).slice(2, 8)}`, text, done: false };
+  const item: ChecklistItem = {
+    id: `cl-${Math.random().toString(36).slice(2, 8)}`,
+    text,
+    done: false,
+  };
   updateTask(taskId, { checklist: [...t.checklist, item] });
   logActivity(taskId, t.reporterId, "checklist_updated", `Added checklist item`);
 }
@@ -628,7 +635,9 @@ export function toggleFavorite(taskId: string) {
   const has = state.favoriteIds.includes(taskId);
   state = {
     ...state,
-    favoriteIds: has ? state.favoriteIds.filter((id) => id !== taskId) : [...state.favoriteIds, taskId],
+    favoriteIds: has
+      ? state.favoriteIds.filter((id) => id !== taskId)
+      : [...state.favoriteIds, taskId],
   };
   emit();
 }
@@ -668,10 +677,19 @@ export function applyFilters(tasks: Task[], filters: TaskFilters, sort?: TaskSor
     if (filters.labels?.length && !filters.labels.some((l) => t.labels.includes(l))) return false;
     if (filters.projectIds?.length && !filters.projectIds.includes(t.projectId)) return false;
     if (filters.epicIds?.length && (!t.epicId || !filters.epicIds.includes(t.epicId))) return false;
-    if (filters.milestoneIds?.length && (!t.milestoneId || !filters.milestoneIds.includes(t.milestoneId))) return false;
-    if (filters.assigneeIds?.length && (!t.assigneeId || !filters.assigneeIds.includes(t.assigneeId))) return false;
+    if (
+      filters.milestoneIds?.length &&
+      (!t.milestoneId || !filters.milestoneIds.includes(t.milestoneId))
+    )
+      return false;
+    if (
+      filters.assigneeIds?.length &&
+      (!t.assigneeId || !filters.assigneeIds.includes(t.assigneeId))
+    )
+      return false;
     if (filters.reporterIds?.length && !filters.reporterIds.includes(t.reporterId)) return false;
-    if (filters.watcherIds?.length && !filters.watcherIds.some((w) => t.watcherIds.includes(w))) return false;
+    if (filters.watcherIds?.length && !filters.watcherIds.some((w) => t.watcherIds.includes(w)))
+      return false;
     if (filters.unassignedOnly && t.assigneeId) return false;
     if (filters.overdueOnly) {
       if (!t.dueDate) return false;

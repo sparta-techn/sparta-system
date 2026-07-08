@@ -60,7 +60,8 @@ function AcceptInvitationPage() {
       } else {
         setInviteeEmail(data.session.user.email ?? null);
         const meta = data.session.user.user_metadata as
-          { full_name?: string; name?: string } | undefined;
+          | { full_name?: string; name?: string }
+          | undefined;
         const guessedName = meta?.full_name || meta?.name;
         if (guessedName) form.setValue("fullName", guessedName);
       }

@@ -27,14 +27,14 @@ The port models the six requested notification types as `NotificationKind`. Each
 provider advertises which kinds it can deliver via `supportedKinds`, and returns a
 `skipped` result (no network) for kinds or targets it can't route.
 
-| Kind | Meaning | Rendering hint |
-|---|---|---|
-| `generic` | Any one-off notification. | Title + body. |
-| `daily_report` | End-of-day report digest. | Title + body, optional link to the report. |
-| `sprint_update` | Sprint progress / status change. | Title + body, link to the sprint board. |
-| `mention` | Someone was @mentioned. | High priority; may @mention the recipient. |
-| `approval_request` | An action needs sign-off. | Renders **action buttons** (Approve / Reject). |
-| `meeting_reminder` | Upcoming meeting. | Renders `MeetingDetails` (start, join URL, attendees). |
+| Kind               | Meaning                          | Rendering hint                                         |
+| ------------------ | -------------------------------- | ------------------------------------------------------ |
+| `generic`          | Any one-off notification.        | Title + body.                                          |
+| `daily_report`     | End-of-day report digest.        | Title + body, optional link to the report.             |
+| `sprint_update`    | Sprint progress / status change. | Title + body, link to the sprint board.                |
+| `mention`          | Someone was @mentioned.          | High priority; may @mention the recipient.             |
+| `approval_request` | An action needs sign-off.        | Renders **action buttons** (Approve / Reject).         |
+| `meeting_reminder` | Upcoming meeting.                | Renders `MeetingDetails` (start, join URL, attendees). |
 
 ---
 
@@ -62,12 +62,12 @@ interface Notification {
   body: string;
   priority?: "low" | "normal" | "high" | "urgent";
   link?: string;
-  actions?: NotificationAction[];   // approval_request buttons
-  meeting?: MeetingDetails;         // meeting_reminder details
+  actions?: NotificationAction[]; // approval_request buttons
+  meeting?: MeetingDetails; // meeting_reminder details
   data?: Record<string, unknown>;
 }
 
-type NotificationTarget =          // where it goes — a tagged union
+type NotificationTarget = // where it goes — a tagged union
   | { type: "user"; ref: string }
   | { type: "channel"; ref: string }
   | { type: "email"; address: string }
@@ -77,8 +77,8 @@ interface DeliveryResult {
   state: "delivered" | "queued" | "skipped" | "failed";
   kind: NotificationKind;
   target: NotificationTarget;
-  externalId?: string;             // provider message/event id
-  detail?: string;                 // why skipped/failed
+  externalId?: string; // provider message/event id
+  detail?: string; // why skipped/failed
 }
 ```
 
@@ -156,6 +156,7 @@ placeholder (`sync`→`performSync`, deliberately `notImplemented`). Only delive
 ## The four channels
 
 ### Slack — `src/integrations/slack/`
+
 - `category: "chat"`, `scope: "org"`, `auth: "oauth2"`,
   capabilities `["notify.send", "chat.notify", "webhook.inbound"]`, webhooks on.
 - Delivers **all six kinds**; renders Block Kit (header + section, action buttons
@@ -163,6 +164,7 @@ placeholder (`sync`→`performSync`, deliberately `notImplemented`). Only delive
 - Settings: `defaultChannel` (required), `mentionOnEscalation` (bool).
 
 ### Discord — `src/integrations/discord/`
+
 - `category: "chat"`, `scope: "org"`, `auth: "api_token"` (bot token),
   capabilities `["notify.send", "chat.notify"]`.
 - Delivers **all six kinds**; renders a rich embed (priority-colored) + link
@@ -170,6 +172,7 @@ placeholder (`sync`→`performSync`, deliberately `notImplemented`). Only delive
 - Settings: `defaultChannelId` (required), `mentionRoleId`.
 
 ### Email — `src/integrations/email/`
+
 - `category: "other"`, `scope: "org"`, `auth: "api_token"` (SMTP/API),
   capabilities `["notify.send"]`. Transport-neutral (SMTP or SES/SendGrid/Postmark).
 - Delivers **all six kinds**; renders HTML + text (subject = title; actions and
@@ -178,6 +181,7 @@ placeholder (`sync`→`performSync`, deliberately `notImplemented`). Only delive
 - Settings: `fromAddress` (required), `fromName`, `replyTo`.
 
 ### Google Calendar — `src/integrations/google-calendar/`
+
 - `category: "calendar"`, `scope: "user"`, `auth: "oauth2"`,
   capabilities `["notify.send", "calendar.sync", "webhook.inbound"]`, webhooks on.
 - A **narrow** channel: `supportedKinds = ["meeting_reminder"]` only. A meeting

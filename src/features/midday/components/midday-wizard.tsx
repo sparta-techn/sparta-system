@@ -18,13 +18,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -42,11 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { getSubmission as getMorningSubmission } from "@/features/checkin/store";
-import {
-  MOCK_DEPARTMENTS,
-  MOCK_EMPLOYEES,
-  MOCK_PLANNED_TASKS,
-} from "@/features/checkin/mock-data";
+import { MOCK_DEPARTMENTS, MOCK_EMPLOYEES, MOCK_PLANNED_TASKS } from "@/features/checkin/mock-data";
 import type { PriorityLevel } from "@/features/checkin/types";
 import { useDependencies } from "@/features/dependencies/store";
 import { CURRENT_USER_ID } from "@/features/dependencies/mock-data";
@@ -73,13 +63,43 @@ import {
 type StepId = "progress" | "completed" | "focus" | "blockers" | "help" | "outlook" | "review";
 
 const STEPS: { id: StepId; short: string; label: string; hint: string }[] = [
-  { id: "progress", short: "Progress", label: "Overall progress", hint: "How far along is the day's plan?" },
-  { id: "completed", short: "Completed", label: "Completed since morning", hint: "Mark each planned task." },
-  { id: "focus", short: "Focus", label: "Current focus", hint: "One sentence — what are you on right now?" },
-  { id: "blockers", short: "Blockers", label: "Current blockers", hint: "Pin open dependencies or note a new one." },
+  {
+    id: "progress",
+    short: "Progress",
+    label: "Overall progress",
+    hint: "How far along is the day's plan?",
+  },
+  {
+    id: "completed",
+    short: "Completed",
+    label: "Completed since morning",
+    hint: "Mark each planned task.",
+  },
+  {
+    id: "focus",
+    short: "Focus",
+    label: "Current focus",
+    hint: "One sentence — what are you on right now?",
+  },
+  {
+    id: "blockers",
+    short: "Blockers",
+    label: "Current blockers",
+    hint: "Pin open dependencies or note a new one.",
+  },
   { id: "help", short: "Help", label: "Need assistance?", hint: "Route a specific ask. Optional." },
-  { id: "outlook", short: "Outlook", label: "End-of-day outlook", hint: "Are you on track to finish today's plan?" },
-  { id: "review", short: "Review", label: "Review & submit", hint: "One last look before you ship the update." },
+  {
+    id: "outlook",
+    short: "Outlook",
+    label: "End-of-day outlook",
+    hint: "Are you on track to finish today's plan?",
+  },
+  {
+    id: "review",
+    short: "Review",
+    label: "Review & submit",
+    hint: "One last look before you ship the update.",
+  },
 ];
 
 const LEVELS: PriorityLevel[] = ["low", "medium", "high", "urgent"];
@@ -298,7 +318,12 @@ export function MiddayWizard({ existing }: Props) {
         </CardContent>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t px-6 py-4">
-          <Button type="button" variant="ghost" onClick={handleCancel} className="text-muted-foreground">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleCancel}
+            className="text-muted-foreground"
+          >
             Cancel
           </Button>
           <div className="flex items-center gap-2">
@@ -381,7 +406,9 @@ function CompletedStep({
 }) {
   // Pull morning-planned tasks, fall back to default mock list.
   const morning = typeof window === "undefined" ? null : getMorningSubmission();
-  const plannedIds = morning?.taskIds?.length ? morning.taskIds : MOCK_PLANNED_TASKS.map((t) => t.id);
+  const plannedIds = morning?.taskIds?.length
+    ? morning.taskIds
+    : MOCK_PLANNED_TASKS.map((t) => t.id);
   const planned = MOCK_PLANNED_TASKS.filter((t) => plannedIds.includes(t.id));
 
   function setEntry(taskId: string, patch: Partial<TaskProgressEntry>) {
@@ -412,7 +439,12 @@ function CompletedStep({
       {planned.map((task) => {
         const entry =
           value.find((e) => e.taskId === task.id) ??
-          ({ taskId: task.id, title: task.title, project: task.project, state: "not_started" } as TaskProgressEntry);
+          ({
+            taskId: task.id,
+            title: task.title,
+            project: task.project,
+            state: "not_started",
+          } as TaskProgressEntry);
         return (
           <li key={task.id} className="rounded-lg border bg-card p-3">
             <div className="flex items-start gap-3">
@@ -583,7 +615,13 @@ function HelpStep({
   value,
   onChange,
 }: {
-  value: { enabled: boolean; departmentId?: string; employeeId?: string; description?: string; priority?: PriorityLevel };
+  value: {
+    enabled: boolean;
+    departmentId?: string;
+    employeeId?: string;
+    description?: string;
+    priority?: PriorityLevel;
+  };
   onChange: (v: typeof value) => void;
 }) {
   function patch(p: Partial<typeof value>) {
@@ -713,7 +751,12 @@ function OutlookStep({
               <p className="font-medium text-foreground">{meta.label}</p>
               <p className="text-sm text-muted-foreground">{meta.description}</p>
             </div>
-            <StatusBadge tone={meta.tone} label={active ? "Selected" : "Pick"} size="sm" withDot={false} />
+            <StatusBadge
+              tone={meta.tone}
+              label={active ? "Selected" : "Pick"}
+              size="sm"
+              withDot={false}
+            />
           </button>
         );
       })}

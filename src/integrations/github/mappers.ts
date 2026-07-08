@@ -125,9 +125,7 @@ export function toVcsRelease(release: GitHubRelease): VcsRelease {
   };
 }
 
-export function toVcsDeveloperActivity(
-  activity: GitHubDeveloperActivity,
-): VcsDeveloperActivity {
+export function toVcsDeveloperActivity(activity: GitHubDeveloperActivity): VcsDeveloperActivity {
   return {
     actor: toVcsActor(activity.user),
     periodStart: activity.from,

@@ -32,9 +32,7 @@ export function TaskTimeTab({ taskId }: Props) {
     () =>
       logs
         .filter((l) => l.endTime !== null)
-        .sort(
-          (a, b) => new Date(b.endTime!).getTime() - new Date(a.endTime!).getTime(),
-        )[0] ?? null,
+        .sort((a, b) => new Date(b.endTime!).getTime() - new Date(a.endTime!).getTime())[0] ?? null,
     [logs],
   );
   const myTotal = sumMinutes(
@@ -63,10 +61,19 @@ export function TaskTimeTab({ taskId }: Props) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total time" value={formatHours(total)} hint={formatMinutes(total)} />
         <StatCard label="My time" value={formatHours(myTotal)} hint={formatMinutes(myTotal)} />
-        <StatCard label="Entries" value={logs.length} hint={`${contributors} contributor${contributors === 1 ? "" : "s"}`} />
+        <StatCard
+          label="Entries"
+          value={logs.length}
+          hint={`${contributors} contributor${contributors === 1 ? "" : "s"}`}
+        />
         <StatCard
           label="Last 7 days"
-          value={formatHours(sumMinutes(logs.filter((l) => isInRange(l.startTime, "week")), now))}
+          value={formatHours(
+            sumMinutes(
+              logs.filter((l) => isInRange(l.startTime, "week")),
+              now,
+            ),
+          )}
         />
       </div>
 

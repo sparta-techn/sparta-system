@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-SpartaFlow Hub is the internal **Employee Operating System** of SpartaFlow, a 100% remote software company. It is not a task manager and is not a replacement for ClickUp. ClickUp continues to own task and project execution. SpartaFlow Hub owns everything *around* execution: attendance, daily workflow, cross-department communication, dependency tracking, reporting, and operational visibility.
+SpartaFlow Hub is the internal **Employee Operating System** of SpartaFlow, a 100% remote software company. It is not a task manager and is not a replacement for ClickUp. ClickUp continues to own task and project execution. SpartaFlow Hub owns everything _around_ execution: attendance, daily workflow, cross-department communication, dependency tracking, reporting, and operational visibility.
 
 ## 2. Purpose
 
@@ -22,7 +22,7 @@ And to give every manager, HR member, and the Owner a single, real-time lens int
 
 ## 3. Vision Statement
 
-> *To build the best internal operating system for a modern remote software company — one that removes ambiguity from the workday, surfaces blockers before they become risks, and turns operational visibility into a competitive advantage, without ever feeling like surveillance.*
+> _To build the best internal operating system for a modern remote software company — one that removes ambiguity from the workday, surfaces blockers before they become risks, and turns operational visibility into a competitive advantage, without ever feeling like surveillance._
 
 ## 4. Product Principles
 

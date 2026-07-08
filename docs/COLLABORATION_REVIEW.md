@@ -16,16 +16,16 @@ Reviewed the collaboration surface end-to-end:
 
 ## Severity summary
 
-| # | Area | Finding | Severity | Status |
-|---|------|---------|----------|--------|
-| 1 | Performance / Realtime | `useNotifications` returned a new array each `getSnapshot()` → React 19 infinite re-render loop | **Critical** | ✅ Fixed |
-| 2 | Realtime / Performance | Every realtime event triggers a full inbox re-fetch (`hydrate()`), unbounded and un-coalesced | Medium | Recommended |
-| 3 | Performance / Repositories | `inbox()` fetches with no `limit`/pagination (up to the 1000-row PostgREST cap) | Medium | Recommended |
-| 4 | Duplicate events | Two unreconciled generation paths + no idempotency key on fan-out | Medium | Recommended |
-| 5 | Repositories | Two preference sources of truth (Supabase table vs localStorage mock) | Medium | Recommended |
-| 6 | Permissions | Cross-user fan-out impossible from client (insert-self RLS); server function not yet built | Low (by design) | Noted |
-| 7 | Security | `href` navigation should be allowlisted to internal paths | Low (hardening) | Recommended |
-| 8 | Memory | Singleton `onAuthStateChange` listeners never unsubscribed | Low (bounded) | Noted |
+| #   | Area                       | Finding                                                                                         | Severity        | Status      |
+| --- | -------------------------- | ----------------------------------------------------------------------------------------------- | --------------- | ----------- |
+| 1   | Performance / Realtime     | `useNotifications` returned a new array each `getSnapshot()` → React 19 infinite re-render loop | **Critical**    | ✅ Fixed    |
+| 2   | Realtime / Performance     | Every realtime event triggers a full inbox re-fetch (`hydrate()`), unbounded and un-coalesced   | Medium          | Recommended |
+| 3   | Performance / Repositories | `inbox()` fetches with no `limit`/pagination (up to the 1000-row PostgREST cap)                 | Medium          | Recommended |
+| 4   | Duplicate events           | Two unreconciled generation paths + no idempotency key on fan-out                               | Medium          | Recommended |
+| 5   | Repositories               | Two preference sources of truth (Supabase table vs localStorage mock)                           | Medium          | Recommended |
+| 6   | Permissions                | Cross-user fan-out impossible from client (insert-self RLS); server function not yet built      | Low (by design) | Noted       |
+| 7   | Security                   | `href` navigation should be allowlisted to internal paths                                       | Low (hardening) | Recommended |
+| 8   | Memory                     | Singleton `onAuthStateChange` listeners never unsubscribed                                      | Low (bounded)   | Noted       |
 
 ---
 
@@ -46,7 +46,7 @@ const EMPTY_LIST: AppNotification[] = [];
 
 function write(next: AppNotification[]) {
   cache = next;
-  listMemo = null;         // invalidate on every mutation
+  listMemo = null; // invalidate on every mutation
   listForMemo.clear();
   listeners.forEach((l) => l());
 }
@@ -124,7 +124,7 @@ RLS in `20260701120000_collaboration_core.sql` is strong and consistent:
 - `activity_feed`: readable by the actor, project members, or elevated roles; append-only.
 - Grants to `authenticated` / `service_role` only — never `anon`.
 
-**Consequence (not a hole):** the insert-self policy means a browser client **cannot** create a notification addressed to another user. Real cross-user fan-out (task assigned → notify assignee, sprint started → notify team) must run server-side under a `SECURITY DEFINER` function or edge function with the service role. That function does not exist yet, so notifications aimed at *other* users are currently never persisted. This is the intended architecture (the migration comments say as much) — flagging it so the fan-out function isn't forgotten.
+**Consequence (not a hole):** the insert-self policy means a browser client **cannot** create a notification addressed to another user. Real cross-user fan-out (task assigned → notify assignee, sprint started → notify team) must run server-side under a `SECURITY DEFINER` function or edge function with the service role. That function does not exist yet, so notifications aimed at _other_ users are currently never persisted. This is the intended architecture (the migration comments say as much) — flagging it so the fan-out function isn't forgotten.
 
 ---
 

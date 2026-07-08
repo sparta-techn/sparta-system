@@ -2,14 +2,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { trendData, workloadByDepartment } from "../mock-data";
 
 function Sparkline({ data, color = "stroke-primary" }: { data: number[]; color?: string }) {
-  const w = 160, h = 44, pad = 4;
-  const min = Math.min(...data), max = Math.max(...data);
+  const w = 160,
+    h = 44,
+    pad = 4;
+  const min = Math.min(...data),
+    max = Math.max(...data);
   const range = Math.max(1, max - min);
-  const pts = data.map((v, i) => {
-    const x = pad + (i * (w - pad * 2)) / (data.length - 1);
-    const y = h - pad - ((v - min) / range) * (h - pad * 2);
-    return `${x},${y}`;
-  }).join(" ");
+  const pts = data
+    .map((v, i) => {
+      const x = pad + (i * (w - pad * 2)) / (data.length - 1);
+      const y = h - pad - ((v - min) / range) * (h - pad * 2);
+      return `${x},${y}`;
+    })
+    .join(" ");
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-11 w-full" role="img" aria-label="trend">
       <polyline fill="none" strokeWidth="2" className={color} points={pts} />
@@ -45,7 +50,9 @@ export function AnalyticsPreview() {
           ))}
         </div>
         <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Workload by department</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Workload by department
+          </p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {workloadByDepartment.map((d) => {
               const total = d.open + d.completed;
@@ -54,7 +61,11 @@ export function AnalyticsPreview() {
               return (
                 <div key={d.dept} className="flex flex-col items-center gap-1">
                   <div className="flex h-20 w-full items-end overflow-hidden rounded-md bg-muted/60">
-                    <div className="w-full rounded-t-md bg-primary" style={{ height: `${h}%` }} aria-hidden />
+                    <div
+                      className="w-full rounded-t-md bg-primary"
+                      style={{ height: `${h}%` }}
+                      aria-hidden
+                    />
                   </div>
                   <span className="truncate text-[11px] text-muted-foreground">{d.dept}</span>
                 </div>

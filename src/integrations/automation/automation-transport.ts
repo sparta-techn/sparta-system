@@ -25,10 +25,7 @@ export interface AutomationTransport {
   getWorkflowStatus(accountId: string, runId: string): Promise<WorkflowRun>;
 
   /** POST an outgoing webhook to the provider; resolves to the provider msg id. */
-  postWebhook(
-    accountId: string,
-    message: OutgoingWebhookMessage,
-  ): Promise<{ id: string }>;
+  postWebhook(accountId: string, message: OutgoingWebhookMessage): Promise<{ id: string }>;
 
   /** Constant-time signature verification of a raw inbound delivery. */
   verifySignature(accountId: string, delivery: RawWebhookDelivery): Promise<boolean>;

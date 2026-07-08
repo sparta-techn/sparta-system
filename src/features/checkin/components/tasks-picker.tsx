@@ -17,9 +17,7 @@ const PRIORITY_TONE = {
 
 export function TasksPicker({ selected, onChange }: Props) {
   function toggle(id: string) {
-    onChange(
-      selected.includes(id) ? selected.filter((t) => t !== id) : [...selected, id],
-    );
+    onChange(selected.includes(id) ? selected.filter((t) => t !== id) : [...selected, id]);
   }
 
   return (
@@ -46,9 +44,7 @@ export function TasksPicker({ selected, onChange }: Props) {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      {task.id}
-                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">{task.id}</span>
                     <StatusBadge
                       tone={PRIORITY_TONE[task.priority]}
                       label={task.priority}

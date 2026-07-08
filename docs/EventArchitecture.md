@@ -34,15 +34,15 @@ Business Module ──► eventBus.publish(...)
 
 ## Event catalogue
 
-| Category | Events |
-| --- | --- |
-| Attendance | `attendance.checked_in` · `checked_out` · `break_started` · `break_ended` · `late` · `absent` |
-| Check-in | `checkin.submitted` · `edited` · `missing` |
-| Midday | `midday.submitted` · `updated` · `missing` |
-| EOD | `eod.submitted` · `updated` · `missing` |
-| Dependency | `dependency.created` · `assigned` · `accepted` · `rejected` · `blocked` · `resolved` · `comment_added` · `mentioned` · `overdue` |
-| Announcement | `announcement.published` · `scheduled` · `updated` · `expired` |
-| User | `user.invited` · `activated` · `disabled` · `password_reset` · `role_changed` |
+| Category     | Events                                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Attendance   | `attendance.checked_in` · `checked_out` · `break_started` · `break_ended` · `late` · `absent`                                    |
+| Check-in     | `checkin.submitted` · `edited` · `missing`                                                                                       |
+| Midday       | `midday.submitted` · `updated` · `missing`                                                                                       |
+| EOD          | `eod.submitted` · `updated` · `missing`                                                                                          |
+| Dependency   | `dependency.created` · `assigned` · `accepted` · `rejected` · `blocked` · `resolved` · `comment_added` · `mentioned` · `overdue` |
+| Announcement | `announcement.published` · `scheduled` · `updated` · `expired`                                                                   |
+| User         | `user.invited` · `activated` · `disabled` · `password_reset` · `role_changed`                                                    |
 
 ## Publishing
 

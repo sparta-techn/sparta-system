@@ -1,7 +1,12 @@
 import type { Department } from "@/features/hr/mock-data";
 
 export type ProjectStatus =
-  "planning" | "active" | "on_hold" | "completed" | "archived" | "cancelled";
+  | "planning"
+  | "active"
+  | "on_hold"
+  | "completed"
+  | "archived"
+  | "cancelled";
 
 export type ProjectHealth = "healthy" | "at_risk" | "blocked" | "delayed" | "completed";
 

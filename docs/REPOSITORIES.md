@@ -81,86 +81,86 @@ Each file exports a **class** (`<Name>Repository`) and a **shared singleton**
 
 Authentication and the current identity.
 
-| Method | Purpose |
-| --- | --- |
-| `signIn` / `signOut` | Password auth. |
-| `requestPasswordReset` / `updatePassword` | Password lifecycle. |
-| `getSession` / `getCurrentUser` | Raw session / user. |
-| `getProfile(userId)` / `getRoles(userId)` | Profile & role reads. |
-| `getCurrentIdentity()` | **Aggregate** — `{ userId, email, profile, roles }` in one call, or `null` when signed out. |
+| Method                                    | Purpose                                                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `signIn` / `signOut`                      | Password auth.                                                                              |
+| `requestPasswordReset` / `updatePassword` | Password lifecycle.                                                                         |
+| `getSession` / `getCurrentUser`           | Raw session / user.                                                                         |
+| `getProfile(userId)` / `getRoles(userId)` | Profile & role reads.                                                                       |
+| `getCurrentIdentity()`                    | **Aggregate** — `{ userId, email, profile, roles }` in one call, or `null` when signed out. |
 
 ### `employeeRepository` → `AuthService` (the `profiles` table)
 
 The canonical employee record is `profiles`; this repository frames it in
 people/HR terms. (The `HrEmployee` mock in `features/hr` is untouched.)
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Directory reads. |
-| `getByEmail(email)` | Lookup by email. |
-| `listByDepartment(deptId)` / `listByTeam(teamId)` | Org-scoped lists. |
-| `listByStatus(status)` | By lifecycle status. |
-| `create(input)` / `update(id, patch)` | Write profile. |
-| `setStatus(id, status)` | Activate / suspend / offboard. |
-| `getRoles(id)` | Assigned roles. |
+| Method                                            | Purpose                        |
+| ------------------------------------------------- | ------------------------------ |
+| `list` / `getById` / `getByIdOrThrow`             | Directory reads.               |
+| `getByEmail(email)`                               | Lookup by email.               |
+| `listByDepartment(deptId)` / `listByTeam(teamId)` | Org-scoped lists.              |
+| `listByStatus(status)`                            | By lifecycle status.           |
+| `create(input)` / `update(id, patch)`             | Write profile.                 |
+| `setStatus(id, status)`                           | Activate / suspend / offboard. |
+| `getRoles(id)`                                    | Assigned roles.                |
 
 ### `projectRepository` → `ProjectsService`
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Reads. |
-| `listByStatus` / `listByManager` | Filtered lists. |
-| `create` / `update` / `remove` | Writes. |
-| `archive(id)` / `setFavorite(id, bool)` | Lifecycle / personalization. |
-| `listMilestones(projectId)` / `listClients()` | Related reads. |
-| `getWithMilestones(id)` | **Aggregate** — project + milestones. |
+| Method                                        | Purpose                               |
+| --------------------------------------------- | ------------------------------------- |
+| `list` / `getById` / `getByIdOrThrow`         | Reads.                                |
+| `listByStatus` / `listByManager`              | Filtered lists.                       |
+| `create` / `update` / `remove`                | Writes.                               |
+| `archive(id)` / `setFavorite(id, bool)`       | Lifecycle / personalization.          |
+| `listMilestones(projectId)` / `listClients()` | Related reads.                        |
+| `getWithMilestones(id)`                       | **Aggregate** — project + milestones. |
 
 ### `taskRepository` → `TasksService`
 
 Subtasks are tasks with a non-null `parentTaskId`.
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Reads. |
-| `listByProject` / `listByAssignee` / `listSubtasks` | Filtered lists. |
-| `create` / `update` | Writes. |
-| `setStatus(id, status)` / `assign(id, assignee)` | Workflow. |
-| `softDelete(id)` / `remove(id)` | Trash / hard delete. |
-| `listComments(taskId)` / `addComment(taskId, authorId, body)` | Comment thread. |
+| Method                                                        | Purpose              |
+| ------------------------------------------------------------- | -------------------- |
+| `list` / `getById` / `getByIdOrThrow`                         | Reads.               |
+| `listByProject` / `listByAssignee` / `listSubtasks`           | Filtered lists.      |
+| `create` / `update`                                           | Writes.              |
+| `setStatus(id, status)` / `assign(id, assignee)`              | Workflow.            |
+| `softDelete(id)` / `remove(id)`                               | Trash / hard delete. |
+| `listComments(taskId)` / `addComment(taskId, authorId, body)` | Comment thread.      |
 
 ### `sprintRepository` → `SprintsService`
 
-| Method | Purpose |
-| --- | --- |
-| `list` / `getById` / `getByIdOrThrow` | Reads. |
-| `listByProject` / `listByStatus` | Filtered lists. |
-| `getActiveForProject(projectId)` | **Aggregate** — the active sprint, if any. |
-| `create` / `update` / `remove` | Writes. |
-| `activate(id)` / `complete(id)` | Lifecycle transitions. |
+| Method                                | Purpose                                    |
+| ------------------------------------- | ------------------------------------------ |
+| `list` / `getById` / `getByIdOrThrow` | Reads.                                     |
+| `listByProject` / `listByStatus`      | Filtered lists.                            |
+| `getActiveForProject(projectId)`      | **Aggregate** — the active sprint, if any. |
+| `create` / `update` / `remove`        | Writes.                                    |
+| `activate(id)` / `complete(id)`       | Lifecycle transitions.                     |
 
 ### `attendanceRepository` → `AttendanceService`
 
-| Method | Purpose |
-| --- | --- |
-| `clockIn` / `clockOut` | Session open / finalize (RPC). |
-| `startBreak` / `endBreak` | Break lifecycle (RPC). |
-| `getCurrentWorkDate` | Server-defined work date. |
-| `getTodaySession(userId)` | Today's session + breaks. |
-| `getHistory(userId, filters)` | Paginated history. |
-| `getTeamToday()` | Team presence. |
-| `getCompanySettings()` | Attendance config. |
+| Method                        | Purpose                        |
+| ----------------------------- | ------------------------------ |
+| `clockIn` / `clockOut`        | Session open / finalize (RPC). |
+| `startBreak` / `endBreak`     | Break lifecycle (RPC).         |
+| `getCurrentWorkDate`          | Server-defined work date.      |
+| `getTodaySession(userId)`     | Today's session + breaks.      |
+| `getHistory(userId, filters)` | Paginated history.             |
+| `getTeamToday()`              | Team presence.                 |
+| `getCompanySettings()`        | Attendance config.             |
 
 ### `reportRepository` → `ReportsService`
 
 One report per work session.
 
-| Method | Purpose |
-| --- | --- |
-| `submit(report)` | File a report. |
-| `update(id, patch)` | Edit. |
-| `getById(id)` / `getBySession(sessionId)` | Reads. |
+| Method                                        | Purpose         |
+| --------------------------------------------- | --------------- |
+| `submit(report)`                              | File a report.  |
+| `update(id, patch)`                           | Edit.           |
+| `getById(id)` / `getBySession(sessionId)`     | Reads.          |
 | `listByUser(userId)` / `listByDate(workDate)` | Filtered lists. |
-| `remove(id)` | Delete. |
+| `remove(id)`                                  | Delete.         |
 
 ---
 
@@ -214,4 +214,7 @@ way (`err instanceof ServiceError`, check `err.code`).
   service for it first (as was done for sprints), then delegate.
 - **No UI changes, mocks intact.** Wiring repositories into hooks/components and
   retiring the mock stores is a deliberate later step.
+
+```
+
 ```

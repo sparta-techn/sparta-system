@@ -4,13 +4,7 @@ import { ArrowLeft, ArrowRight, Check, CloudUpload, Loader2 } from "lucide-react
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -32,11 +26,7 @@ import {
   submitCheckIn,
   updateSubmission,
 } from "../store";
-import {
-  EMPTY_DRAFT,
-  type CheckInDraft,
-  type CheckInSubmission,
-} from "../types";
+import { EMPTY_DRAFT, type CheckInDraft, type CheckInSubmission } from "../types";
 
 type StepId = "mood" | "goal" | "priorities" | "tasks" | "blockers" | "help" | "review";
 
@@ -65,9 +55,7 @@ export function CheckInWizard({ existing }: Props) {
       return rest;
     }
     const saved = getDraft();
-    return saved.mood || saved.mainGoal || saved.priorities.length
-      ? saved
-      : EMPTY_DRAFT;
+    return saved.mood || saved.mainGoal || saved.priorities.length ? saved : EMPTY_DRAFT;
   });
   const [stepIdx, setStepIdx] = useState(0);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
@@ -95,8 +83,7 @@ export function CheckInWizard({ existing }: Props) {
   const validation = useMemo(() => {
     const errors: Partial<Record<StepId, string>> = {};
     if (!draft.mainGoal.trim()) errors.goal = "Main goal is required.";
-    if (draft.priorities.length === 0)
-      errors.priorities = "Add at least one priority.";
+    if (draft.priorities.length === 0) errors.priorities = "Add at least one priority.";
     else if (draft.priorities.some((p) => !p.title.trim()))
       errors.priorities = "All priorities need a title.";
     return errors;
@@ -204,10 +191,7 @@ export function CheckInWizard({ existing }: Props) {
         <CardContent className="space-y-6">
           {step.id === "mood" ? (
             <div className="space-y-4">
-              <MoodPicker
-                value={draft.mood}
-                onChange={(m) => setField("mood", m)}
-              />
+              <MoodPicker value={draft.mood} onChange={(m) => setField("mood", m)} />
               <div className="space-y-1.5">
                 <Label htmlFor="moodNote">
                   Anything you'd like your manager to know?{" "}
@@ -264,24 +248,15 @@ export function CheckInWizard({ existing }: Props) {
           ) : null}
 
           {step.id === "tasks" ? (
-            <TasksPicker
-              selected={draft.taskIds}
-              onChange={(v) => setField("taskIds", v)}
-            />
+            <TasksPicker selected={draft.taskIds} onChange={(v) => setField("taskIds", v)} />
           ) : null}
 
           {step.id === "blockers" ? (
-            <BlockersEditor
-              value={draft.blockers}
-              onChange={(v) => setField("blockers", v)}
-            />
+            <BlockersEditor value={draft.blockers} onChange={(v) => setField("blockers", v)} />
           ) : null}
 
           {step.id === "help" ? (
-            <HelpRequestEditor
-              value={draft.help}
-              onChange={(v) => setField("help", v)}
-            />
+            <HelpRequestEditor value={draft.help} onChange={(v) => setField("help", v)} />
           ) : null}
 
           {step.id === "review" ? <CheckInSummary draft={draft} /> : null}
@@ -299,12 +274,7 @@ export function CheckInWizard({ existing }: Props) {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={back}
-              disabled={stepIdx === 0}
-            >
+            <Button type="button" variant="outline" onClick={back} disabled={stepIdx === 0}>
               <ArrowLeft /> Back
             </Button>
             {stepIdx < STEPS.length - 1 ? (

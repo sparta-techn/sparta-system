@@ -5,10 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
 import { AuthLayout } from "@/features/auth/components/auth-layout";
-import {
-  forgotPasswordSchema,
-  type ForgotPasswordInput,
-} from "@/features/auth/validation";
+import { forgotPasswordSchema, type ForgotPasswordInput } from "@/features/auth/validation";
 import { requestPasswordReset } from "@/features/auth/auth-service";
 import { mapAuthError } from "@/features/auth/errors";
 

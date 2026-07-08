@@ -25,8 +25,8 @@ function UnauthorizedPage() {
           You don't have access
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Your role doesn't allow access to this page. If you think this is a mistake, contact
-          HR or your administrator.
+          Your role doesn't allow access to this page. If you think this is a mistake, contact HR or
+          your administrator.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Button variant="outline" onClick={() => router.history.back()}>

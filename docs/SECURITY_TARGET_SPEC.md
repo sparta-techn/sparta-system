@@ -93,14 +93,14 @@ Security is built in at every layer. The architecture assumes **zero trust** bet
 
 ## 10. Environment Variables
 
-| Variable | Scope | Notes |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | client + server | Public. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client + server | Publishable. |
-| `SUPABASE_SERVICE_ROLE_KEY` | server only (Edge Functions) | Never bundled to client. |
-| `SUPABASE_JWT_SECRET` | server only | Token verification in middleware. |
-| `RESEND_API_KEY`, `SLACK_*`, `CLICKUP_*` | server only | Per-integration. |
-| `SENTRY_DSN` | client + server | Public DSN is fine. |
+| Variable                                 | Scope                        | Notes                             |
+| ---------------------------------------- | ---------------------------- | --------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`               | client + server              | Public.                           |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`          | client + server              | Publishable.                      |
+| `SUPABASE_SERVICE_ROLE_KEY`              | server only (Edge Functions) | Never bundled to client.          |
+| `SUPABASE_JWT_SECRET`                    | server only                  | Token verification in middleware. |
+| `RESEND_API_KEY`, `SLACK_*`, `CLICKUP_*` | server only                  | Per-integration.                  |
+| `SENTRY_DSN`                             | client + server              | Public DSN is fine.               |
 
 ESLint rule forbids referencing non-`NEXT_PUBLIC_` env vars in client bundles.
 
@@ -162,13 +162,13 @@ ESLint rule forbids referencing non-`NEXT_PUBLIC_` env vars in client bundles.
 
 ## 16. Threats Considered
 
-| Threat | Mitigation |
-|---|---|
-| Account takeover | MFA, leaked password check, lockout, IP anomaly logging. |
-| Privilege escalation | Roles in separate table; SECURITY DEFINER helpers; audit. |
-| Cross-team data leak | RLS scoped by team/department; integration tests. |
-| Token theft | httpOnly cookies, short-lived JWTs, refresh rotation. |
-| Webhook spoofing | HMAC signature verification, timing-safe comparison. |
-| Supply chain attack | Lockfile, audit, dependency review, SRI for third-party scripts. |
-| Insider misuse | Audit log, two-person rule for sensitive ops, least privilege. |
-| Data loss | Daily backups, restore tests quarterly, RPO ≤ 1 h. |
+| Threat               | Mitigation                                                       |
+| -------------------- | ---------------------------------------------------------------- |
+| Account takeover     | MFA, leaked password check, lockout, IP anomaly logging.         |
+| Privilege escalation | Roles in separate table; SECURITY DEFINER helpers; audit.        |
+| Cross-team data leak | RLS scoped by team/department; integration tests.                |
+| Token theft          | httpOnly cookies, short-lived JWTs, refresh rotation.            |
+| Webhook spoofing     | HMAC signature verification, timing-safe comparison.             |
+| Supply chain attack  | Lockfile, audit, dependency review, SRI for third-party scripts. |
+| Insider misuse       | Audit log, two-person rule for sensitive ops, least privilege.   |
+| Data loss            | Daily backups, restore tests quarterly, RPO ≤ 1 h.               |

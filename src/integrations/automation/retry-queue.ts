@@ -87,7 +87,12 @@ export class InMemoryRetryQueue implements RetryQueue {
 
     const attempts = item.attempts + 1;
     const now = new Date();
-    const attempt: DeliveryAttempt = { attempt: attempts, at: now.toISOString(), state: "retrying", detail: error };
+    const attempt: DeliveryAttempt = {
+      attempt: attempts,
+      at: now.toISOString(),
+      state: "retrying",
+      detail: error,
+    };
 
     if (attempts >= item.policy.maxAttempts) {
       this.items.delete(id);

@@ -12,7 +12,7 @@ The system has two halves:
    provider normalizes its failures into one typed shape so the UI never
    handles raw Supabase/PostgREST/provider errors.
 2. **Presentation-layer handler** (`src/lib/errors.ts`) — a single place that
-   turns *any* of those shapes (or a raw throw) into a **category**, a
+   turns _any_ of those shapes (or a raw throw) into a **category**, a
    **user-safe message**, and a **retry decision**, plus the global wiring that
    applies them.
 
@@ -20,20 +20,20 @@ The system has two halves:
 
 ## 1. Building blocks
 
-| Concern | Module | Notes |
-| --- | --- | --- |
-| Data-layer errors | `src/services/core/errors.ts` — `ServiceError`, `toServiceError`, `notFound` | Every service method wraps failures here. |
-| Auth error messages | `src/features/auth/errors.ts` — `mapAuthError` | Sanitized (no account enumeration). |
-| Integration errors | `src/integrations/services/errors.ts` — `IntegrationError` | Stable `IntegrationErrorCode`. |
-| AI errors | `src/ai/utils/errors.ts` — `AIError` | Stable `AIErrorCode`. |
-| **Central handler** | **`src/lib/errors.ts`** | `classifyError`, `getErrorMessage`, `shouldRetry`, `retryDelay`, `isSessionExpired`, `reportError`. |
-| **Error boundary** | **`src/components/error-boundary.tsx`** | `ErrorBoundary`, `ErrorFallback`. |
-| **Full-page screens** | **`src/components/error-screen.tsx`** | `ErrorScreen`, `OfflineScreen`. |
-| Inline fallbacks | `src/components/states.tsx` — `ErrorState`, `EmptyState`, `LoadingState`, `ListSkeleton` | Pre-existing state primitives. |
-| Connectivity | **`src/hooks/use-online-status.ts`**, **`src/components/layout/connection-banner.tsx`** | Ambient offline banner. |
-| Realtime transport | `src/lib/supabase/realtime.ts` | Ref-counted channels, reconnect + resync. |
-| Global wiring | `src/router.tsx`, `src/routes/__root.tsx`, `src/components/layout/app-shell.tsx` | See §8. |
-| SSR/server errors | `src/server.ts`, `src/start.ts`, `src/lib/error-page.ts`, `src/lib/error-capture.ts` | 500 wrapper + stack recovery. |
+| Concern               | Module                                                                                   | Notes                                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Data-layer errors     | `src/services/core/errors.ts` — `ServiceError`, `toServiceError`, `notFound`             | Every service method wraps failures here.                                                           |
+| Auth error messages   | `src/features/auth/errors.ts` — `mapAuthError`                                           | Sanitized (no account enumeration).                                                                 |
+| Integration errors    | `src/integrations/services/errors.ts` — `IntegrationError`                               | Stable `IntegrationErrorCode`.                                                                      |
+| AI errors             | `src/ai/utils/errors.ts` — `AIError`                                                     | Stable `AIErrorCode`.                                                                               |
+| **Central handler**   | **`src/lib/errors.ts`**                                                                  | `classifyError`, `getErrorMessage`, `shouldRetry`, `retryDelay`, `isSessionExpired`, `reportError`. |
+| **Error boundary**    | **`src/components/error-boundary.tsx`**                                                  | `ErrorBoundary`, `ErrorFallback`.                                                                   |
+| **Full-page screens** | **`src/components/error-screen.tsx`**                                                    | `ErrorScreen`, `OfflineScreen`.                                                                     |
+| Inline fallbacks      | `src/components/states.tsx` — `ErrorState`, `EmptyState`, `LoadingState`, `ListSkeleton` | Pre-existing state primitives.                                                                      |
+| Connectivity          | **`src/hooks/use-online-status.ts`**, **`src/components/layout/connection-banner.tsx`**  | Ambient offline banner.                                                                             |
+| Realtime transport    | `src/lib/supabase/realtime.ts`                                                           | Ref-counted channels, reconnect + resync.                                                           |
+| Global wiring         | `src/router.tsx`, `src/routes/__root.tsx`, `src/components/layout/app-shell.tsx`         | See §8.                                                                                             |
+| SSR/server errors     | `src/server.ts`, `src/start.ts`, `src/lib/error-page.ts`, `src/lib/error-capture.ts`     | 500 wrapper + stack recovery.                                                                       |
 
 **Bold** = added/changed in this pass. Everything else was already in place and
 is reused, not duplicated.
@@ -94,6 +94,7 @@ renders a fallback.
 ```
 
 Fallbacks:
+
 - `ErrorFallback` (default) — `variant="inline"` → `ErrorState` card with a
   "Try again" button; `variant="page"` → full-page `ErrorScreen`.
 - `ErrorScreen` / `OfflineScreen` (`error-screen.tsx`) — the canonical
@@ -102,12 +103,12 @@ Fallbacks:
 
 The boundary hierarchy (spec §14) is realized as:
 
-| Spec layer | Where |
-| --- | --- |
-| Global ErrorBoundary | `__root.tsx` wraps `<Outlet/>` (`variant="page"`). |
-| Route ErrorBoundary | TanStack `errorComponent` on the root route → `ErrorScreen`. |
+| Spec layer            | Where                                                                                                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Global ErrorBoundary  | `__root.tsx` wraps `<Outlet/>` (`variant="page"`).                                                          |
+| Route ErrorBoundary   | TanStack `errorComponent` on the root route → `ErrorScreen`.                                                |
 | Feature ErrorBoundary | `app-shell.tsx` wraps page `{children}` (`variant="inline"`) so the sidebar/topbar survive a feature crash. |
-| Widget ErrorBoundary | Opt-in: wrap any streamed widget with `<ErrorBoundary variant="inline">`. |
+| Widget ErrorBoundary  | Opt-in: wrap any streamed widget with `<ErrorBoundary variant="inline">`.                                   |
 
 ---
 
@@ -116,7 +117,7 @@ The boundary hierarchy (spec §14) is realized as:
 `src/router.tsx` attaches global handlers to the `QueryClient`:
 
 - **`QueryCache.onError`** — `reportError` always; redirect on session expiry
-  (§5); toast **only** when a *background* refetch fails while stale data is
+  (§5); toast **only** when a _background_ refetch fails while stale data is
   still on screen (`query.state.data !== undefined`) — the one case with no
   inline error UI. Fresh loads render their own `ErrorState` via
   `useQuery().error`, so we don't double-report with a toast.
@@ -170,7 +171,9 @@ Consume per-domain via `DomainHandlers` (`features/realtime/hooks.ts`):
 
 ```ts
 useNotificationsRealtime(userId, {
-  onChange: (payload) => { /* apply */ },
+  onChange: (payload) => {
+    /* apply */
+  },
   onResync: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   onStatus: (s) => setLive(s === "subscribed"),
 });
@@ -185,12 +188,12 @@ updates paused" indicator (spec §7) can be built from `onStatus` where desired.
 
 Defined once in `src/lib/errors.ts`, applied via `QueryClient` defaults:
 
-| Operation | Policy |
-| --- | --- |
-| Reads (`useQuery`) | `retry: shouldRetry` → up to **3** attempts, **only** for `network`/`server`/`unknown`. `retryDelay` = `min(2^n·1000, 15s)` + jitter. |
-| `auth`/`permission`/`not_found`/`validation`/`rate_limit` | **Never** retried — fail fast so the user sees the real problem. |
-| Writes (`useMutation`) | `retry: false` — a retried mutation can double-apply. Offer a manual "Try again" (the error toast + re-submit). |
-| Realtime | Socket-level auto-reconnect with backoff + `onResync` (§6). |
+| Operation                                                 | Policy                                                                                                                                |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Reads (`useQuery`)                                        | `retry: shouldRetry` → up to **3** attempts, **only** for `network`/`server`/`unknown`. `retryDelay` = `min(2^n·1000, 15s)` + jitter. |
+| `auth`/`permission`/`not_found`/`validation`/`rate_limit` | **Never** retried — fail fast so the user sees the real problem.                                                                      |
+| Writes (`useMutation`)                                    | `retry: false` — a retried mutation can double-apply. Offer a manual "Try again" (the error toast + re-submit).                       |
+| Realtime                                                  | Socket-level auto-reconnect with backoff + `onResync` (§6).                                                                           |
 
 ---
 
@@ -218,27 +221,28 @@ server.ts / start.ts → SSR 500 wrapper (renderErrorPage) + error-capture stack
 
 ## 9. Status vs. the design spec
 
-| Spec item | Status |
-| --- | --- |
-| Typed per-layer errors | ✅ `ServiceError` / `IntegrationError` / `AIError` / auth mapping |
-| Category classification | ✅ `classifyError` (8 categories) |
-| User-friendly messages, no stack traces | ✅ `getErrorMessage` + `ErrorScreen` |
-| Auth expiry → redirect | ✅ `beforeLoad` guard + global session-expiry redirect |
-| Retry strategy (reads 3×/backoff, no write retry) | ✅ `shouldRetry` / `retryDelay` |
-| Realtime reconnect + resync | ✅ `realtimeManager` |
-| Offline banner | ✅ `ConnectionBanner` + `useOnlineStatus` |
-| Boundary hierarchy (global/route/feature/widget) | ✅ root + route + app-shell + opt-in widget |
-| Error reporting hook | ✅ `reportError` → `reportLovableError` |
-| Canonical `AppError` w/ `correlationId` | ⬜ Not yet — `reportError` tags `category`; add a correlation ID when a server logger lands. |
-| Circuit breakers / webhook replay | ⬜ Integration-layer, future |
-| Sentry + per-feature dashboards | ⬜ Observability, future (`reportLovableError` is the current sink) |
-| MFA redirect | ⬜ Not applicable until MFA ships |
+| Spec item                                         | Status                                                                                       |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Typed per-layer errors                            | ✅ `ServiceError` / `IntegrationError` / `AIError` / auth mapping                            |
+| Category classification                           | ✅ `classifyError` (8 categories)                                                            |
+| User-friendly messages, no stack traces           | ✅ `getErrorMessage` + `ErrorScreen`                                                         |
+| Auth expiry → redirect                            | ✅ `beforeLoad` guard + global session-expiry redirect                                       |
+| Retry strategy (reads 3×/backoff, no write retry) | ✅ `shouldRetry` / `retryDelay`                                                              |
+| Realtime reconnect + resync                       | ✅ `realtimeManager`                                                                         |
+| Offline banner                                    | ✅ `ConnectionBanner` + `useOnlineStatus`                                                    |
+| Boundary hierarchy (global/route/feature/widget)  | ✅ root + route + app-shell + opt-in widget                                                  |
+| Error reporting hook                              | ✅ `reportError` → `reportLovableError`                                                      |
+| Canonical `AppError` w/ `correlationId`           | ⬜ Not yet — `reportError` tags `category`; add a correlation ID when a server logger lands. |
+| Circuit breakers / webhook replay                 | ⬜ Integration-layer, future                                                                 |
+| Sentry + per-feature dashboards                   | ⬜ Observability, future (`reportLovableError` is the current sink)                          |
+| MFA redirect                                      | ⬜ Not applicable until MFA ships                                                            |
 
 ---
 
 ## 10. Cookbook
 
 **Show inline error for a query (default pattern):**
+
 ```tsx
 const { data, error, isPending, refetch } = useQuery(...);
 if (isPending) return <ListSkeleton />;
@@ -247,6 +251,7 @@ if (error) return <ErrorState title="Couldn't load" description={getErrorMessage
 ```
 
 **Wrap a risky widget:**
+
 ```tsx
 <ErrorBoundary variant="inline" context={{ boundary: "chart" }} resetKeys={[range]}>
   <AnalyticsChart range={range} />

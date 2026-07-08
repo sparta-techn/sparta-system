@@ -21,17 +21,17 @@ the generic six-method `Integration` lifecycle **plus** a capability port.
 
 ## What each provider supports
 
-| Concern | How it's provided |
-|---|---|
-| **Connection** | `BaseIntegration.connect` → the adapter's `authenticate` vendor hook (placeholder). |
-| **Validation** | `BaseIntegration.validate` — scope/credential/required-field checks, shared by all providers. |
-| **Health Check** | `BaseIntegration.healthCheck` → the adapter's `probe` hook (a cheap identity call, placeholder). |
-| **Settings** | `BaseIntegration.settings` + each adapter's declarative `settingsSchema` (renders the Admin form). |
-| **Sync placeholder** | `BaseIntegration.sync` → the adapter's `performSync` hook — deliberately `notImplemented`. |
-| **Recent Activity** | The `RecentActivityPort` capability port (below), implemented per provider. |
+| Concern              | How it's provided                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| **Connection**       | `BaseIntegration.connect` → the adapter's `authenticate` vendor hook (placeholder).                |
+| **Validation**       | `BaseIntegration.validate` — scope/credential/required-field checks, shared by all providers.      |
+| **Health Check**     | `BaseIntegration.healthCheck` → the adapter's `probe` hook (a cheap identity call, placeholder).   |
+| **Settings**         | `BaseIntegration.settings` + each adapter's declarative `settingsSchema` (renders the Admin form). |
+| **Sync placeholder** | `BaseIntegration.sync` → the adapter's `performSync` hook — deliberately `notImplemented`.         |
+| **Recent Activity**  | The `RecentActivityPort` capability port (below), implemented per provider.                        |
 
-The first five are **inherited** — no provider re-implements them. Only *Recent
-Activity* is provider-specific, so it is the only new contract these providers add.
+The first five are **inherited** — no provider re-implements them. Only _Recent
+Activity_ is provider-specific, so it is the only new contract these providers add.
 
 ---
 
@@ -46,7 +46,7 @@ providers (and any future one — Dropbox, Notion, …).
 export interface RecentActivityPort {
   listRecentActivity(
     accountId: string,
-    params?: ActivityPageParams,   // { cursor?, perPage?, since? }
+    params?: ActivityPageParams, // { cursor?, perPage?, since? }
   ): Promise<ActivityPage<ActivityItem>>;
 }
 ```
@@ -56,10 +56,10 @@ export interface RecentActivityPort {
 ```ts
 interface ActivityItem {
   id: string;
-  action: ActivityAction;          // created | edited | commented | shared | renamed | moved | deleted | restored | viewed
-  actor: ActivityActor;            // id, displayName, email?, avatarUrl?
-  resource: ActivityResource;      // id, type ("design"|"file"|"document"|"folder"|…), name, url?
-  occurredAt: string;              // ISO
+  action: ActivityAction; // created | edited | commented | shared | renamed | moved | deleted | restored | viewed
+  actor: ActivityActor; // id, displayName, email?, avatarUrl?
+  resource: ActivityResource; // id, type ("design"|"file"|"document"|"folder"|…), name, url?
+  occurredAt: string; // ISO
   summary?: string;
 }
 ```
@@ -125,10 +125,10 @@ real data.
   publishes (`FigmaEventType` → `ActivityAction`; resource `type: "design"`).
 - **Settings:**
 
-  | Key | Type | Purpose |
-  |---|---|---|
-  | `teamId` | string (optional) | Restrict activity to one Figma team. |
-  | `includeComments` | boolean (default `true`) | Count file comments as activity. |
+  | Key               | Type                     | Purpose                              |
+  | ----------------- | ------------------------ | ------------------------------------ |
+  | `teamId`          | string (optional)        | Restrict activity to one Figma team. |
+  | `includeComments` | boolean (default `true`) | Count file comments as activity.     |
 
 ## Google Drive
 
@@ -140,10 +140,10 @@ real data.
   types (`folder`, `document`, `spreadsheet`, `presentation`, `file`).
 - **Settings:**
 
-  | Key | Type | Purpose |
-  |---|---|---|
-  | `folderId` | string (optional) | Restrict activity to a folder subtree. Blank = all files. |
-  | `includeSharedDrives` | boolean (default `true`) | Include shared drives. |
+  | Key                   | Type                     | Purpose                                                   |
+  | --------------------- | ------------------------ | --------------------------------------------------------- |
+  | `folderId`            | string (optional)        | Restrict activity to a folder subtree. Blank = all files. |
+  | `includeSharedDrives` | boolean (default `true`) | Include shared drives.                                    |
 
 ## Google Docs
 
@@ -156,10 +156,10 @@ real data.
   `type: "document"`).
 - **Settings:**
 
-  | Key | Type | Purpose |
-  |---|---|---|
-  | `documentId` | string (optional) | Limit activity to a single document. Blank = all. |
-  | `includeSuggestions` | boolean (default `true`) | Count suggestion edits as activity. |
+  | Key                  | Type                     | Purpose                                           |
+  | -------------------- | ------------------------ | ------------------------------------------------- |
+  | `documentId`         | string (optional)        | Limit activity to a single document. Blank = all. |
+  | `includeSuggestions` | boolean (default `true`) | Count suggestion edits as activity.               |
 
 ---
 

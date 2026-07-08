@@ -8,16 +8,16 @@ drives the workflow.
 
 ## 1. States
 
-| State | Tone | Meaning |
-|---|---|---|
-| `backlog` | neutral | Captured but not yet planned. |
-| `todo` | neutral | Planned and ready to be picked up. |
-| `in_progress` | primary | Actively being worked on. |
-| `review` | info | Awaiting peer / code review. |
-| `qa` | info | Awaiting verification by QA. |
-| `done` | success | Verified and complete. |
-| `blocked` | danger | Cannot progress; reason explained in comments. |
-| `cancelled` | neutral | Closed without completing. Out of scope. |
+| State         | Tone    | Meaning                                        |
+| ------------- | ------- | ---------------------------------------------- |
+| `backlog`     | neutral | Captured but not yet planned.                  |
+| `todo`        | neutral | Planned and ready to be picked up.             |
+| `in_progress` | primary | Actively being worked on.                      |
+| `review`      | info    | Awaiting peer / code review.                   |
+| `qa`          | info    | Awaiting verification by QA.                   |
+| `done`        | success | Verified and complete.                         |
+| `blocked`     | danger  | Cannot progress; reason explained in comments. |
+| `cancelled`   | neutral | Closed without completing. Out of scope.       |
 
 Display labels and tones live in `src/features/tasks/types.ts`
 (`STATUS_LABEL`, `STATUS_TONE`).
@@ -77,11 +77,11 @@ consistently across rows, cards, table, and widgets.
 
 These look similar but behave differently:
 
-| Operation | Field | Visible in list? | Recoverable? | Use when… |
-|---|---|---|---|---|
-| Cancel | `status = cancelled` | yes (with cancelled badge) | yes (change status) | The work is no longer needed. |
-| Archive | `archivedAt = now` | hidden unless `includeArchived` | yes (Restore) | Done/completed work that should not clutter the list. |
-| Delete (soft) | `deletedAt = now` | hidden everywhere | yes (Trash view, future) | Created in error or sensitive content. |
+| Operation     | Field                | Visible in list?                | Recoverable?             | Use when…                                             |
+| ------------- | -------------------- | ------------------------------- | ------------------------ | ----------------------------------------------------- |
+| Cancel        | `status = cancelled` | yes (with cancelled badge)      | yes (change status)      | The work is no longer needed.                         |
+| Archive       | `archivedAt = now`   | hidden unless `includeArchived` | yes (Restore)            | Done/completed work that should not clutter the list. |
+| Delete (soft) | `deletedAt = now`    | hidden everywhere               | yes (Trash view, future) | Created in error or sensitive content.                |
 
 Hard delete is admin-only and out of scope for this module.
 

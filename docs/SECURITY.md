@@ -4,7 +4,7 @@
 > hardening pass. Companion to `docs/PRODUCTION_AUDIT.md` (findings) and
 > `docs/ARCHITECTURE.md` (as-built).
 >
-> **Related:** `docs/SECURITY_TARGET_SPEC.md` is the *aspirational* security
+> **Related:** `docs/SECURITY_TARGET_SPEC.md` is the _aspirational_ security
 > architecture (MFA, httpOnly cookies, DOMPurify, Vault, gitleaks, etc.). This
 > document describes the security posture **as actually built today** and the
 > hardening applied in this pass — where the two differ, this file is the source
@@ -18,15 +18,15 @@
 
 ## 0. Summary of changes in this pass
 
-| Area | Change | Where |
-| --- | --- | --- |
-| XSS | Centralized URL sanitizer; markdown links now share it | `src/lib/security/url.ts`, `features/ai/components/link-safety.ts` |
-| Open redirect | Post-login `redirect` is coerced to a same-origin path | `src/lib/security/redirect.ts`, `routes/auth/index.tsx` |
-| HTTP headers / CSP | Security headers + CSP (Report-Only) on every response | `src/lib/security/headers.ts`, `src/server.ts` |
-| API validation | Optional `zod` write-validation hook on the service base class | `src/lib/security/validate.ts`, `services/core/base-service.ts` |
-| Secure storage | AI keys can no longer be read by client code in production | `features/ai-settings/secure-store.ts` |
-| Rate limiting | Token-bucket limiter + presets, ready to wire | `src/lib/security/rate-limit.ts` |
-| Env / secrets | `.env` git-ignored; `.env.example` added (previous pass) | `.gitignore`, `.env.example` |
+| Area               | Change                                                         | Where                                                              |
+| ------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| XSS                | Centralized URL sanitizer; markdown links now share it         | `src/lib/security/url.ts`, `features/ai/components/link-safety.ts` |
+| Open redirect      | Post-login `redirect` is coerced to a same-origin path         | `src/lib/security/redirect.ts`, `routes/auth/index.tsx`            |
+| HTTP headers / CSP | Security headers + CSP (Report-Only) on every response         | `src/lib/security/headers.ts`, `src/server.ts`                     |
+| API validation     | Optional `zod` write-validation hook on the service base class | `src/lib/security/validate.ts`, `services/core/base-service.ts`    |
+| Secure storage     | AI keys can no longer be read by client code in production     | `features/ai-settings/secure-store.ts`                             |
+| Rate limiting      | Token-bucket limiter + presets, ready to wire                  | `src/lib/security/rate-limit.ts`                                   |
+| Env / secrets      | `.env` git-ignored; `.env.example` added (previous pass)       | `.gitignore`, `.env.example`                                       |
 
 New security primitives live under **`src/lib/security/`** (barrel: `@/lib/security`)
 and are unit-tested (`*.test.ts`).
@@ -39,6 +39,7 @@ and are unit-tested (`*.test.ts`).
 `localStorage`, `autoRefreshToken` on.
 
 **Controls in place**
+
 - `AuthProvider` subscribes to `onAuthStateChange` before reading the session;
   identity (profile + roles) refetched only on user-id change.
 - Route gate `_authenticated/route.tsx` `beforeLoad` calls
@@ -54,12 +55,14 @@ and are unit-tested (`*.test.ts`).
 - Auth pages carry `robots: noindex,nofollow`.
 
 **Hardened this pass**
+
 - **Open-redirect fixed.** The `redirect` search param was passed straight to
   `navigate()`. It is now normalized by `toSafeInternalPath()` — only same-origin
-  *paths* survive; absolute, protocol-relative (`//evil`), and backslash-tricked
+  _paths_ survive; absolute, protocol-relative (`//evil`), and backslash-tricked
   targets fall back to `/app`. See §9.
 
 **Recommended next**
+
 - Enable Supabase leaked-password protection (HIBP) and email confirmation in the
   Supabase Auth settings (server-side toggle).
 - Wire rate limiting on sign-in and password reset (§11).
@@ -78,7 +81,7 @@ and are unit-tested (`*.test.ts`).
   not the app.
 
 **Note / gap (tracked in the audit, not a regression):** some role-sensitive pages
-(owner/HR dashboards) are gated by authentication but not yet by *role* at the
+(owner/HR dashboards) are gated by authentication but not yet by _role_ at the
 route level. Enforcement is still correct because RLS blocks the underlying data;
 add route-level role gates as defense-in-depth (`hasRole`/`hasPermission` from
 `useAuth()` or a `beforeLoad` role check).
@@ -97,7 +100,7 @@ Two-tier, **database as source of truth**:
   `AuthProvider`; consumed via `hasRole`/`hasPermission`. These helpers are
   unit-tested as the business-rule contract.
 
-**Principle:** the frontend matrix is a *mirror of RLS intent* and must never be
+**Principle:** the frontend matrix is a _mirror of RLS intent_ and must never be
 the only enforcement point. Keep `permissions.ts` in lockstep with policy as new
 tables land; consider a generated assertion so the two cannot silently drift.
 
@@ -114,6 +117,7 @@ tables land; consider a generated assertion so the two cannot silently drift.
   `super_admin`/`owner`; attendance review/admin split so owners are read-only).
 
 **Operational rules**
+
 - The **service-role key bypasses RLS** and is server-only (§5). Never use it for
   user-driven reads/writes — use the user-scoped client so RLS applies.
 - After every migration, regenerate `integrations/supabase/types.ts` from the live
@@ -128,7 +132,8 @@ tables land; consider a generated assertion so the two cannot silently drift.
 ## 5. Environment variables & secrets
 
 **Model**
-- **Client (browser bundle):** only `VITE_`-prefixed, *publishable* values
+
+- **Client (browser bundle):** only `VITE_`-prefixed, _publishable_ values
   (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`). These are inlined at
   build time and are public by design.
 - **Server-only:** `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and the
@@ -137,6 +142,7 @@ tables land; consider a generated assertion so the two cannot silently drift.
   `NODE_ENV=production` toggles HSTS/frame-deny.
 
 **Controls in place**
+
 - `client.server.ts` (service-role admin client) reads only `process.env`, sets
   `persistSession:false`, and is dynamically imported inside server handlers so it
   never enters the client bundle.
@@ -144,6 +150,7 @@ tables land; consider a generated assertion so the two cannot silently drift.
   and warns that the service-role key must never be `VITE_`-prefixed or committed.
 
 **Rules**
+
 - Never place a secret in a `VITE_` variable.
 - Never import `client.server.ts` from a route/component or `*.functions.ts`
   module (those ship to the client).
@@ -158,6 +165,7 @@ straight to Supabase — no schema validation (audit H-2). Auth/forms already
 validated with `zod`.
 
 **Hardened this pass**
+
 - Added `validate()` / `tryValidate()` + a typed `ValidationError`
   (`src/lib/security/validate.ts`).
 - `BaseService` gained optional `insertSchema` / `updateSchema` hooks. When a
@@ -167,6 +175,7 @@ validated with `zod`.
   unchanged — opt-in, zero breakage.
 
 **How to adopt (per service):**
+
 ```ts
 class ProjectsService extends BaseService<Project, ProjectInsert, ProjectUpdate> {
   protected readonly table = "projects";
@@ -178,7 +187,7 @@ class ProjectsService extends BaseService<Project, ProjectInsert, ProjectUpdate>
 
 **Recommended next:** define insert/update schemas for each domain entity
 (derive from the feature `types.ts`) and set them on the service. Validation is
-defense-in-depth *in front of* RLS + DB constraints, not a replacement.
+defense-in-depth _in front of_ RLS + DB constraints, not a replacement.
 
 ---
 
@@ -199,12 +208,14 @@ defense-in-depth *in front of* RLS + DB constraints, not a replacement.
 ## 8. XSS protection
 
 **Controls in place**
+
 - No `dangerouslySetInnerHTML` on untrusted content. The AI markdown renderer
   (`features/ai/components/markdown.tsx`) builds React elements only.
 - The two `dangerouslySetInnerHTML` usages in the tree are trusted:
   `components/ui/chart.tsx` (generated CSS variables) — no user data.
 
 **Hardened this pass**
+
 - Markdown link hrefs are sanitized through `safeHref` → `safeUrl`, closing the
   `javascript:`-URL vector (a crafted `[x](javascript:…)` now renders as plain
   text). Sanitization is shared with the rest of the app so the policy can't drift.
@@ -212,6 +223,7 @@ defense-in-depth *in front of* RLS + DB constraints, not a replacement.
   scoped `connect-src`, and `frame-ancestors 'none'`.
 
 **Residual / next**
+
 - CSP `script-src` currently needs `'unsafe-inline'` for SSR hydration. Upgrade to
   a per-request **nonce** to make CSP a strong anti-XSS control, then flip CSP to
   enforcing (§10). The target spec's `<SafeRichText>` + DOMPurify approach is the
@@ -229,12 +241,14 @@ header, so classic cookie-based CSRF does not apply to server functions or
 Supabase calls.
 
 **Controls that reinforce this**
+
 - `requireSupabaseAuth` rejects any request without a valid Bearer JWT.
 - `Referrer-Policy: strict-origin-when-cross-origin`, CSP `form-action 'self'`,
   and (prod) `X-Frame-Options: DENY` / `frame-ancestors 'none'` reduce
   clickjacking/cross-origin abuse.
 
 **Rules / next**
+
 - Do **not** move auth into cookies without adding CSRF defenses
   (`SameSite=Lax/Strict` + double-submit or `Origin` allow-list checks — the
   approach described in the target spec).
@@ -251,6 +265,7 @@ Applied to every response in `src/server.ts` via `securityHeaders()`
 headers.
 
 **Always on**
+
 - `X-Content-Type-Options: nosniff`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `X-Permitted-Cross-Domain-Policies: none`
@@ -260,6 +275,7 @@ headers.
 
 **Production only** (`NODE_ENV=production`) — kept off in dev so the Lovable
 preview iframe still works:
+
 - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
 - `X-Frame-Options: DENY`
 
@@ -273,6 +289,7 @@ by default so it cannot break the app during rollout. Directives:
 `worker-src 'self' blob:`.
 
 **Rollout to enforcing CSP**
+
 1. Deploy with Report-Only (current default); collect violation reports.
 2. Add a per-request nonce for SSR inline scripts and drop `'unsafe-inline'` from
    `script-src`.
@@ -292,12 +309,15 @@ No throttling exists today. This pass ships the mechanism, ready to wire:
 - Default `InMemoryRateLimitStore` is **per-instance only**.
 
 **How to wire (server function example):**
+
 ```ts
 const authLimiter = new RateLimiter(RATE_LIMIT_PRESETS.auth);
 const { allowed, retryAfter } = authLimiter.check(`${ip}:signin`);
-if (!allowed) throw new Response("Too Many Requests", {
-  status: 429, headers: { "Retry-After": String(retryAfter) },
-});
+if (!allowed)
+  throw new Response("Too Many Requests", {
+    status: 429,
+    headers: { "Retry-After": String(retryAfter) },
+  });
 ```
 
 **Before production behind multiple instances/edge regions:** replace the
@@ -317,6 +337,7 @@ Supabase Auth also has its own built-in rate limits — configure them too.
   stand-in** — `localStorage` with light obfuscation, never a real secret store.
 
 **Hardened this pass**
+
 - `getApiKey()` now **returns `null` in production builds** (`import.meta.env.PROD`)
   and logs a one-time warning. Raw third-party keys can no longer be handed to
   client code in prod even after the provider adapters are implemented. Masked
@@ -359,5 +380,5 @@ and `features/ai/components/link-safety.test.ts`.
 
 ---
 
-*Update this document whenever an auth/RLS/validation control changes. Security
-controls are only as good as their last review.*
+_Update this document whenever an auth/RLS/validation control changes. Security
+controls are only as good as their last review._

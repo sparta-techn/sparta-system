@@ -12,14 +12,14 @@
 The Executive Dashboard's **AI Insights** section now generates six leadership
 summaries on demand:
 
-| Summary | AI feature id | Grounding surface |
-| --- | --- | --- |
-| **Company Health** | `executive-company-health` | `analytics` |
-| **Team Performance** | `executive-team-performance` | `reports` |
-| **Project Risks** | `executive-project-risks` | `projects` |
-| **Attendance Trends** | `executive-attendance-trends` | `analytics` |
-| **Engineering Productivity** | `executive-engineering-productivity` | `sprints` |
-| **Delivery Forecast** | `executive-delivery-forecast` | `sprints` |
+| Summary                      | AI feature id                        | Grounding surface |
+| ---------------------------- | ------------------------------------ | ----------------- |
+| **Company Health**           | `executive-company-health`           | `analytics`       |
+| **Team Performance**         | `executive-team-performance`         | `reports`         |
+| **Project Risks**            | `executive-project-risks`            | `projects`        |
+| **Attendance Trends**        | `executive-attendance-trends`        | `analytics`       |
+| **Engineering Productivity** | `executive-engineering-productivity` | `sprints`         |
+| **Delivery Forecast**        | `executive-delivery-forecast`        | `sprints`         |
 
 Each renders as a card with a **Generate / Regenerate** action; a **Generate all**
 button runs the six in parallel. Output is rendered with the existing AI
@@ -104,6 +104,7 @@ They are registered by appending `EXECUTIVE_FEATURES` to `ALL_AI_FEATURES`, so
   dashboard section alongside the at-a-glance `InsightGrid`.
 
 ### On-demand, not on-load
+
 Summaries are generated when the user asks (per card or Generate-all), not on
 mount — LLM calls are the dashboard's most expensive operation, so they stay
 explicit (consistent with `EXECUTIVE_DASHBOARD_PLAN.md §9`, "AI band: manual /
@@ -114,8 +115,8 @@ on-demand, never auto-poll").
 ## 6. Design notes
 
 - **Reuse-first (CLAUDE.md):** new code is limited to feature definitions + a hook
-  + a component. The engine, context sources, prompt builder, provider registry,
-  `Markdown`, `Skeleton`, `Card`, `Button`, and `useAuth` are all reused.
+  - a component. The engine, context sources, prompt builder, provider registry,
+    `Markdown`, `Skeleton`, `Card`, `Button`, and `useAuth` are all reused.
 - **RBAC:** features are `audience: "owner"`; context grounding is owner-scoped by
   the service/RLS layer. The route itself should be gated on `owner:access`
   (tracked in `EXECUTIVE_DASHBOARD_PLAN.md §8`).
@@ -141,6 +142,6 @@ real engine surface — proving the wiring into the existing AI feature system.
 
 ---
 
-*Next: gate the route on `owner:access`; optionally stream summaries via
+_Next: gate the route on `owner:access`; optionally stream summaries via
 `aiAssistant.runStream` for token-by-token rendering; cache the last completion
-per `(topic, period)` so re-opening the dashboard doesn't re-run the model.*
+per `(topic, period)` so re-opening the dashboard doesn't re-run the model._

@@ -41,12 +41,12 @@ Loaded by `client.ts` via `getSupabaseEnv()`, which reads from both runtimes:
 - **Browser / Vite build:** `import.meta.env.VITE_*` (statically replaced at build).
 - **SSR / server functions:** `process.env.*` (no `VITE_` prefix).
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `VITE_SUPABASE_URL` / `SUPABASE_URL` | ✅ | Project API URL. |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_PUBLISHABLE_KEY` | ✅ | Public (anon / publishable) key. Safe for the browser. |
-| `VITE_SUPABASE_PROJECT_ID` / `SUPABASE_PROJECT_ID` | ⬜ | Project ref; informational. |
-| `SUPABASE_SERVICE_ROLE_KEY` | server-only | Used **only** by `client.server.ts`. **Never** expose to the client. |
+| Variable                                                     | Required    | Purpose                                                              |
+| ------------------------------------------------------------ | ----------- | -------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL` / `SUPABASE_URL`                         | ✅          | Project API URL.                                                     |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_PUBLISHABLE_KEY` | ✅          | Public (anon / publishable) key. Safe for the browser.               |
+| `VITE_SUPABASE_PROJECT_ID` / `SUPABASE_PROJECT_ID`           | ⬜          | Project ref; informational.                                          |
+| `SUPABASE_SERVICE_ROLE_KEY`                                  | server-only | Used **only** by `client.server.ts`. **Never** expose to the client. |
 
 `.env` template (already scaffolded in the repo):
 
@@ -75,12 +75,12 @@ Helpers:
 
 ### `client.ts`
 
-| Export | Description |
-| --- | --- |
-| `supabaseClient: AppSupabaseClient` | Shared, lazily-initialized browser client, typed to the generated `Database`. |
-| `getSupabaseClient()` | Accessor form of the above. |
-| `getSupabaseEnv()` / `isSupabaseConfigured()` | Env resolution / presence check. |
-| `AppSupabaseClient`, `SupabaseEnv` | Types. |
+| Export                                        | Description                                                                   |
+| --------------------------------------------- | ----------------------------------------------------------------------------- |
+| `supabaseClient: AppSupabaseClient`           | Shared, lazily-initialized browser client, typed to the generated `Database`. |
+| `getSupabaseClient()`                         | Accessor form of the above.                                                   |
+| `getSupabaseEnv()` / `isSupabaseConfigured()` | Env resolution / presence check.                                              |
+| `AppSupabaseClient`, `SupabaseEnv`            | Types.                                                                        |
 
 ### `auth.ts` — session primitives over `supabase.auth`
 
@@ -99,21 +99,21 @@ Helpers:
 
 Declared buckets (create these before use — §4):
 
-| Constant | Bucket | Suggested visibility |
-| --- | --- | --- |
-| `STORAGE_BUCKETS.avatars` | `avatars` | public |
-| `STORAGE_BUCKETS.taskAttachments` | `task-attachments` | private (signed URLs) |
-| `STORAGE_BUCKETS.projectFiles` | `project-files` | private (signed URLs) |
+| Constant                            | Bucket               | Suggested visibility  |
+| ----------------------------------- | -------------------- | --------------------- |
+| `STORAGE_BUCKETS.avatars`           | `avatars`            | public                |
+| `STORAGE_BUCKETS.taskAttachments`   | `task-attachments`   | private (signed URLs) |
+| `STORAGE_BUCKETS.projectFiles`      | `project-files`      | private (signed URLs) |
 | `STORAGE_BUCKETS.reportAttachments` | `report-attachments` | private (signed URLs) |
 
 ### `realtime.ts` — channel helpers
 
-| Helper | Use |
-| --- | --- |
-| `subscribeToTable(name, { table, event?, filter?, onChange })` | Postgres row changes; returns an unsubscribe fn. |
-| `createBroadcastChannel(name, event, onMessage?)` | Ephemeral cross-client messages (cursors, typing). |
-| `createPresenceChannel(name, state, onSync?)` | Who's online / viewing. |
-| `unsubscribe(channel)` | Remove a channel and release its socket. |
+| Helper                                                         | Use                                                |
+| -------------------------------------------------------------- | -------------------------------------------------- |
+| `subscribeToTable(name, { table, event?, filter?, onChange })` | Postgres row changes; returns an unsubscribe fn.   |
+| `createBroadcastChannel(name, event, onMessage?)`              | Ephemeral cross-client messages (cursors, typing). |
+| `createPresenceChannel(name, state, onSync?)`                  | Who's online / viewing.                            |
+| `unsubscribe(channel)`                                         | Remove a channel and release its socket.           |
 
 ---
 
@@ -176,4 +176,7 @@ const off = supabaseRealtime.subscribeToTable("tasks-feed", {
   `unsubscribe(channel)`) inside React effect cleanups.
 - **Not connected yet.** Wiring these into hooks/components and replacing the
   in-browser mock stores is a deliberate later step — mocks remain untouched.
+
+```
+
 ```

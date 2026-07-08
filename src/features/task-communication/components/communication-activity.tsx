@@ -40,14 +40,10 @@ export function CommunicationActivity({ taskId }: { taskId: string }) {
                 <Icon className="size-3" />
               </span>
               <p className="text-sm">
-                <span className="font-medium">
-                  {employeeById(e.actorId)?.name ?? "Someone"}
-                </span>{" "}
+                <span className="font-medium">{employeeById(e.actorId)?.name ?? "Someone"}</span>{" "}
                 {e.summary}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {relativeTime(e.at)}
-              </p>
+              <p className="text-xs text-muted-foreground">{relativeTime(e.at)}</p>
             </li>
           );
         })}

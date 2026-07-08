@@ -21,6 +21,7 @@ Top-of-the-funnel view at `/app/analytics/executive`, designed for owners and ex
 ## Surfaces
 
 ### KPIs (`TrendCard`)
+
 - **Company health** — composite score 0-100 from attendance, reporting, dependency flow, sentiment.
 - **Attendance compliance** — % of expected sessions present on time.
 - **Report compliance** — average of check-in / midday / EoD completion.
@@ -29,18 +30,23 @@ Top-of-the-funnel view at `/app/analytics/executive`, designed for owners and ex
 Each card shows: current value, % change vs previous period, comparison label, and the previous value as a secondary hint.
 
 ### Department Health
+
 Bar list of departments with a composite score + Progress bar. Headcount and score are displayed side by side so growth and quality can be read together.
 
 ### Operational Risks
+
 Severity-ranked list (high / medium / low) with the responsible team. A real implementation would generate these from rules across blockers, late reports, missed targets.
 
 ### Dependency Trend
+
 Grouped bar chart, **opened vs resolved per week**. Reading: when the green (resolved) overtakes orange (opened), the team is burning down the backlog.
 
 ### Report & Attendance Compliance
+
 Two stacked line charts, both formatted as percent, so the eye can compare slope and convergence.
 
 ### Project Health Table
+
 Per-project: status badge, score, open blockers. Sorted manually in mock data by criticality.
 
 ## Data Inputs (future)

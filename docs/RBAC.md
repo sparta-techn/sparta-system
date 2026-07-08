@@ -38,15 +38,15 @@ Authorization is defended in depth. From authoritative to advisory:
 Seven canonical enterprise roles, highest privilege first. Roles live in the
 Postgres `app_role` enum and are assigned via `user_roles`.
 
-| Role | Key | Rank | Purpose |
-|---|---|---:|---|
-| **Owner** | `owner` | 100 | Company owner. Everything, plus owner-exclusive company management and the executive dashboard. Read-only on attendance by design. |
-| **Admin** | `admin` | 90 | Full platform administrator: user/role administration, settings, integrations, all operational modules. Not company ownership or the executive cockpit. |
-| **HR** | `hr` | 70 | People operations: employee lifecycle, org structure, attendance administration, report review. |
-| **Project Manager** | `project_manager` | 60 | Owns delivery: projects, tasks, sprints, report/attendance review, analytics. |
-| **Team Lead** | `team_lead` | 50 | Runs a team: task management + assignment, report/attendance review. |
-| **Employee** | `employee` | 30 | Individual contributor: own work, own tasks, submit reports. |
-| **Intern** | `intern` | 20 | Most limited active contributor: read + submit own reports; no task edits. |
+| Role                | Key               | Rank | Purpose                                                                                                                                                 |
+| ------------------- | ----------------- | ---: | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Owner**           | `owner`           |  100 | Company owner. Everything, plus owner-exclusive company management and the executive dashboard. Read-only on attendance by design.                      |
+| **Admin**           | `admin`           |   90 | Full platform administrator: user/role administration, settings, integrations, all operational modules. Not company ownership or the executive cockpit. |
+| **HR**              | `hr`              |   70 | People operations: employee lifecycle, org structure, attendance administration, report review.                                                         |
+| **Project Manager** | `project_manager` |   60 | Owns delivery: projects, tasks, sprints, report/attendance review, analytics.                                                                           |
+| **Team Lead**       | `team_lead`       |   50 | Runs a team: task management + assignment, report/attendance review.                                                                                    |
+| **Employee**        | `employee`        |   30 | Individual contributor: own work, own tasks, submit reports.                                                                                            |
+| **Intern**          | `intern`          |   20 | Most limited active contributor: read + submit own reports; no task edits.                                                                              |
 
 > **Legacy:** `viewer` (rank 10) is **deprecated** and read-only. Postgres cannot
 > drop an enum value, so it remains in `app_role` for compatibility but is not
@@ -64,18 +64,18 @@ copy) in `PERMISSION_CATALOG` in `src/features/auth/permissions.ts`; seeded into
 the `permissions` table by
 `supabase/migrations/20260703120100_rbac_granular_permissions.sql`.
 
-| Category | Permissions |
-|---|---|
-| **employees** | `employees.read`, `employees.create`, `employees.update`, `employees.delete`, `employees.invite` |
-| **organization** | `organization.manage` |
-| **projects** | `projects.read`, `projects.create`, `projects.edit`, `projects.archive`, `projects.delete` |
-| **tasks** | `tasks.read`, `tasks.create`, `tasks.edit`, `tasks.assign`, `tasks.delete` |
-| **sprints** | `sprints.manage` |
-| **attendance** | `attendance.read`, `attendance.review`, `attendance.manage` |
-| **reports** | `reports.submit`, `reports.read`, `reports.review` |
-| **analytics** | `analytics.view`, `dashboard.executive.view` |
-| **access** | `roles.assign`, `permissions.manage` |
-| **settings** | `settings.manage`, `integrations.manage`, `company.manage` |
+| Category         | Permissions                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| **employees**    | `employees.read`, `employees.create`, `employees.update`, `employees.delete`, `employees.invite` |
+| **organization** | `organization.manage`                                                                            |
+| **projects**     | `projects.read`, `projects.create`, `projects.edit`, `projects.archive`, `projects.delete`       |
+| **tasks**        | `tasks.read`, `tasks.create`, `tasks.edit`, `tasks.assign`, `tasks.delete`                       |
+| **sprints**      | `sprints.manage`                                                                                 |
+| **attendance**   | `attendance.read`, `attendance.review`, `attendance.manage`                                      |
+| **reports**      | `reports.submit`, `reports.read`, `reports.review`                                               |
+| **analytics**    | `analytics.view`, `dashboard.executive.view`                                                     |
+| **access**       | `roles.assign`, `permissions.manage`                                                             |
+| **settings**     | `settings.manage`, `integrations.manage`, `company.manage`                                       |
 
 ---
 
@@ -84,38 +84,38 @@ the `permissions` table by
 `✓` = granted. Source of truth: `ROLE_PERMISSIONS` in
 `src/features/auth/permissions.ts` (mirrored in SQL).
 
-| Permission | Owner | Admin | HR | PM | Lead | Empl | Intern | Viewer¹ |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| `employees.read` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `employees.create` | ✓ | ✓ | ✓ | | | | | |
-| `employees.update` | ✓ | ✓ | ✓ | | | | | |
-| `employees.delete` | ✓ | ✓ | | | | | | |
-| `employees.invite` | ✓ | ✓ | ✓ | | | | | |
-| `organization.manage` | ✓ | ✓ | ✓ | | | | | |
-| `projects.read` | ✓ | ✓ | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `projects.create` | ✓ | ✓ | | ✓ | | | | |
-| `projects.edit` | ✓ | ✓ | | ✓ | | | | |
-| `projects.archive` | ✓ | ✓ | | ✓ | | | | |
-| `projects.delete` | ✓ | ✓ | | | | | | |
-| `tasks.read` | ✓ | ✓ | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `tasks.create` | ✓ | ✓ | | ✓ | ✓ | | | |
-| `tasks.edit` | ✓ | ✓ | | ✓ | ✓ | ✓ | | |
-| `tasks.assign` | ✓ | ✓ | | ✓ | ✓ | | | |
-| `tasks.delete` | ✓ | ✓ | | ✓ | | | | |
-| `sprints.manage` | ✓ | ✓ | | ✓ | | | | |
-| `attendance.read` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `attendance.review` | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| `attendance.manage` | | ✓ | ✓ | | | | | |
-| `reports.submit` | ✓ | ✓ | | ✓ | ✓ | ✓ | ✓ | |
-| `reports.read` | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ |
-| `reports.review` | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| `analytics.view` | ✓ | ✓ | ✓ | ✓ | | | | |
-| `dashboard.executive.view` | ✓ | | | | | | | |
-| `roles.assign` | ✓ | ✓ | | | | | | |
-| `permissions.manage` | ✓ | ✓ | | | | | | |
-| `settings.manage` | ✓ | ✓ | | | | | | |
-| `integrations.manage` | ✓ | ✓ | | | | | | |
-| `company.manage` | ✓ | | | | | | | |
+| Permission                 | Owner | Admin | HR  | PM  | Lead | Empl | Intern | Viewer¹ |
+| -------------------------- | :---: | :---: | :-: | :-: | :--: | :--: | :----: | :-----: |
+| `employees.read`           |   ✓   |   ✓   |  ✓  |  ✓  |  ✓   |  ✓   |   ✓    |    ✓    |
+| `employees.create`         |   ✓   |   ✓   |  ✓  |     |      |      |        |         |
+| `employees.update`         |   ✓   |   ✓   |  ✓  |     |      |      |        |         |
+| `employees.delete`         |   ✓   |   ✓   |     |     |      |      |        |         |
+| `employees.invite`         |   ✓   |   ✓   |  ✓  |     |      |      |        |         |
+| `organization.manage`      |   ✓   |   ✓   |  ✓  |     |      |      |        |         |
+| `projects.read`            |   ✓   |   ✓   |     |  ✓  |  ✓   |  ✓   |   ✓    |    ✓    |
+| `projects.create`          |   ✓   |   ✓   |     |  ✓  |      |      |        |         |
+| `projects.edit`            |   ✓   |   ✓   |     |  ✓  |      |      |        |         |
+| `projects.archive`         |   ✓   |   ✓   |     |  ✓  |      |      |        |         |
+| `projects.delete`          |   ✓   |   ✓   |     |     |      |      |        |         |
+| `tasks.read`               |   ✓   |   ✓   |     |  ✓  |  ✓   |  ✓   |   ✓    |    ✓    |
+| `tasks.create`             |   ✓   |   ✓   |     |  ✓  |  ✓   |      |        |         |
+| `tasks.edit`               |   ✓   |   ✓   |     |  ✓  |  ✓   |  ✓   |        |         |
+| `tasks.assign`             |   ✓   |   ✓   |     |  ✓  |  ✓   |      |        |         |
+| `tasks.delete`             |   ✓   |   ✓   |     |  ✓  |      |      |        |         |
+| `sprints.manage`           |   ✓   |   ✓   |     |  ✓  |      |      |        |         |
+| `attendance.read`          |   ✓   |   ✓   |  ✓  |  ✓  |  ✓   |  ✓   |   ✓    |    ✓    |
+| `attendance.review`        |   ✓   |   ✓   |  ✓  |  ✓  |  ✓   |      |        |         |
+| `attendance.manage`        |       |   ✓   |  ✓  |     |      |      |        |         |
+| `reports.submit`           |   ✓   |   ✓   |     |  ✓  |  ✓   |  ✓   |   ✓    |         |
+| `reports.read`             |   ✓   |   ✓   |  ✓  |  ✓  |  ✓   |      |        |    ✓    |
+| `reports.review`           |   ✓   |   ✓   |  ✓  |  ✓  |  ✓   |      |        |         |
+| `analytics.view`           |   ✓   |   ✓   |  ✓  |  ✓  |      |      |        |         |
+| `dashboard.executive.view` |   ✓   |       |     |     |      |      |        |         |
+| `roles.assign`             |   ✓   |   ✓   |     |     |      |      |        |         |
+| `permissions.manage`       |   ✓   |   ✓   |     |     |      |      |        |         |
+| `settings.manage`          |   ✓   |   ✓   |     |     |      |      |        |         |
+| `integrations.manage`      |   ✓   |   ✓   |     |     |      |      |        |         |
+| `company.manage`           |   ✓   |       |     |     |      |      |        |         |
 
 ¹ `viewer` is a deprecated legacy role (read-only).
 
@@ -180,15 +180,15 @@ grant/revoke should be written to the audit trail (`@/lib/logging` `auditLog`).
 
 ## Data model
 
-| Object | Role |
-|---|---|
-| `app_role` (enum) | The role identifiers |
-| `user_roles` | Which roles a user holds (`user_id`, `role`) |
-| `permissions` | The permission catalog (`key`, `category`, `description`) |
-| `role_permissions` | Role → permission grants (`role`, `permission_id`) |
-| `public.has_role(uid, role)` | Does the user hold a role? |
-| `public.has_any_role(uid, role[])` | Does the user hold any of these roles? |
-| `public.has_permission(uid, key)` | Does the user (via any role) have a permission? |
+| Object                             | Role                                                      |
+| ---------------------------------- | --------------------------------------------------------- |
+| `app_role` (enum)                  | The role identifiers                                      |
+| `user_roles`                       | Which roles a user holds (`user_id`, `role`)              |
+| `permissions`                      | The permission catalog (`key`, `category`, `description`) |
+| `role_permissions`                 | Role → permission grants (`role`, `permission_id`)        |
+| `public.has_role(uid, role)`       | Does the user hold a role?                                |
+| `public.has_any_role(uid, role[])` | Does the user hold any of these roles?                    |
+| `public.has_permission(uid, key)`  | Does the user (via any role) have a permission?           |
 
 TypeScript mirror: `src/features/auth/types.ts` (`AppRole`, `Permission`) and
 `src/features/auth/permissions.ts` (`PERMISSION_CATALOG`, `ROLE_PERMISSIONS`).

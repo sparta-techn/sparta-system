@@ -39,6 +39,7 @@ Supabase (RLS enforced: recipient-scoped / project-scoped / party-scoped)
   matching the SELECT/INSERT-only grants.
 
 ### Realignment note
+
 A pre-existing scaffold `services/notifications/notifications.service.ts` was
 typed against the **mock** `AppNotification` (camelCase `readAt`/`deletedAt`).
 It has been **realigned to the migration schema** (snake-case, `state`
@@ -50,42 +51,47 @@ lifecycle enum) — the class/singleton names are unchanged, so the root
 ## 2. Services
 
 ### `@/services/notifications`
-| Service / singleton | Table | Key methods |
-| --- | --- | --- |
-| `NotificationsService` / `notificationsService` | `notifications` | `listForRecipient`, `listByState`, `unreadCount`, `markSeen`, `markRead`, `markAllRead`, `archive`, `dismiss` (+ inherited CRUD) |
-| `NotificationPreferencesService` / `notificationPreferencesService` | `notification_preferences` (user_id key) | `get`, `upsert`, `update` |
-| `MentionsService` / `mentionsService` | `mentions` | `listForUser`, `listUnseen` (uses `IS NULL`), `listForSource`, `markSeen` (+ CRUD) |
+
+| Service / singleton                                                 | Table                                    | Key methods                                                                                                                      |
+| ------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `NotificationsService` / `notificationsService`                     | `notifications`                          | `listForRecipient`, `listByState`, `unreadCount`, `markSeen`, `markRead`, `markAllRead`, `archive`, `dismiss` (+ inherited CRUD) |
+| `NotificationPreferencesService` / `notificationPreferencesService` | `notification_preferences` (user_id key) | `get`, `upsert`, `update`                                                                                                        |
+| `MentionsService` / `mentionsService`                               | `mentions`                               | `listForUser`, `listUnseen` (uses `IS NULL`), `listForSource`, `markSeen` (+ CRUD)                                               |
 
 ### `@/services/activity`
-| Service / singleton | Table | Key methods |
-| --- | --- | --- |
+
+| Service / singleton                           | Table           | Key methods                                                                              |
+| --------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
 | `ActivityFeedService` / `activityFeedService` | `activity_feed` | `log`, `listForProject`, `listForActor`, `listForSource`, `listRecent` — **append-only** |
 
 ### `@/services/approvals`
-| Service / singleton | Table | Key methods |
-| --- | --- | --- |
+
+| Service / singleton                                   | Table               | Key methods                                                                                           |
+| ----------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
 | `ApprovalRequestsService` / `approvalRequestsService` | `approval_requests` | `listForApprover`, `listForRequester`, `listForEntity`, `pendingCount`, `decide`, `reassign` (+ CRUD) |
-| `ApprovalActionsService` / `approvalActionsService` | `approval_actions` | `log`, `listForRequest` — **append-only** |
+| `ApprovalActionsService` / `approvalActionsService`   | `approval_actions`  | `log`, `listForRequest` — **append-only**                                                             |
 
 ---
 
 ## 3. Repositories
 
 ### `@/repositories/notifications` (the collaboration / inbox domain)
-| Repository / singleton | Feature | Verbs |
-| --- | --- | --- |
-| `NotificationRepository` / `notificationRepository` | **Notification CRUD** | `inbox(recipientId, state?)`, `badgeCount`, `create`, `update`, `remove`, `markSeen`/`markRead`/`markAllRead`/`archive`/`dismiss` |
-| `NotificationPreferenceRepository` / `notificationPreferenceRepository` | **Notification Preferences** | `get`, `save` (upsert), `update` |
-| `MentionRepository` / `mentionRepository` | **Mentions** | `listForUser`, `listUnseen`, `listForSource`, `create`, `markSeen`, `remove` |
-| `ApprovalRepository` / `approvalRepository` | **Approval Requests** | `queue(assigneeId, status?)`, `raised`, `forEntity`, `pendingCount`, `history`, `raise`, `approve`, `reject`, `cancel`, `reassign` |
+
+| Repository / singleton                                                  | Feature                      | Verbs                                                                                                                              |
+| ----------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `NotificationRepository` / `notificationRepository`                     | **Notification CRUD**        | `inbox(recipientId, state?)`, `badgeCount`, `create`, `update`, `remove`, `markSeen`/`markRead`/`markAllRead`/`archive`/`dismiss`  |
+| `NotificationPreferenceRepository` / `notificationPreferenceRepository` | **Notification Preferences** | `get`, `save` (upsert), `update`                                                                                                   |
+| `MentionRepository` / `mentionRepository`                               | **Mentions**                 | `listForUser`, `listUnseen`, `listForSource`, `create`, `markSeen`, `remove`                                                       |
+| `ApprovalRepository` / `approvalRepository`                             | **Approval Requests**        | `queue(assigneeId, status?)`, `raised`, `forEntity`, `pendingCount`, `history`, `raise`, `approve`, `reject`, `cancel`, `reassign` |
 
 > Approval requests live under `repositories/notifications/` (the inbox domain)
 > rather than a separate folder — only `repositories/notifications/` and
 > `repositories/activity/` were created.
 
 ### `@/repositories/activity`
-| Repository / singleton | Feature | Verbs |
-| --- | --- | --- |
+
+| Repository / singleton                              | Feature           | Verbs                                                  |
+| --------------------------------------------------- | ----------------- | ------------------------------------------------------ |
 | `ActivityFeedRepository` / `activityFeedRepository` | **Activity Feed** | `forProject`, `forActor`, `forSource`, `recent`, `log` |
 
 The `ApprovalRepository` decision verbs update the request **and** append an
@@ -97,13 +103,13 @@ action; `approve`/`reject`/`cancel` log the matching action; `reassign` logs
 
 ## 4. Supported operations → call sites
 
-| Operation | Call |
-| --- | --- |
-| Notification CRUD | `notificationRepository.inbox(userId)` · `.badgeCount(userId)` · `.markRead(id)` · `.markAllRead(userId)` |
-| Notification preferences | `notificationPreferenceRepository.get(userId)` · `.save({ user_id, categories, channels, quiet_hours })` |
-| Mentions | `mentionRepository.listUnseen(userId)` · `.create({ mentioned_user_id, source_type, source_id })` · `.markSeen(id)` |
-| Activity feed | `activityFeedRepository.forProject(projectId)` · `.recent(50)` · `.log({ source_type, source_id, kind, summary })` |
-| Approval requests | `approvalRepository.queue(userId)` · `.raise({ title, type, assignee_id })` · `.approve(id, deciderId, note)` · `.history(id)` |
+| Operation                | Call                                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Notification CRUD        | `notificationRepository.inbox(userId)` · `.badgeCount(userId)` · `.markRead(id)` · `.markAllRead(userId)`                      |
+| Notification preferences | `notificationPreferenceRepository.get(userId)` · `.save({ user_id, categories, channels, quiet_hours })`                       |
+| Mentions                 | `mentionRepository.listUnseen(userId)` · `.create({ mentioned_user_id, source_type, source_id })` · `.markSeen(id)`            |
+| Activity feed            | `activityFeedRepository.forProject(projectId)` · `.recent(50)` · `.log({ source_type, source_id, kind, summary })`             |
+| Approval requests        | `approvalRepository.queue(userId)` · `.raise({ title, type, assignee_id })` · `.approve(id, deciderId, note)` · `.history(id)` |
 
 Actor/recipient come from the authenticated session; RLS + `DEFAULT auth.uid()`
 audit columns enforce and stamp server-side.
@@ -135,7 +141,7 @@ audit columns enforce and stamp server-side.
    then appends the action as a second statement. A `decide_approval` SECURITY
    DEFINER RPC (planned, `COLLABORATION_PLAN.md §4`) would make it transactional
    and enforce approver eligibility + the side effect server-side.
-3. **No notification generation here** — creating notifications for *other* users
+3. **No notification generation here** — creating notifications for _other_ users
    (mention fan-out, event → notification) is server-side (triggers / Edge
    Function outbox worker per `COLLABORATION_PLAN.md §0`); these services only
    read the recipient's own inbox and let a user self-notify.

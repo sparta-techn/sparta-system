@@ -25,19 +25,19 @@ Feature Use-Case ──► Port (interface in domain/)
 
 ## 2. Capabilities per Integration
 
-| Integration | Direction | Capabilities |
-|---|---|---|
-| **ClickUp** | both | Read projects/tasks for linking in reports & dependencies; webhook on task status changes; deep-links from SpartaFlow. |
-| **GitHub** | inbound | Commits, PRs, reviews per user (opt-in performance signal). |
-| **GitLab** | inbound | Same as GitHub for GitLab-using teams. |
-| **Slack** | outbound + interactive | Notifications to DMs/channels; slash commands (`/sparta status`); interactive buttons (ack dependency). |
-| **Discord** | outbound | Notifications mirror (where Slack is unavailable). |
-| **Google Calendar** | bidirectional | Sync leaves; surface core working hours. |
-| **Google Meet** | outbound link | Generate meeting links for managers. |
-| **Figma** | inbound | Active file signals for designers (opt-in). |
-| **Postman** | inbound | Collection runs / monitor results (QA signals). |
-| **AI Services** | both | Summarization, risk detection, suggestions. Provider-agnostic. |
-| **Email (Resend/SES)** | outbound | Transactional emails. |
+| Integration            | Direction              | Capabilities                                                                                                           |
+| ---------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **ClickUp**            | both                   | Read projects/tasks for linking in reports & dependencies; webhook on task status changes; deep-links from SpartaFlow. |
+| **GitHub**             | inbound                | Commits, PRs, reviews per user (opt-in performance signal).                                                            |
+| **GitLab**             | inbound                | Same as GitHub for GitLab-using teams.                                                                                 |
+| **Slack**              | outbound + interactive | Notifications to DMs/channels; slash commands (`/sparta status`); interactive buttons (ack dependency).                |
+| **Discord**            | outbound               | Notifications mirror (where Slack is unavailable).                                                                     |
+| **Google Calendar**    | bidirectional          | Sync leaves; surface core working hours.                                                                               |
+| **Google Meet**        | outbound link          | Generate meeting links for managers.                                                                                   |
+| **Figma**              | inbound                | Active file signals for designers (opt-in).                                                                            |
+| **Postman**            | inbound                | Collection runs / monitor results (QA signals).                                                                        |
+| **AI Services**        | both                   | Summarization, risk detection, suggestions. Provider-agnostic.                                                         |
+| **Email (Resend/SES)** | outbound               | Transactional emails.                                                                                                  |
 
 ---
 
@@ -114,7 +114,7 @@ Features depend on ports, not providers. `notifications` calls `ChatNotifierPort
 
 ## 8. AI Services Layer
 
-AI is a *port*, not a vendor:
+AI is a _port_, not a vendor:
 
 ```text
 interface AIPort {
@@ -136,11 +136,11 @@ interface AIPort {
 
 `integration_links` maps SpartaFlow entities ↔ external entities:
 
-| SpartaFlow | External |
-|---|---|
-| Project | ClickUp space, GitHub repo, Figma project |
-| User | Slack user, GitHub login, Google email |
-| Team | Slack channel, ClickUp list |
+| SpartaFlow | External                                  |
+| ---------- | ----------------------------------------- |
+| Project    | ClickUp space, GitHub repo, Figma project |
+| User       | Slack user, GitHub login, Google email    |
+| Team       | Slack channel, ClickUp list               |
 
 Links are managed in Admin and respected by the UI for deep-linking.
 

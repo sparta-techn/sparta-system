@@ -42,9 +42,7 @@ function StateShell({
       ) : null}
       <div className="max-w-sm space-y-1">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        ) : null}
+        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
@@ -55,16 +53,12 @@ export function EmptyState(props: StateProps) {
   return <StateShell icon={props.icon ?? Inbox} {...props} />;
 }
 
-export function NoResultsState(
-  props: Partial<Omit<StateProps, "icon">> = {},
-) {
+export function NoResultsState(props: Partial<Omit<StateProps, "icon">> = {}) {
   return (
     <StateShell
       icon={SearchX}
       title={props.title ?? "No results"}
-      description={
-        props.description ?? "Try adjusting your filters or search query."
-      }
+      description={props.description ?? "Try adjusting your filters or search query."}
       action={props.action}
       className={props.className}
     />

@@ -6,8 +6,8 @@ through one vendor-neutral capability port, backed by shared delivery-reliabilit
 infrastructure (retry queue + dead-letter queue).
 
 > **Status: architecture only — no external API is called yet.**
-> The *transport* to each provider (n8n / Zapier / Make) is a `notImplemented`
-> client seam. The *reliability infrastructure* (retry queue, DLQ capture) is real
+> The _transport_ to each provider (n8n / Zapier / Make) is a `notImplemented`
+> client seam. The _reliability infrastructure_ (retry queue, DLQ capture) is real
 > internal plumbing — it makes no external calls — so the retry → dead-letter
 > pipeline works end-to-end today; only the vendor delivery and the DLQ **replay**
 > are placeholders. Each provider stays `available: false` until its client is wired.
@@ -23,14 +23,14 @@ the generic six-method `Integration` lifecycle **plus** a capability port.
 
 ## Supported features
 
-| Feature | Where it lives | Status |
-|---|---|---|
-| **Incoming Webhooks** | `AutomationPort.parseIncomingWebhook` — verify signature + parse. | Verify seam placeholder. |
-| **Outgoing Webhooks** | `AutomationPort.sendOutgoingWebhook` — emit; queue-on-failure. | Transport placeholder. |
-| **Workflow Trigger** | `AutomationPort.triggerWorkflow`. | Transport placeholder. |
-| **Workflow Status** | `AutomationPort.getWorkflowStatus`. | Transport placeholder. |
-| **Retry Queue** | `RetryQueue` + `InMemoryRetryQueue` (backoff scheduler). | **Working** (in-memory). |
-| **Dead Letter Queue** | `DeadLetterQueue` + `InMemoryDeadLetterQueue`. | Capture works; `replay` placeholder. |
+| Feature               | Where it lives                                                    | Status                               |
+| --------------------- | ----------------------------------------------------------------- | ------------------------------------ |
+| **Incoming Webhooks** | `AutomationPort.parseIncomingWebhook` — verify signature + parse. | Verify seam placeholder.             |
+| **Outgoing Webhooks** | `AutomationPort.sendOutgoingWebhook` — emit; queue-on-failure.    | Transport placeholder.               |
+| **Workflow Trigger**  | `AutomationPort.triggerWorkflow`.                                 | Transport placeholder.               |
+| **Workflow Status**   | `AutomationPort.getWorkflowStatus`.                               | Transport placeholder.               |
+| **Retry Queue**       | `RetryQueue` + `InMemoryRetryQueue` (backoff scheduler).          | **Working** (in-memory).             |
+| **Dead Letter Queue** | `DeadLetterQueue` + `InMemoryDeadLetterQueue`.                    | Capture works; `replay` placeholder. |
 
 ---
 
@@ -46,7 +46,7 @@ interface AutomationPort {
   getWorkflowStatus(accountId, runId: string): Promise<WorkflowRun>;
   sendOutgoingWebhook(accountId, msg: OutgoingWebhookMessage): Promise<WebhookDeliveryResult>;
   parseIncomingWebhook(accountId, raw: RawWebhookDelivery): Promise<IncomingWebhookEvent>;
-  processDueRetries(accountId): Promise<RetryRunSummary>;   // the retry pump
+  processDueRetries(accountId): Promise<RetryRunSummary>; // the retry pump
   readonly retryQueue: RetryQueue;
   readonly deadLetterQueue: DeadLetterQueue;
 }
@@ -150,12 +150,14 @@ signature. Lifecycle concerns — Connection, Validation, Health Check, Settings
 Sync — are all inherited from `BaseIntegration`.
 
 ### n8n — `src/integrations/n8n/`
+
 - `auth: "api_token"` (n8n API key), webhooks on. Full execution status
   (`new/waiting`→queued, `running`, `success`→succeeded, `error`→failed,
   `canceled`→cancelled).
 - Settings: `baseUrl` (required), `defaultWorkflowId`.
 
 ### Zapier — `src/integrations/zapier/`
+
 - `auth: "webhook_secret"` (Catch Hook), webhooks on. Webhook-first: a trigger
   POSTs to a Catch Hook and returns a request id. Zapier exposes **no run-status
   API**, so `getWorkflowStatus` honestly returns `unknown` with no network call —
@@ -163,6 +165,7 @@ Sync — are all inherited from `BaseIntegration`.
 - Settings: `catchHookUrl` (required), `signingSecret`.
 
 ### Make — `src/integrations/make/`
+
 - `auth: "api_token"`, webhooks on. Full execution status (`pending`→queued,
   `running`, `success`→succeeded, `warning`→succeeded, `error`→failed).
 - Settings: `apiBaseUrl` (required, region-specific), `defaultScenarioId`.

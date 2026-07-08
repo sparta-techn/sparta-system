@@ -128,7 +128,9 @@ export function SprintPlanningBoard({ sprint }: { sprint: Sprint }) {
         <div className="space-y-1">
           <Progress value={Math.min(100, loadPct)} className="h-1.5" />
           {loadPct > 100 ? (
-            <p className="text-[11px] text-rose-500">Over capacity by {stats.points - sprint.capacity} pts.</p>
+            <p className="text-[11px] text-rose-500">
+              Over capacity by {stats.points - sprint.capacity} pts.
+            </p>
           ) : (
             <p className="text-[11px] text-muted-foreground">
               {Math.max(0, sprint.capacity - stats.points)} pts of capacity remaining.

@@ -4,7 +4,11 @@ import { useTasksState } from "@/features/tasks/store";
 import { sprintStats } from "../utils";
 import type { Sprint } from "../types";
 
-const STATUS_BUCKETS: Array<{ key: keyof ReturnType<typeof sprintStats>; label: string; tone: string }> = [
+const STATUS_BUCKETS: Array<{
+  key: keyof ReturnType<typeof sprintStats>;
+  label: string;
+  tone: string;
+}> = [
   { key: "todo", label: "To do / Backlog", tone: "bg-muted" },
   { key: "inProgress", label: "In progress", tone: "bg-amber-500" },
   { key: "review", label: "Review / QA", tone: "bg-blue-500" },
@@ -33,7 +37,14 @@ export function SprintProgress({ sprint }: { sprint: Sprint }) {
             const v = stats[b.key] as number;
             const pct = (v / denom) * 100;
             if (!pct) return null;
-            return <div key={b.key} className={b.tone} style={{ width: `${pct}%` }} title={`${b.label}: ${v}`} />;
+            return (
+              <div
+                key={b.key}
+                className={b.tone}
+                style={{ width: `${pct}%` }}
+                title={`${b.label}: ${v}`}
+              />
+            );
           })}
         </div>
 
@@ -41,7 +52,10 @@ export function SprintProgress({ sprint }: { sprint: Sprint }) {
           {STATUS_BUCKETS.map((b) => {
             const v = stats[b.key] as number;
             return (
-              <li key={b.key} className="flex items-center justify-between rounded-md border bg-card/40 px-3 py-2 text-sm">
+              <li
+                key={b.key}
+                className="flex items-center justify-between rounded-md border bg-card/40 px-3 py-2 text-sm"
+              >
                 <span className="inline-flex items-center gap-2">
                   <span className={`size-2.5 rounded-full ${b.tone}`} aria-hidden />
                   {b.label}
@@ -58,7 +72,9 @@ export function SprintProgress({ sprint }: { sprint: Sprint }) {
         <div className="mt-3 space-y-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Committed</span>
-            <span className="font-medium">{stats.points} / {sprint.capacity} pts</span>
+            <span className="font-medium">
+              {stats.points} / {sprint.capacity} pts
+            </span>
           </div>
           <Progress value={Math.min(100, pointPct)} className="h-2" />
           <div className="flex items-center justify-between text-xs text-muted-foreground">

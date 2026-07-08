@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -21,9 +14,7 @@ const STORAGE_KEY = "spartaflow-theme";
 
 function getSystemTheme(): "light" | "dark" {
   if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function applyTheme(resolved: "light" | "dark") {
@@ -45,11 +36,10 @@ export function ThemeProvider({
 
   // Hydrate from storage once on the client.
   useEffect(() => {
-    const stored = (
-      typeof window !== "undefined"
+    const stored =
+      (typeof window !== "undefined"
         ? (localStorage.getItem(STORAGE_KEY) as Theme | null)
-        : null
-    ) ?? defaultTheme;
+        : null) ?? defaultTheme;
     setThemeState(stored);
   }, [defaultTheme]);
 

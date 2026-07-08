@@ -70,7 +70,7 @@ const SEED: AppNotification[] = [
     type: "success",
     priority: "normal",
     title: "Dependency resolved",
-    body: "Sena B. resolved \"Empty state copy for onboarding\".",
+    body: 'Sena B. resolved "Empty state copy for onboarding".',
     recipientId: CURRENT_USER_ID,
     channels: ["in_app"],
     href: "/app/dependencies/DEP-1031",

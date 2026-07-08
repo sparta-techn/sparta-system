@@ -1,6 +1,6 @@
 # SpartaFlow — Integration Platform Architecture
 
-> **Design document.** Describes the *target* design for the SpartaFlow
+> **Design document.** Describes the _target_ design for the SpartaFlow
 > Integration Platform. No application code is created or modified by this
 > document — it is the contract the implementation must satisfy.
 >
@@ -16,13 +16,13 @@
 
 ## 1. Goals & Constraints
 
-| Goal | How this design meets it |
-|---|---|
-| **Adapter Pattern** | Every external system is reached only through an adapter that implements one uniform interface. Business logic depends on the interface, never a vendor SDK. |
-| **Uniform provider contract** | Every provider implements exactly six lifecycle methods: `connect`, `disconnect`, `sync`, `healthCheck`, `settings`, `validate`. |
-| **Generic `Integration` interface** | A single `Integration` interface (below) is the only type features import. |
-| **Open for extension, closed for modification** | Adding a provider = one new adapter file + one registry entry. No existing adapter, feature, or interface changes. (Open/Closed Principle.) |
-| **Consistency with the codebase** | Same idioms as `src/ai/providers/`: abstract base for shared behaviour, thin concrete adapters, a memoized registry, a `reset()` test seam. |
+| Goal                                            | How this design meets it                                                                                                                                     |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Adapter Pattern**                             | Every external system is reached only through an adapter that implements one uniform interface. Business logic depends on the interface, never a vendor SDK. |
+| **Uniform provider contract**                   | Every provider implements exactly six lifecycle methods: `connect`, `disconnect`, `sync`, `healthCheck`, `settings`, `validate`.                             |
+| **Generic `Integration` interface**             | A single `Integration` interface (below) is the only type features import.                                                                                   |
+| **Open for extension, closed for modification** | Adding a provider = one new adapter file + one registry entry. No existing adapter, feature, or interface changes. (Open/Closed Principle.)                  |
+| **Consistency with the codebase**               | Same idioms as `src/ai/providers/`: abstract base for shared behaviour, thin concrete adapters, a memoized registry, a `reset()` test seam.                  |
 
 **Non-goals of this doc:** concrete vendor endpoints, UI screens, and SQL DDL
 (referenced where relevant, specified in their own docs).
@@ -141,11 +141,11 @@ export interface IntegrationMetadata {
 
 /** A persisted connection between SpartaFlow and an external account. */
 export interface IntegrationAccount {
-  id: string;                 // UUID
+  id: string; // UUID
   integrationId: IntegrationId;
   scope: IntegrationScope;
-  ownerId: string;            // user id (scope="user") or org id (scope="org")
-  externalAccountId: string;  // id on the provider side
+  ownerId: string; // user id (scope="user") or org id (scope="org")
+  externalAccountId: string; // id on the provider side
   status: "active" | "revoked" | "error";
   /** Opaque, encrypted at the app layer (see §7). Never returned to the client raw. */
   credentialsRef: string;
@@ -160,9 +160,10 @@ export interface ConnectInput {
   scope: IntegrationScope;
   ownerId: string;
   /** OAuth authorization code, or an API token, depending on `metadata.auth`. */
-  credential: { kind: "oauth_code"; code: string; redirectUri: string }
-            | { kind: "api_token"; token: string }
-            | { kind: "webhook_secret"; secret: string };
+  credential:
+    | { kind: "oauth_code"; code: string; redirectUri: string }
+    | { kind: "api_token"; token: string }
+    | { kind: "webhook_secret"; secret: string };
 }
 
 export interface SyncInput {
@@ -351,8 +352,8 @@ persistence or health timing, just as no AI adapter re-implements `countTokens`.
 
 ## 5. Capability Ports (keeping the core interface stable)
 
-The six lifecycle methods are universal, but a feature that wants to *send a
-notification* needs more than lifecycle. Rather than widen `Integration`, we
+The six lifecycle methods are universal, but a feature that wants to _send a
+notification_ needs more than lifecycle. Rather than widen `Integration`, we
 layer **capability ports** — small interfaces an adapter additionally implements.
 This is the ports-and-adapters split from `docs/Integrations.md`, made precise.
 
@@ -360,7 +361,11 @@ This is the ports-and-adapters split from `docs/Integrations.md`, made precise.
 // src/integrations/ports/chat-notifier.ts
 export interface ChatNotifierPort {
   notifyUser(accountId: string, userRef: string, msg: NotificationMessage): Promise<DeliveryResult>;
-  notifyChannel(accountId: string, channelRef: string, msg: NotificationMessage): Promise<DeliveryResult>;
+  notifyChannel(
+    accountId: string,
+    channelRef: string,
+    msg: NotificationMessage,
+  ): Promise<DeliveryResult>;
 }
 
 // src/integrations/ports/task-provider.ts
@@ -415,12 +420,18 @@ export function getIntegration(id: IntegrationId): Integration {
 }
 
 /** Resolve the configured provider for a capability (e.g. active chat notifier). */
-export function resolveCapability<T>(cap: IntegrationCapability): T { /* config → id → cast */ }
+export function resolveCapability<T>(cap: IntegrationCapability): T {
+  /* config → id → cast */
+}
 
-export function registeredIntegrations(): IntegrationId[] { return Object.keys(factories); }
+export function registeredIntegrations(): IntegrationId[] {
+  return Object.keys(factories);
+}
 
 /** Test/reset seam — clears memoized instances (mirrors resetProviders()). */
-export function resetIntegrations(): void { instances.clear(); }
+export function resetIntegrations(): void {
+  instances.clear();
+}
 ```
 
 **Adding a provider touches exactly two things:** a new `src/integrations/<p>/`
@@ -473,7 +484,7 @@ All outbound HTTP flows through `core/http-client.ts`:
   feature surface shows a paused state ("Slack notifications paused") rather than
   failing the user's primary action.
 - **Failure isolation** (from `docs/Integrations.md` §10): an adapter failure
-  *never* fails the user's core action. If Slack is down, the in-app
+  _never_ fails the user's core action. If Slack is down, the in-app
   notification still delivers; Slack delivery is retried out-of-band.
 
 ---
@@ -485,8 +496,13 @@ A single `IntegrationError` taxonomy (mirroring `src/ai/utils/errors.ts` and
 
 ```ts
 export type IntegrationErrorCode =
-  | "invalid_request" | "unknown_provider" | "unauthorized"
-  | "rate_limited" | "provider_unavailable" | "not_connected" | "sync_conflict";
+  | "invalid_request"
+  | "unknown_provider"
+  | "unauthorized"
+  | "rate_limited"
+  | "provider_unavailable"
+  | "not_connected"
+  | "sync_conflict";
 ```
 
 Errors carry a code, a human message, and optional field-level detail (for
@@ -500,12 +516,12 @@ state through the shared `states` module (`docs/ARCHITECTURE.md` §4).
 UUID PKs, RLS on every table, per `CLAUDE.md` Database rules and
 `docs/DB_RULES.md`.
 
-| Table | Purpose | Ownership / RLS |
-|---|---|---|
-| `integration_accounts` | One connected account (encrypted creds, settings, status). | `scope="user"` → owner only; `scope="org"` → org admins (`owner`/`super_admin`). |
-| `integration_links` | Maps SpartaFlow entity ↔ external entity (project↔ClickUp space, user↔Slack id). | Readable by entity viewers; writable by admins. |
-| `integration_events` | Raw inbound webhook payloads (audit + replay). | Admin-only. |
-| `integration_sync_runs` | Per-`sync` outcome: cursor, itemsProcessed, errors, timing. | Admin-only; feeds health page. |
+| Table                   | Purpose                                                                          | Ownership / RLS                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `integration_accounts`  | One connected account (encrypted creds, settings, status).                       | `scope="user"` → owner only; `scope="org"` → org admins (`owner`/`super_admin`). |
+| `integration_links`     | Maps SpartaFlow entity ↔ external entity (project↔ClickUp space, user↔Slack id). | Readable by entity viewers; writable by admins.                                  |
+| `integration_events`    | Raw inbound webhook payloads (audit + replay).                                   | Admin-only.                                                                      |
+| `integration_sync_runs` | Per-`sync` outcome: cursor, itemsProcessed, errors, timing.                      | Admin-only; feeds health page.                                                   |
 
 Important cross-entity/privileged writes go through **server functions**, not
 direct client queries; simple owner-scoped reads use client + RLS. Every
@@ -544,7 +560,7 @@ depends on a **port**, resolved by the **registry**, implemented by an
 
 1. Create `src/integrations/<provider>/` with `<provider>-integration.ts`
    (extends `BaseIntegration`, implements the six methods via the abstract
-   hooks + any capability port), `<provider>-client.ts` (the *only* file that
+   hooks + any capability port), `<provider>-client.ts` (the _only_ file that
    imports the vendor SDK), `mappers.ts`, optional `webhooks/handler.ts`, and
    `README.md`.
 2. Add the `IntegrationId` to the union in `core/types.ts` and one line to the
@@ -593,13 +609,13 @@ The infrastructure now exists under `src/integrations/` — see
 design with a flat, feature-first folder layout (matching `docs/ARCHITECTURE.md`
 §2) rather than the illustrative `core/`+`ports/` sketch in §2 above:
 
-| This doc (conceptual) | As built |
-|---|---|
-| `Integration` interface, DTOs | `src/integrations/types/` |
-| `BaseIntegration`, adapters, factory, registry | `src/integrations/providers/` |
-| `IntegrationManager`, `SettingsManager`, `AccountStore`, composition root | `src/integrations/services/` |
-| `ProviderStatus`, `IntegrationAccount` value objects | `src/integrations/models/` |
-| React consumption | `src/integrations/hooks/`, `src/integrations/components/` |
+| This doc (conceptual)                                                     | As built                                                  |
+| ------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `Integration` interface, DTOs                                             | `src/integrations/types/`                                 |
+| `BaseIntegration`, adapters, factory, registry                            | `src/integrations/providers/`                             |
+| `IntegrationManager`, `SettingsManager`, `AccountStore`, composition root | `src/integrations/services/`                              |
+| `ProviderStatus`, `IntegrationAccount` value objects                      | `src/integrations/models/`                                |
+| React consumption                                                         | `src/integrations/hooks/`, `src/integrations/components/` |
 
 **Delivered:** the six-method `Integration` contract; `BaseIntegration` with all
 shared lifecycle plumbing; `ProviderFactory` (single extension table) +
@@ -614,4 +630,7 @@ encryption (§7), and Supabase-backed persistence + RLS (§11). Persistence is a
 in-memory `AccountStore` that already mirrors the future `integration_accounts`
 surface, so swapping it for Supabase is a one-file change in the composition
 root.
+
+```
+
 ```

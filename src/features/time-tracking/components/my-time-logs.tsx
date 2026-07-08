@@ -30,8 +30,7 @@ export function MyTimeLogs() {
   const [tab, setTab] = useState<TimeRange>("week");
   const [manualOpen, setManualOpen] = useState(false);
 
-  const ranged = (range: TimeRange) =>
-    myLogs.filter((l) => isInRange(l.startTime, range));
+  const ranged = (range: TimeRange) => myLogs.filter((l) => isInRange(l.startTime, range));
 
   const totals = {
     today: sumMinutes(ranged("today"), now),
@@ -44,9 +43,7 @@ export function MyTimeLogs() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="font-display text-xl font-semibold tracking-tight">My time logs</h2>
-          <p className="text-sm text-muted-foreground">
-            Personal aggregations across all tasks.
-          </p>
+          <p className="text-sm text-muted-foreground">Personal aggregations across all tasks.</p>
         </div>
         <Button className="gap-2" onClick={() => setManualOpen(true)}>
           <Plus className="size-4" /> Log time
@@ -54,9 +51,21 @@ export function MyTimeLogs() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Today" value={formatHours(totals.today)} hint={formatMinutes(totals.today)} />
-        <StatCard label="This week" value={formatHours(totals.week)} hint={formatMinutes(totals.week)} />
-        <StatCard label="This month" value={formatHours(totals.month)} hint={formatMinutes(totals.month)} />
+        <StatCard
+          label="Today"
+          value={formatHours(totals.today)}
+          hint={formatMinutes(totals.today)}
+        />
+        <StatCard
+          label="This week"
+          value={formatHours(totals.week)}
+          hint={formatMinutes(totals.week)}
+        />
+        <StatCard
+          label="This month"
+          value={formatHours(totals.month)}
+          hint={formatMinutes(totals.month)}
+        />
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as TimeRange)}>
@@ -154,9 +163,7 @@ function TopTasks({
                   </span>
                   {task?.title ?? "Unknown task"}
                 </Link>
-                <span className="font-mono text-xs tabular-nums">
-                  {formatHours(r.minutes)}
-                </span>
+                <span className="font-mono text-xs tabular-nums">{formatHours(r.minutes)}</span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div

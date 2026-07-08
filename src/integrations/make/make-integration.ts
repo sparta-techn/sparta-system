@@ -30,11 +30,7 @@ import type {
 } from "../ports";
 import { BaseIntegration, type AuthenticatedIdentity } from "../providers/base-integration";
 import { notImplemented } from "../services/errors";
-import {
-  AutomationService,
-  InMemoryDeadLetterQueue,
-  InMemoryRetryQueue,
-} from "../automation";
+import { AutomationService, InMemoryDeadLetterQueue, InMemoryRetryQueue } from "../automation";
 import { MakeClient } from "./make-client";
 import type { MakeClientConfig } from "./types";
 

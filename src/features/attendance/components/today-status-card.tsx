@@ -43,21 +43,12 @@ export function TodayStatusCard({ compact = false }: Props) {
   const openBreak = breaks.find((b) => !b.ended_at);
 
   // Live working seconds: total since start, minus completed breaks, minus current open break.
-  const completedBreakSeconds = breaks.reduce(
-    (acc, b) => acc + (b.duration_seconds ?? 0),
-    0,
-  );
-  const openBreakElapsed = useLiveElapsedSeconds(
-    openBreak?.started_at ?? null,
-    !!openBreak,
-  );
+  const completedBreakSeconds = breaks.reduce((acc, b) => acc + (b.duration_seconds ?? 0), 0);
+  const openBreakElapsed = useLiveElapsedSeconds(openBreak?.started_at ?? null, !!openBreak);
   const totalSinceStart = session?.started_at
     ? Math.max(0, Math.floor((now.getTime() - new Date(session.started_at).getTime()) / 1000))
     : 0;
-  const workedSeconds = Math.max(
-    0,
-    totalSinceStart - completedBreakSeconds - openBreakElapsed,
-  );
+  const workedSeconds = Math.max(0, totalSinceStart - completedBreakSeconds - openBreakElapsed);
   const breakSecondsTotal = completedBreakSeconds + openBreakElapsed;
 
   const expectedSeconds = (settingsQ.data?.expected_work_minutes ?? 480) * 60;
@@ -143,12 +134,11 @@ export function TodayStatusCard({ compact = false }: Props) {
                 <span
                   className={cn(
                     "text-xs",
-                    session.attendance_status === "late"
-                      ? "text-warning"
-                      : "text-muted-foreground",
+                    session.attendance_status === "late" ? "text-warning" : "text-muted-foreground",
                   )}
                 >
-                  {session.late_minutes} min after {settingsQ.data?.work_start_time?.slice(0, 5) ?? "09:00"}
+                  {session.late_minutes} min after{" "}
+                  {settingsQ.data?.work_start_time?.slice(0, 5) ?? "09:00"}
                 </span>
               ) : (
                 <span className="text-xs text-muted-foreground">
@@ -233,11 +223,7 @@ export function TodayStatusCard({ compact = false }: Props) {
 
             {status === "on_break" ? (
               <>
-                <Button
-                  onClick={() => resumeMut.mutate()}
-                  disabled={busy}
-                  aria-label="Resume work"
-                >
+                <Button onClick={() => resumeMut.mutate()} disabled={busy} aria-label="Resume work">
                   {resumeMut.isPending ? <Loader2 className="animate-spin" /> : <Pause />}
                   Resume work
                 </Button>

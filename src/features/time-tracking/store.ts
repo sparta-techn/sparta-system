@@ -91,9 +91,7 @@ export function getActiveLogForUser(userId: string): TimeLog | null {
 
 export function getActiveLogForTask(taskId: string, userId: string): TimeLog | null {
   return (
-    state.logs.find(
-      (l) => l.taskId === taskId && l.userId === userId && l.endTime === null,
-    ) ?? null
+    state.logs.find((l) => l.taskId === taskId && l.userId === userId && l.endTime === null) ?? null
   );
 }
 
@@ -103,11 +101,7 @@ export function getActiveLogForTask(taskId: string, userId: string): TimeLog | n
  * Start a timer for the given task/user. If another timer is running for
  * the same user it is stopped first (single-active-timer policy).
  */
-export function startTimer(
-  taskId: string,
-  userId: string,
-  description?: string,
-): TimeLog {
+export function startTimer(taskId: string, userId: string, description?: string): TimeLog {
   let logs = state.logs;
   const existingActive = logs.find((l) => l.userId === userId && l.endTime === null);
   if (existingActive) {

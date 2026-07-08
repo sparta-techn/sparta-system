@@ -8,7 +8,9 @@ function daysFromNow(d: number): string {
   return date.toISOString();
 }
 
-const TEMPLATES: Array<Pick<Sprint, "name" | "goal" | "status"> & { offset: number; len: number; cap: number }> = [
+const TEMPLATES: Array<
+  Pick<Sprint, "name" | "goal" | "status"> & { offset: number; len: number; cap: number }
+> = [
   {
     name: "Sprint 1 · Authentication",
     goal: "Ship invite-only auth, role gating, and session hardening across the platform.",

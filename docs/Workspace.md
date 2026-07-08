@@ -11,26 +11,30 @@ A single settings page grouped by concern. Save is sticky at the bottom — you 
 ## Settings
 
 ### Company
-| Field | Notes |
-| --- | --- |
+
+| Field          | Notes                                                                    |
+| -------------- | ------------------------------------------------------------------------ |
 | Logo (initial) | One- or two-character monogram; renders in the sidebar and tab favicons. |
-| Company name | Used in headers, exports, and email templates. |
+| Company name   | Used in headers, exports, and email templates.                           |
 
 ### Working hours
-| Field | Notes |
-| --- | --- |
-| Timezone | IANA name. Drives attendance, midday reminders, EOD timestamps. |
-| Start / End | 24-hour HH:MM. |
+
+| Field        | Notes                                                                       |
+| ------------ | --------------------------------------------------------------------------- |
+| Timezone     | IANA name. Drives attendance, midday reminders, EOD timestamps.             |
+| Start / End  | 24-hour HH:MM.                                                              |
 | Working days | Toggle chips for Mon → Sun. Drives attendance gating and report compliance. |
 
 ### Languages
+
 A chip selector for company languages. Surfaces in the directory, document tagging, and (future) localization defaults.
 
 ### Defaults
-| Field | Notes |
-| --- | --- |
-| Default task statuses | Comma-separated list. Used when a new project starts from scratch (no template). |
-| Default project template | The template auto-selected in the "New project" dialog. |
+
+| Field                    | Notes                                                                            |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| Default task statuses    | Comma-separated list. Used when a new project starts from scratch (no template). |
+| Default project template | The template auto-selected in the "New project" dialog.                          |
 
 ## Storage
 

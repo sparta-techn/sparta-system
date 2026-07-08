@@ -11,17 +11,17 @@
 
 ## 1. What's included
 
-| Requirement | Where |
-| --- | --- |
-| **Conversation History** | `store.ts` (local) + `ConversationList` sidebar |
-| **Suggested Prompts** | `suggested-prompts.ts` (role-aware) + `SuggestedPrompts` empty state |
-| **Favorite Prompts** | `store.ts` favorites + star toggle in `SuggestedPrompts` |
-| **Copy Response** | `useCopy` hook + copy buttons on assistant messages & code blocks |
-| **Markdown Rendering** | `Markdown` (dependency-free) |
-| **Code Blocks** | `CodeBlock` (language label + copy) |
-| **Tables** | GFM pipe tables → shadcn `Table` |
-| **Loading States** | typing indicator + send spinner |
-| **Streaming-ready architecture** | `useChat` consumes `aiAssistant.chatStream`, accumulating deltas |
+| Requirement                      | Where                                                                |
+| -------------------------------- | -------------------------------------------------------------------- |
+| **Conversation History**         | `store.ts` (local) + `ConversationList` sidebar                      |
+| **Suggested Prompts**            | `suggested-prompts.ts` (role-aware) + `SuggestedPrompts` empty state |
+| **Favorite Prompts**             | `store.ts` favorites + star toggle in `SuggestedPrompts`             |
+| **Copy Response**                | `useCopy` hook + copy buttons on assistant messages & code blocks    |
+| **Markdown Rendering**           | `Markdown` (dependency-free)                                         |
+| **Code Blocks**                  | `CodeBlock` (language label + copy)                                  |
+| **Tables**                       | GFM pipe tables → shadcn `Table`                                     |
+| **Loading States**               | typing indicator + send spinner                                      |
+| **Streaming-ready architecture** | `useChat` consumes `aiAssistant.chatStream`, accumulating deltas     |
 
 ---
 

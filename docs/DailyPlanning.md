@@ -30,10 +30,10 @@ Routes:
 The single integration seam. UI never touches `localStorage` directly.
 
 ```ts
-getDraft() / setDraft(draft) / clearDraft()
-getSubmission() / submitCheckIn(draft) / updateSubmission(patch)
-canEditSubmission(s)        // 30-minute window
-useTodaySubmission()         // reactive hook for widgets
+getDraft() / setDraft(draft) / clearDraft();
+getSubmission() / submitCheckIn(draft) / updateSubmission(patch);
+canEditSubmission(s); // 30-minute window
+useTodaySubmission(); // reactive hook for widgets
 ```
 
 When we wire the backend, this file becomes a thin wrapper around three Supabase RPCs (`submit_check_in`, `update_check_in`, `get_today_check_in`) plus a TanStack Query subscription. The component API does not change.

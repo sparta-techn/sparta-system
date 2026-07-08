@@ -19,10 +19,8 @@ export function mapAuthError(error: unknown): string {
     return "Network error. Check your connection and try again.";
   if (lc.includes("invalid login") || lc.includes("invalid credentials"))
     return "Incorrect email or password.";
-  if (lc.includes("email not confirmed"))
-    return "Please verify your email before signing in.";
-  if (lc.includes("user not found"))
-    return "Incorrect email or password.";
+  if (lc.includes("email not confirmed")) return "Please verify your email before signing in.";
+  if (lc.includes("user not found")) return "Incorrect email or password.";
   if (lc.includes("user is banned") || lc.includes("disabled"))
     return "This account is disabled. Contact your administrator.";
   if (lc.includes("rate limit") || lc.includes("too many"))

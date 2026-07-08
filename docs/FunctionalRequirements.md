@@ -46,7 +46,7 @@ Requirements are grouped by module. Each requirement is uniquely identified (e.g
 
 ## 4. Dependencies (FR-DEP)
 
-- **FR-DEP-01** Any employee can create a dependency: *I (or my team) am waiting on X from team Y*.
+- **FR-DEP-01** Any employee can create a dependency: _I (or my team) am waiting on X from team Y_.
 - **FR-DEP-02** A dependency has: requester, target department, target person (optional), description, expected resolution date, priority, related ClickUp task link (optional).
 - **FR-DEP-03** Target department receives a notification and the dependency appears on their team board.
 - **FR-DEP-04** Target can: acknowledge, accept with ETA, reject with reason, or mark as resolved.
@@ -79,9 +79,11 @@ Requirements are grouped by module. Each requirement is uniquely identified (e.g
 ## 7. Dashboards (FR-DASH)
 
 ### Employee Dashboard
+
 - **FR-DASH-E-01** Shows today's workflow step, attendance status, current working hours, today's announcements, my open dependencies, my notifications.
 
 ### Team Lead / Project Manager Dashboard
+
 - **FR-DASH-M-01** Live team status (working / on break / late / off).
 - **FR-DASH-M-02** Daily report completion status per team member.
 - **FR-DASH-M-03** Open blockers and dependencies sorted by age.
@@ -89,6 +91,7 @@ Requirements are grouped by module. Each requirement is uniquely identified (e.g
 - **FR-DASH-M-05** Weekly and monthly performance trends.
 
 ### HR Dashboard
+
 - **FR-DASH-H-01** Company-wide attendance summary.
 - **FR-DASH-H-02** Late / absent employees today.
 - **FR-DASH-H-03** Pending leave requests.
@@ -96,6 +99,7 @@ Requirements are grouped by module. Each requirement is uniquely identified (e.g
 - **FR-DASH-H-05** Employee directory and department breakdown.
 
 ### Owner Dashboard
+
 - **FR-DASH-O-01** Company health score.
 - **FR-DASH-O-02** Department performance comparison.
 - **FR-DASH-O-03** Blocker rate trend per department.

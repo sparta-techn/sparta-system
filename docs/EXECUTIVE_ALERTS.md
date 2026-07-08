@@ -12,15 +12,15 @@
 Turns operational state into ranked, actionable alerts and manages their
 lifecycle. Seven conditions are covered:
 
-| # | Condition | Alert type | Category | Source signal |
-| --- | --- | --- | --- | --- |
-| 1 | Project overdue | `project_overdue` | project | open project past `endDate` |
-| 2 | Sprint delayed | `sprint_delayed` | engineering | active sprint past end with work left |
-| 3 | Employee missing reports | `employee_missing_reports` | reports | expected reports unfiled |
-| 4 | Attendance anomalies | `attendance_anomaly` | attendance | repeated lateness / absence |
-| 5 | High workload | `high_workload` | engineering | open tasks per person over threshold |
-| 6 | Critical blocker | `critical_blocker` | engineering | critical / aged high-priority blocker |
-| 7 | AI detects risk | `ai_risk` | ai | risk from the AI risk-detection feature |
+| #   | Condition                | Alert type                 | Category    | Source signal                           |
+| --- | ------------------------ | -------------------------- | ----------- | --------------------------------------- |
+| 1   | Project overdue          | `project_overdue`          | project     | open project past `endDate`             |
+| 2   | Sprint delayed           | `sprint_delayed`           | engineering | active sprint past end with work left   |
+| 3   | Employee missing reports | `employee_missing_reports` | reports     | expected reports unfiled                |
+| 4   | Attendance anomalies     | `attendance_anomaly`       | attendance  | repeated lateness / absence             |
+| 5   | High workload            | `high_workload`            | engineering | open tasks per person over threshold    |
+| 6   | Critical blocker         | `critical_blocker`         | engineering | critical / aged high-priority blocker   |
+| 7   | AI detects risk          | `ai_risk`                  | ai          | risk from the AI risk-detection feature |
 
 Every alert supports **priority**, **severity**, **dismiss**, **archive**, and
 **history**.
@@ -89,13 +89,13 @@ order.
 
 Thresholds are tunable per evaluation (`input.thresholds`), each with a default:
 
-| Threshold | Default | Used by |
-| --- | --- | --- |
-| `missingReportsMin` | 2 | missing reports |
-| `attendanceLateMin` | 3 | attendance anomaly |
-| `attendanceAbsentMin` | 2 | attendance anomaly |
-| `highWorkloadTasks` | 12 | high workload (escalates at 1.5×) |
-| `blockerAgeDays` | 2 | critical blocker (escalates aged high-priority) |
+| Threshold             | Default | Used by                                         |
+| --------------------- | ------- | ----------------------------------------------- |
+| `missingReportsMin`   | 2       | missing reports                                 |
+| `attendanceLateMin`   | 3       | attendance anomaly                              |
+| `attendanceAbsentMin` | 2       | attendance anomaly                              |
+| `highWorkloadTasks`   | 12      | high workload (escalates at 1.5×)               |
+| `blockerAgeDays`      | 2       | critical blocker (escalates aged high-priority) |
 
 Each alert carries a stable **dedupe id** `` `${type}:${entityId}` `` so re-running
 the engine updates an existing alert rather than duplicating it — which is what
@@ -116,7 +116,7 @@ The store (`alert-store.ts`) owns state; the engine never mutates it.
   purges archived rows (history preserved).
 - **`restore(id)`** — return a dismissed/archived alert to `active`.
 - **History** — every transition (`raised | updated | dismissed | archived |
-  restored`) is appended to an immutable log (capped at 500), surfaced in the
+restored`) is appended to an immutable log (capped at 500), surfaced in the
   History tab. This is the client mirror of a future `executive_alert_events`
   audit table.
 
@@ -167,6 +167,6 @@ escalation, engine aggregation + ranking, and dedupe-id stability.
 
 ---
 
-*Next: gate the dashboard route on `owner:access`, feed live snapshots via the
+_Next: gate the dashboard route on `owner:access`, feed live snapshots via the
 adapter, and (optionally) push `critical`/`urgent` alerts into the notifications
-pipeline so they reach owners outside the dashboard.*
+pipeline so they reach owners outside the dashboard._

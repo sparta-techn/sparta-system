@@ -19,9 +19,10 @@ export function HrSubnav() {
   return (
     <nav className="mb-4 -mx-1 flex gap-1 overflow-x-auto border-b" aria-label="HR sections">
       {NAV.map((item) => {
-        const isActive = item.to === "/app/hr"
-          ? pathname === "/app/hr"
-          : pathname === item.to || pathname.startsWith(`${item.to}/`);
+        const isActive =
+          item.to === "/app/hr"
+            ? pathname === "/app/hr"
+            : pathname === item.to || pathname.startsWith(`${item.to}/`);
         return (
           <Link
             key={item.to}
@@ -30,7 +31,7 @@ export function HrSubnav() {
               "shrink-0 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
               isActive
                 ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {item.label}
