@@ -56,6 +56,16 @@ function asErrorLike(error: unknown): ErrorLike {
   return {};
 }
 
+/**
+ * A safe, lowercased message string. Some providers hand back a non-string
+ * `.message` (e.g. Supabase's `AuthRetryableFetchError` on an empty 500 body,
+ * whose `message` is `{}`) — calling `.toLowerCase()` on that would throw and
+ * mask the real failure, so coerce to "" unless it's actually a string.
+ */
+function messageText(e: ErrorLike): string {
+  return typeof e.message === "string" ? e.message.toLowerCase() : "";
+}
+
 /** Numeric HTTP status if the error carries one (Supabase auth, fetch, etc.). */
 function httpStatus(e: ErrorLike): number | undefined {
   const raw = e.status ?? e.statusCode;
@@ -68,7 +78,7 @@ function httpStatus(e: ErrorLike): number | undefined {
 export function isNetworkError(error: unknown): boolean {
   if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
   const e = asErrorLike(error);
-  const msg = (e.message ?? "").toLowerCase();
+  const msg = messageText(e);
   return e.name === "TypeError" && msg.includes("fetch") // browser fetch failure
     ? true
     : msg.includes("failed to fetch") ||
@@ -93,7 +103,7 @@ export function classifyError(error: unknown): ErrorCategory {
 
   const status = httpStatus(e);
   const code = typeof e.code === "string" ? e.code.toLowerCase() : "";
-  const msg = (e.message ?? "").toLowerCase();
+  const msg = messageText(e);
 
   // 2. Supabase AuthError (login / session / JWT) — name or 401/403 + auth code.
   if (e.name === "AuthError" || e.name === "AuthApiError" || e.name === "AuthSessionMissingError") {
@@ -141,7 +151,7 @@ export function isAuthError(error: unknown): boolean {
 export function isSessionExpired(error: unknown): boolean {
   if (!isAuthError(error)) return false;
   const e = asErrorLike(error);
-  const msg = (e.message ?? "").toLowerCase();
+  const msg = messageText(e);
   const code = typeof e.code === "string" ? e.code.toLowerCase() : "";
   return (
     msg.includes("expired") ||

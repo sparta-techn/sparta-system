@@ -19,6 +19,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { toServiceError } from "@/services/core/errors";
 import { auditLog } from "@/lib/logging";
 import type { AppRole } from "@/features/auth/types";
 import {
@@ -54,7 +55,7 @@ export async function getBootstrapStatus(): Promise<BootstrapStatus> {
     .select("is_bootstrapped, public_registration_enabled, company_id, bootstrapped_at")
     .eq("id", true)
     .maybeSingle();
-  if (error) throw error;
+  if (error) throw toServiceError(error, "Failed to read bootstrap status.");
 
   return {
     isBootstrapped: Boolean(data?.is_bootstrapped),
@@ -69,7 +70,7 @@ async function findAuthUserByEmail(email: string): Promise<{ id: string } | null
   const target = email.trim().toLowerCase();
   for (let page = 1; page <= 100; page++) {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) throw error;
+    if (error) throw toServiceError(error, "Failed to look up existing users.");
     const match = data.users.find((u) => u.email?.toLowerCase() === target);
     if (match) return { id: match.id };
     if (data.users.length < 200) break;
@@ -93,7 +94,7 @@ async function ensureOwner(input: BootstrapInput["owner"]): Promise<string> {
   if (created.error) {
     // Idempotent: an owner may already exist from a previous partial run.
     const existing = await findAuthUserByEmail(email);
-    if (!existing) throw created.error;
+    if (!existing) throw toServiceError(created.error, "Failed to create the owner account.");
     userId = existing.id;
   }
   if (!userId) throw new Error("Failed to resolve the owner user id");
@@ -106,7 +107,7 @@ async function ensureOwner(input: BootstrapInput["owner"]): Promise<string> {
       { user_id: userId, role: "owner" },
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
-  if (roleError) throw roleError;
+  if (roleError) throw toServiceError(roleError, "Failed to grant the owner role.");
 
   await admin().from("user_roles").delete().eq("user_id", userId).eq("role", "employee");
 
@@ -114,7 +115,7 @@ async function ensureOwner(input: BootstrapInput["owner"]): Promise<string> {
     .from("profiles")
     .update({ full_name: fullName, display_name: fullName, status: "active" })
     .eq("id", userId);
-  if (profileError) throw profileError;
+  if (profileError) throw toServiceError(profileError, "Failed to update the owner profile.");
 
   return userId;
 }
@@ -130,7 +131,7 @@ async function ensureDepartments(ownerId: string): Promise<number> {
   const { error } = await admin()
     .from("departments")
     .upsert(rows, { onConflict: "slug", ignoreDuplicates: true });
-  if (error) throw error;
+  if (error) throw toServiceError(error, "Failed to create default departments.");
   return rows.length;
 }
 
@@ -147,10 +148,10 @@ async function ensurePermissions(): Promise<number> {
   const { error: permError } = await admin()
     .from("permissions")
     .upsert(permRows, { onConflict: "key", ignoreDuplicates: true });
-  if (permError) throw permError;
+  if (permError) throw toServiceError(permError, "Failed to create the permission catalog.");
 
   const { data: perms, error: readError } = await admin().from("permissions").select("id, key");
-  if (readError) throw readError;
+  if (readError) throw toServiceError(readError, "Failed to read the permission catalog.");
 
   const idByKey = new Map<string, string>();
   for (const p of (perms ?? []) as Array<{ id: string; key: string }>) idByKey.set(p.key, p.id);
@@ -167,7 +168,8 @@ async function ensurePermissions(): Promise<number> {
     const { error: matrixError } = await admin()
       .from("role_permissions")
       .upsert(matrixRows, { onConflict: "role,permission_id", ignoreDuplicates: true });
-    if (matrixError) throw matrixError;
+    if (matrixError)
+      throw toServiceError(matrixError, "Failed to create the role→permission matrix.");
   }
 
   return permRows.length;
@@ -189,7 +191,8 @@ async function ensureCompanyAndWorkspace(
     .select("id")
     .eq("slug", companySlug)
     .maybeSingle();
-  if (existingCompany.error) throw existingCompany.error;
+  if (existingCompany.error)
+    throw toServiceError(existingCompany.error, "Failed to look up the company.");
 
   let companyId = (existingCompany.data as { id: string } | null)?.id ?? null;
   if (!companyId) {
@@ -204,7 +207,7 @@ async function ensureCompanyAndWorkspace(
       })
       .select("id")
       .single();
-    if (companyError) throw companyError;
+    if (companyError) throw toServiceError(companyError, "Failed to create the company.");
     companyId = (company as { id: string }).id;
   }
 
@@ -217,7 +220,8 @@ async function ensureCompanyAndWorkspace(
     .eq("company_id", companyId)
     .eq("is_default", true)
     .maybeSingle();
-  if (existingWorkspace.error) throw existingWorkspace.error;
+  if (existingWorkspace.error)
+    throw toServiceError(existingWorkspace.error, "Failed to look up the workspace.");
 
   let workspaceId = (existingWorkspace.data as { id: string } | null)?.id ?? null;
   if (!workspaceId) {
@@ -232,7 +236,7 @@ async function ensureCompanyAndWorkspace(
       })
       .select("id")
       .single();
-    if (workspaceError) throw workspaceError;
+    if (workspaceError) throw toServiceError(workspaceError, "Failed to create the workspace.");
     workspaceId = (workspace as { id: string }).id;
   }
 
@@ -286,7 +290,7 @@ export async function runBootstrap(input: BootstrapInput): Promise<BootstrapResu
       bootstrapped_by: ownerUserId,
     })
     .eq("id", true);
-  if (settingsError) throw settingsError;
+  if (settingsError) throw toServiceError(settingsError, "Failed to finalize bootstrap settings.");
 
   auditLog.record(
     {

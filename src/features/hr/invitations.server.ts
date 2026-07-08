@@ -23,6 +23,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { ServiceError, toServiceError } from "@/services/core/errors";
 import { auditLog } from "@/lib/logging";
 import type { AppRole } from "@/features/auth/types";
 import type { Department, EmployeeRole } from "./mock-data";
@@ -69,7 +70,7 @@ async function findAuthUserByEmail(email: string): Promise<{ id: string } | null
   const target = email.trim().toLowerCase();
   for (let page = 1; page <= 100; page++) {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) throw error;
+    if (error) throw toServiceError(error, "Failed to look up existing users.");
     const match = data.users.find((u) => u.email?.toLowerCase() === target);
     if (match) return { id: match.id };
     if (data.users.length < 200) break;
@@ -84,7 +85,7 @@ async function resolveDepartmentId(name: string): Promise<string | null> {
     .select("id")
     .ilike("name", name.trim())
     .maybeSingle();
-  if (error) throw error;
+  if (error) throw toServiceError(error, "Failed to resolve the department.");
   return (data as { id: string } | null)?.id ?? null;
 }
 
@@ -96,7 +97,7 @@ async function resolvePositionId(
   let query = admin().from("positions").select("id").ilike("title", title.trim());
   if (departmentId) query = query.eq("department_id", departmentId);
   const { data, error } = await query.limit(1).maybeSingle();
-  if (error) throw error;
+  if (error) throw toServiceError(error, "Failed to resolve the position.");
   return (data as { id: string } | null)?.id ?? null;
 }
 
@@ -107,9 +108,33 @@ async function resolveActorName(userId: string): Promise<string> {
     .select("full_name, display_name, email")
     .eq("id", userId)
     .maybeSingle();
-  if (error) throw error;
+  if (error) throw toServiceError(error, "Failed to resolve the inviting user.");
   const p = data as { full_name?: string; display_name?: string; email?: string } | null;
   return p?.full_name || p?.display_name || p?.email || "Unknown";
+}
+
+/**
+ * Turn a failed `inviteUserByEmail` into an actionable error. The dominant cause
+ * is the project's email/SMTP not being configured (or rate-limited): GoTrue
+ * returns a 500 with an empty body, which supabase-js surfaces as an
+ * `AuthRetryableFetchError` whose `.message` is `{}`. Say that plainly instead.
+ * The `invalid_request` code makes `getErrorMessage` (see `@/lib/errors`) surface
+ * this authored message verbatim to the admin rather than a generic fallback.
+ */
+function emailInviteError(cause: unknown): ServiceError {
+  const status = (cause as { status?: number } | null)?.status;
+  const name = (cause as { name?: string } | null)?.name;
+  const isSendFailure =
+    name === "AuthRetryableFetchError" || (typeof status === "number" && status >= 500);
+  if (isSendFailure) {
+    return new ServiceError(
+      "Couldn't send the invitation email — check the email/SMTP configuration in Supabase Auth settings.",
+      "invalid_request",
+      cause,
+    );
+  }
+  // Other failures (e.g. an invalid email address) already carry a usable message.
+  return toServiceError(cause, "Couldn't invite this employee.");
 }
 
 /**
@@ -136,9 +161,11 @@ export async function provisionInvitedEmployee(
 
   let userId = invited.data.user?.id ?? null;
   if (invited.error) {
-    // Already registered (re-invite) — reuse the existing auth user.
+    // Already registered (re-invite) — reuse the existing auth user. If there's
+    // no such user, the invite genuinely failed (almost always the email/SMTP
+    // send) — surface an actionable message instead of the opaque provider error.
     const existing = await findAuthUserByEmail(email);
-    if (!existing) throw invited.error;
+    if (!existing) throw emailInviteError(invited.error);
     userId = existing.id;
   }
   if (!userId) throw new Error("Failed to resolve the invited user id.");
@@ -152,7 +179,7 @@ export async function provisionInvitedEmployee(
       { user_id: userId, role: appRole },
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
-  if (roleError) throw roleError;
+  if (roleError) throw toServiceError(roleError, "Failed to assign the employee's role.");
 
   // 3. Assign department / position via the real employee tables.
   const departmentId = await resolveDepartmentId(input.department);
@@ -174,7 +201,7 @@ export async function provisionInvitedEmployee(
     )
     .select("id")
     .single();
-  if (employeeError) throw employeeError;
+  if (employeeError) throw toServiceError(employeeError, "Failed to create the employee record.");
   const employeeId = (employee as { id: string }).id;
 
   const actor = { id: input.invitedByUserId, name: await resolveActorName(input.invitedByUserId) };

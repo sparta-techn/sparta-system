@@ -13,6 +13,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { toServiceError } from "@/services/core/errors";
 import type { AppRole } from "@/features/auth/types";
 import type { Department, EmployeeRole } from "./mock-data";
 import type { ProvisionInvitedEmployeeResult } from "./invitations.server";
@@ -73,7 +74,7 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
       .from("user_roles")
       .select("role")
       .eq("user_id", actorId);
-    if (roleError) throw roleError;
+    if (roleError) throw toServiceError(roleError, "Failed to check your permissions.");
 
     const roles = ((roleRows ?? []) as Array<{ role: AppRole }>).map((r) => r.role);
     if (!roles.some((r) => ALLOWED_ROLES.includes(r))) {

@@ -23,6 +23,7 @@ import { type Department, type EmployeeRole, type HrEmployee } from "../mock-dat
 import { useEmployeeManagement } from "../use-employee-management";
 import { inviteEmployeeFn } from "../invite.functions";
 import { hrQueries } from "../queries";
+import { getErrorMessage } from "@/lib/errors";
 import { recordAudit } from "@/features/audit/audit-store";
 import { ROLE_OPTIONS } from "./employee-role-options";
 
@@ -101,9 +102,7 @@ export function EmployeeFormDialog({
         toast.success("Employee updated", { description: form.name });
         onOpenChange(false);
       } catch (err) {
-        toast.error("Couldn't update employee", {
-          description: err instanceof Error ? err.message : "Please try again.",
-        });
+        toast.error("Couldn't update employee", { description: getErrorMessage(err) });
       } finally {
         setSubmitting(false);
       }
@@ -133,9 +132,7 @@ export function EmployeeFormDialog({
       toast.success("Employee created", { description: form.name });
       onOpenChange(false);
     } catch (err) {
-      toast.error("Couldn't create employee", {
-        description: err instanceof Error ? err.message : "Please try again.",
-      });
+      toast.error("Couldn't create employee", { description: getErrorMessage(err) });
     } finally {
       setSubmitting(false);
     }

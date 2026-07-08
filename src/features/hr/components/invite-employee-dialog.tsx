@@ -22,6 +22,7 @@ import {
 import { type Department, type EmployeeRole } from "../mock-data";
 import { issueInvitation, EXPIRY_OPTIONS, useInvitationSettings } from "../invitations-store";
 import { hrQueries } from "../queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const ROLE_OPTIONS: { value: EmployeeRole; label: string }[] = [
   { value: "employee", label: "Employee" },
@@ -78,9 +79,7 @@ export function InviteEmployeeDialog({
         description: `${invitation.email} has ${expiryDays} days to accept.`,
       });
     } catch (err) {
-      toast.error("Couldn't send invitation", {
-        description: err instanceof Error ? err.message : "Please try again.",
-      });
+      toast.error("Couldn't send invitation", { description: getErrorMessage(err) });
     } finally {
       setSubmitting(false);
     }
