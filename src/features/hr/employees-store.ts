@@ -228,7 +228,11 @@ export interface CreateEmployeeInput {
   workMode?: HrEmployee["workMode"];
 }
 
-/** Create an employee record directly (distinct from the invitation flow). */
+/**
+ * @deprecated Local-only overlay create — no longer used by the UI. "New
+ * employee" now provisions a real Supabase row via `inviteEmployeeFn`. Retained
+ * only for the overlay unit tests; do not re-wire this into any component.
+ */
 export function createEmployee(input: CreateEmployeeInput): HrEmployee {
   const id = uid("emp_local");
   const name = input.name.trim();

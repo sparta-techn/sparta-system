@@ -20,8 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type Department, type EmployeeRole, type HrEmployee } from "../mock-data";
-import { createEmployee } from "../employees-store";
 import { useEmployeeManagement } from "../use-employee-management";
+import { inviteEmployeeFn } from "../invite.functions";
 import { hrQueries } from "../queries";
 import { recordAudit } from "@/features/audit/audit-store";
 import { ROLE_OPTIONS } from "./employee-role-options";
@@ -109,16 +109,36 @@ export function EmployeeFormDialog({
       }
       return;
     }
-    // Create stays local for now (a real hire goes through the invitation flow).
-    createEmployee(form);
-    recordAudit({
-      action: "employee_created",
-      target: form.name.trim(),
-      targetType: "employee",
-      newValue: `${form.department} · ${form.role}`,
-    });
-    toast.success("Employee created", { description: form.name });
-    onOpenChange(false);
+    // Real create: provision the auth user + profile + role + employees row on
+    // the server (also emails the setup link), then persist the remaining
+    // fields (job title / team / work mode) via the same path Edit uses.
+    setSubmitting(true);
+    try {
+      const result = await inviteEmployeeFn({
+        data: {
+          email: form.email,
+          role: form.role,
+          department: form.department,
+          fullName: form.name,
+          positionTitle: form.jobTitle || undefined,
+        },
+      });
+      await mgmt.edit({ id: result.employeeId, userId: result.userId, name: form.name }, form);
+      recordAudit({
+        action: "employee_created",
+        target: form.name.trim(),
+        targetType: "employee",
+        newValue: `${form.department} · ${form.role}`,
+      });
+      toast.success("Employee created", { description: form.name });
+      onOpenChange(false);
+    } catch (err) {
+      toast.error("Couldn't create employee", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (

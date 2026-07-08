@@ -44,12 +44,34 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Canonical UUID — the shape of a real Supabase employee id. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Management actions only ever touch real Supabase rows. A legacy
+ * localStorage-only record (id like `emp_local_…`, from before create was wired
+ * live) is rejected here with a clear message rather than letting the fake id
+ * reach Postgres as an `invalid input syntax for type uuid` error.
+ */
+function assertRealEmployee(employee: Pick<HrEmployee, "id" | "name">): void {
+  if (!UUID_RE.test(employee.id)) {
+    throw new Error(
+      `"${employee.name}" is a local-only record, not a real employee — it can't be ` +
+        `changed or removed on the server. Clear the local HR cache to remove it.`,
+    );
+  }
+}
+
 export function useEmployeeManagement() {
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: hrKeys.employees() });
 
   /** Full profile edit: name/email/title → profiles, dept/team/mode → employees. */
-  async function edit(employee: HrEmployee, input: EmployeeEditInput): Promise<void> {
+  async function edit(
+    employee: Pick<HrEmployee, "id" | "userId" | "name">,
+    input: EmployeeEditInput,
+  ): Promise<void> {
+    assertRealEmployee(employee);
     // profiles — name/email/job title (keyed by the auth/profile id).
     if (employee.userId) {
       await profileRepository.update(employee.userId, {
@@ -85,6 +107,7 @@ export function useEmployeeManagement() {
     action: Parameters<typeof recordEmployeeAudit>[1],
     detail?: string,
   ): Promise<void> {
+    assertRealEmployee(employee);
     await hrEmployeeRepository.setStatus(employee.id, status);
     recordEmployeeAudit(employee.id, action, detail);
     await invalidate();
@@ -100,6 +123,7 @@ export function useEmployeeManagement() {
 
   /** Soft delete — status 'offboarded' hides the row from the directory read. */
   async function softDelete(employee: HrEmployee): Promise<void> {
+    assertRealEmployee(employee);
     await hrEmployeeRepository.update(employee.id, {
       status: "offboarded",
       end_date: todayIso(),
@@ -109,6 +133,7 @@ export function useEmployeeManagement() {
   }
 
   async function restore(employee: HrEmployee): Promise<void> {
+    assertRealEmployee(employee);
     await hrEmployeeRepository.update(employee.id, { status: "active", end_date: null });
     recordEmployeeAudit(employee.id, "restored");
     await invalidate();
