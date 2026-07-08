@@ -52,6 +52,8 @@ export interface ProvisionInvitedEmployeeInput {
   positionTitle?: string;
   /** Authenticated inviter (from the JWT) — the audit actor. */
   invitedByUserId: string;
+  /** Absolute URL the invite email should send the invitee to. */
+  redirectTo?: string;
 }
 
 export interface ProvisionInvitedEmployeeResult {
@@ -157,6 +159,10 @@ export async function provisionInvitedEmployee(
   //    and Supabase emails the setup link.
   const invited = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
     data: { full_name: fullName, display_name: fullName, role: appRole },
+    // Land the invitee directly on the set-password page (which has no route
+    // guard), so the token is exchanged there instead of bouncing through the
+    // root/dashboard flow — where a missing session redirects them to sign-in.
+    ...(input.redirectTo ? { redirectTo: input.redirectTo } : {}),
   });
 
   let userId = invited.data.user?.id ?? null;

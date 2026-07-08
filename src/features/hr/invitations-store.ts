@@ -16,7 +16,7 @@
 import { useSyncExternalStore } from "react";
 
 import { recordAudit } from "@/features/audit/audit-store";
-import { inviteEmployeeFn } from "./invite.functions";
+import { acceptInvitationRedirectUrl, inviteEmployeeFn } from "./invite.functions";
 import {
   invitations as seedInvitations,
   type Department,
@@ -216,6 +216,7 @@ export async function issueInvitation(input: CreateInvitationInput): Promise<HrI
       department: input.department,
       fullName: input.name,
       positionTitle: input.positionTitle,
+      redirectTo: acceptInvitationRedirectUrl(),
     },
   });
 

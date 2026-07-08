@@ -36,6 +36,19 @@ export interface InviteEmployeeInput {
   department: Department;
   fullName?: string;
   positionTitle?: string;
+  /** Absolute URL GoTrue should send the invitee to (the set-password page). */
+  redirectTo?: string;
+}
+
+/**
+ * Where the invite email should land the invitee: the in-app set-password page.
+ * Must also be present in the Supabase project's Auth → Redirect URLs allowlist,
+ * otherwise GoTrue silently falls back to the Site URL.
+ */
+export function acceptInvitationRedirectUrl(): string | undefined {
+  return typeof window !== "undefined"
+    ? `${window.location.origin}/auth/accept-invitation`
+    : undefined;
 }
 
 export const inviteEmployeeFn = createServerFn({ method: "POST" })
@@ -54,12 +67,26 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
     if (!department) {
       throw new Error("A department is required.");
     }
+    // Only allow an absolute http(s) URL — this becomes a link in an email, so a
+    // malformed/other-scheme value must never flow through to GoTrue.
+    const redirectTo = data?.redirectTo?.trim() || undefined;
+    if (redirectTo) {
+      let ok = false;
+      try {
+        const u = new URL(redirectTo);
+        ok = u.protocol === "https:" || u.protocol === "http:";
+      } catch {
+        ok = false;
+      }
+      if (!ok) throw new Error("A valid redirect URL is required.");
+    }
     return {
       email,
       role: data.role,
       department: department as Department,
       fullName: data.fullName?.trim() || undefined,
       positionTitle: data.positionTitle?.trim() || undefined,
+      redirectTo,
     };
   })
   .handler(async ({ data, context }): Promise<ProvisionInvitedEmployeeResult> => {

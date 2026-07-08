@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { type Department, type EmployeeRole, type HrEmployee } from "../mock-data";
 import { useEmployeeManagement } from "../use-employee-management";
-import { inviteEmployeeFn } from "../invite.functions";
+import { acceptInvitationRedirectUrl, inviteEmployeeFn } from "../invite.functions";
 import { hrQueries } from "../queries";
 import { getErrorMessage } from "@/lib/errors";
 import { recordAudit } from "@/features/audit/audit-store";
@@ -120,6 +120,7 @@ export function EmployeeFormDialog({
           department: form.department,
           fullName: form.name,
           positionTitle: form.jobTitle || undefined,
+          redirectTo: acceptInvitationRedirectUrl(),
         },
       });
       await mgmt.edit({ id: result.employeeId, userId: result.userId, name: form.name }, form);
