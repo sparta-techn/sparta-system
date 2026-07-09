@@ -6,32 +6,73 @@ import { StatCard } from "@/components/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { useProjectsState } from "../store";
 import { ProjectHealthBadge, ProjectStatusBadge } from "./badges";
-import type { ProjectHealth } from "../types";
+import type { ProjectHealth, ProjectStatus } from "../types";
+
+// Human labels + display order for the live (non-archived) statuses. Ordering
+// puts in-flight work first so the health list surfaces active/planning ahead of
+// finished work.
+const STATUS_LABEL: Record<ProjectStatus, string> = {
+  planning: "planning",
+  active: "active",
+  on_hold: "on hold",
+  completed: "completed",
+  archived: "archived",
+  cancelled: "cancelled",
+};
+const STATUS_RANK: Record<ProjectStatus, number> = {
+  active: 0,
+  planning: 1,
+  on_hold: 2,
+  completed: 3,
+  cancelled: 4,
+  archived: 5,
+};
 
 export function ProjectsDashboard() {
   const projects = useProjectsState((s) => s.projects);
 
   const stats = useMemo(() => {
-    const active = projects.filter((p) => p.status === "active");
-    const atRisk = active.filter((p) => ["at_risk", "blocked", "delayed"].includes(p.health));
-    const totalOpen = active.reduce((acc, p) => acc + p.openTasks, 0);
-    const totalOverdue = active.reduce((acc, p) => acc + p.overdueTasks, 0);
-    const avgProgress = active.length
-      ? Math.round(active.reduce((acc, p) => acc + p.progress, 0) / active.length)
+    // Working set = every non-archived project. Scoping to status === "active"
+    // hid brand-new projects (they land in "planning") and made every count read
+    // 0 until someone flipped a project to active. We count the live set and
+    // surface the status split so the numbers reflect what actually exists.
+    const live = projects.filter((p) => p.status !== "archived");
+    const byStatus = live.reduce<Record<ProjectStatus, number>>(
+      (acc, p) => {
+        acc[p.status] = (acc[p.status] ?? 0) + 1;
+        return acc;
+      },
+      { planning: 0, active: 0, on_hold: 0, completed: 0, archived: 0, cancelled: 0 },
+    );
+    const atRisk = live.filter((p) => ["at_risk", "blocked", "delayed"].includes(p.health));
+    const totalOpen = live.reduce((acc, p) => acc + p.openTasks, 0);
+    const totalOverdue = live.reduce((acc, p) => acc + p.overdueTasks, 0);
+    const avgProgress = live.length
+      ? Math.round(live.reduce((acc, p) => acc + p.progress, 0) / live.length)
       : 0;
-    const healthBreakdown = active.reduce<Record<ProjectHealth, number>>(
+    const healthBreakdown = live.reduce<Record<ProjectHealth, number>>(
       (acc, p) => {
         acc[p.health] = (acc[p.health] ?? 0) + 1;
         return acc;
       },
       { healthy: 0, at_risk: 0, blocked: 0, delayed: 0, completed: 0 },
     );
-    return { active, atRisk, totalOpen, totalOverdue, avgProgress, healthBreakdown };
+    return { live, byStatus, atRisk, totalOpen, totalOverdue, avgProgress, healthBreakdown };
   }, [projects]);
 
+  // "3 active · 1 planning" — the honest breakdown behind the headline count.
+  const statusHint = useMemo(() => {
+    const parts = (["active", "planning", "on_hold", "completed"] as ProjectStatus[])
+      .filter((s) => stats.byStatus[s] > 0)
+      .map((s) => `${stats.byStatus[s]} ${STATUS_LABEL[s]}`);
+    return parts.length > 0 ? parts.join(" · ") : "No projects yet";
+  }, [stats.byStatus]);
+
   const favorites = projects.filter((p) => p.favorite).slice(0, 4);
-  const recentActive = stats.active.slice(0, 5);
-  const upcomingDeadlines = [...stats.active]
+  const recentLive = [...stats.live]
+    .sort((a, b) => STATUS_RANK[a.status] - STATUS_RANK[b.status])
+    .slice(0, 5);
+  const upcomingDeadlines = [...stats.live]
     .sort((a, b) => a.endDate.localeCompare(b.endDate))
     .slice(0, 5);
 
@@ -39,10 +80,10 @@ export function ProjectsDashboard() {
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Active projects"
-          value={stats.active.length}
+          label="Projects"
+          value={stats.live.length}
           icon={Briefcase}
-          hint="Across all teams"
+          hint={statusHint}
         />
         <StatCard label="Avg. progress" value={`${stats.avgProgress}%`} icon={TrendingUp} />
         <StatCard
@@ -74,11 +115,11 @@ export function ProjectsDashboard() {
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Active project health</CardTitle>
+            <CardTitle className="text-base">Project health</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="divide-y">
-              {recentActive.map((p) => (
+              {recentLive.map((p) => (
                 <li key={p.id} className="flex items-center gap-3 py-3">
                   <span
                     className="grid size-9 shrink-0 place-items-center rounded-lg text-lg"
@@ -98,12 +139,13 @@ export function ProjectsDashboard() {
                   <div className="hidden w-32 sm:block">
                     <Progress value={p.progress} className="h-1.5" />
                   </div>
+                  <ProjectStatusBadge status={p.status} />
                   <ProjectHealthBadge health={p.health} />
                 </li>
               ))}
-              {recentActive.length === 0 ? (
+              {recentLive.length === 0 ? (
                 <li className="py-6 text-center text-sm text-muted-foreground">
-                  No active projects yet.
+                  No projects yet.
                 </li>
               ) : null}
             </ul>
@@ -117,7 +159,7 @@ export function ProjectsDashboard() {
           <CardContent className="space-y-2">
             {(Object.keys(stats.healthBreakdown) as ProjectHealth[]).map((h) => {
               const count = stats.healthBreakdown[h];
-              const pct = stats.active.length ? (count / stats.active.length) * 100 : 0;
+              const pct = stats.live.length ? (count / stats.live.length) * 100 : 0;
               return (
                 <div key={h} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">

@@ -161,14 +161,24 @@ export function clearArchived(): void {
 
 // ── Reads ────────────────────────────────────────────────────────────────────
 
-function byState(s: State, target: AlertState): StoredAlert[] {
-  return Object.values(s.alerts).filter((a) => a.state === target);
-}
-
-export const selectActive = (s: State): StoredAlert[] => byState(s, "active");
-export const selectDismissed = (s: State): StoredAlert[] => byState(s, "dismissed");
-export const selectArchived = (s: State): StoredAlert[] => byState(s, "archived");
+/**
+ * Slice selectors return **referentially stable** values (the underlying store
+ * objects), never freshly-derived arrays. This is required by
+ * `useSyncExternalStore`: a selector that allocates a new array on every
+ * `getSnapshot` call makes React see the snapshot change on every check, which
+ * loops until "Maximum update depth exceeded". Callers derive/filter downstream
+ * (memoized) via `filterAlertsByState`.
+ */
+export const selectAlerts = (s: State): Record<string, StoredAlert> => s.alerts;
 export const selectHistory = (s: State): AlertEvent[] => s.history;
+
+/** Pure derivation — filter a stored-alert record by lifecycle state. */
+export function filterAlertsByState(
+  alerts: Record<string, StoredAlert>,
+  target: AlertState,
+): StoredAlert[] {
+  return Object.values(alerts).filter((a) => a.state === target);
+}
 
 export function useAlertsState<T>(selector: (s: State) => T): T {
   return useSyncExternalStore(

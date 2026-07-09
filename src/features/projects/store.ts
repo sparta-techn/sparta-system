@@ -14,6 +14,7 @@
  * counts read 0 until the tasks module is connected.
  */
 import { useSyncExternalStore } from "react";
+import { toast } from "sonner";
 import { employeeRepository } from "@/repositories";
 import { departmentRepository } from "@/repositories/hr";
 import { recordAudit } from "@/features/audit/audit-store";
@@ -314,15 +315,59 @@ function newProjectId(): string {
     : `proj-${Date.now().toString(36)}`;
 }
 
-export function createProject(input: CreateProjectInput): Project {
+/**
+ * Short, user-facing detail for a failed write. Services normalize failures to a
+ * `ServiceError` carrying the real Postgres/PostgREST message, so we surface that
+ * verbatim instead of swallowing it — this is what makes an RLS/permission
+ * rejection visible rather than a silently-vanishing row.
+ */
+function writeErrorDetail(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  return "Please try again.";
+}
+
+export async function createProject(input: CreateProjectInput): Promise<Project> {
   const departmentId = state.departments.find((d) => d.name === input.department)?.id ?? null;
-  // Client-generated UUID = the persisted id, so the optimistic row and the DB
-  // row share one stable id (the route the dialog navigates to stays valid).
+  // Client-generated UUID = the persisted id, so the DB row and the cache row
+  // share one stable id (the route the dialog navigates to stays valid).
   const id = newProjectId();
-  const optimistic: Project = {
+
+  // Persist FIRST and AWAIT — no optimistic "success". The row (and its member
+  // rows) must actually land in Supabase before we treat the create as done;
+  // any RLS / FK / validation failure propagates to the caller as a
+  // ServiceError instead of being swallowed and silently vanishing on the next
+  // hydrate. (B1-class fix: never show success for a write that did not happen.)
+  const row = await projectRepository.create({
+    id,
+    key: input.key,
+    name: input.name,
+    description: input.description || undefined,
+    manager_id: input.managerId,
+    department_id: departmentId,
+    priority: input.priority,
+    status: input.status as DbProjectStatus,
+    health: input.health,
+    start_date: input.startDate || undefined,
+    end_date: input.endDate || undefined,
+    color: input.color,
+    icon: input.icon,
+    repository_url: input.repositoryUrl,
+    figma_url: input.figmaUrl,
+    api_docs_url: input.apiDocsUrl,
+  });
+
+  // Assign members (manager + others). Awaited so a membership failure surfaces
+  // too — the Task dialog's project dropdown only lists projects where the user
+  // is a member/manager, so these rows must exist for the create to be usable.
+  await Promise.all(
+    input.members.map((m) => projectMemberRepository.assignByRole(id, m.employeeId, m.projectRole)),
+  );
+
+  // Only now — after the writes succeeded — reflect the project in the cache.
+  const created: Project = {
     ...input,
     id,
-    createdAt: new Date().toISOString(),
+    createdAt: row.created_at,
     favorite: false,
     progress: input.progress ?? 0,
     openTasks: 0,
@@ -331,54 +376,15 @@ export function createProject(input: CreateProjectInput): Project {
     totalTasks: 0,
     openDependencies: 0,
   };
-  state = { ...state, projects: [optimistic, ...state.projects] };
   setOverlay(id, {
     environments: input.environments,
     clientId: input.clientId,
     templateId: input.templateId,
   });
+  state = { ...state, projects: [created, ...state.projects] };
   emit();
 
-  void (async () => {
-    try {
-      const row = await projectRepository.create({
-        id,
-        key: input.key,
-        name: input.name,
-        description: input.description || undefined,
-        manager_id: input.managerId,
-        department_id: departmentId,
-        priority: input.priority,
-        status: input.status as DbProjectStatus,
-        health: input.health,
-        start_date: input.startDate || undefined,
-        end_date: input.endDate || undefined,
-        color: input.color,
-        icon: input.icon,
-        repository_url: input.repositoryUrl,
-        figma_url: input.figmaUrl,
-        api_docs_url: input.apiDocsUrl,
-      });
-      // Assign members (manager + others) against project_members.
-      await Promise.all(
-        input.members.map((m) =>
-          projectMemberRepository.assignByRole(id, m.employeeId, m.projectRole),
-        ),
-      );
-      // Sync server-authored fields; the id is unchanged.
-      state = {
-        ...state,
-        projects: state.projects.map((p) =>
-          p.id === id ? { ...p, createdAt: row.created_at } : p,
-        ),
-      };
-      emit();
-    } catch (err) {
-      console.error("[projects] createProject write-through failed", err);
-    }
-  })();
-
-  return optimistic;
+  return created;
 }
 
 const CORE_FIELDS: Array<keyof Project> = [
@@ -396,7 +402,7 @@ const CORE_FIELDS: Array<keyof Project> = [
   "apiDocsUrl",
 ];
 
-function persistProjectPatch(id: string, patch: Partial<Project>) {
+function persistProjectPatch(id: string, patch: Partial<Project>, restore?: () => void) {
   const corePatch: Record<string, unknown> = {};
   if (patch.managerId !== undefined) corePatch.manager_id = patch.managerId;
   if (patch.name !== undefined) corePatch.name = patch.name;
@@ -418,10 +424,17 @@ function persistProjectPatch(id: string, patch: Partial<Project>) {
   if (Object.keys(corePatch).length === 0) return;
   void projectRepository.update(id, corePatch).catch((err) => {
     console.error("[projects] updateProject write-through failed", err);
+    restore?.();
+    toast.error(`Couldn't save your changes. ${writeErrorDetail(err)}`);
   });
 }
 
-function reconcileMembers(projectId: string, prev: ProjectMember[], next: ProjectMember[]) {
+function reconcileMembers(
+  projectId: string,
+  prev: ProjectMember[],
+  next: ProjectMember[],
+  restore?: () => void,
+) {
   const prevById = new Map(prev.map((m) => [m.employeeId, m]));
   const nextById = new Map(next.map((m) => [m.employeeId, m]));
   void (async () => {
@@ -447,19 +460,29 @@ function reconcileMembers(projectId: string, prev: ProjectMember[], next: Projec
       }
     } catch (err) {
       console.error("[projects] member reconciliation failed", err);
+      restore?.();
+      toast.error(`Couldn't update project members. ${writeErrorDetail(err)}`);
     }
   })();
 }
 
 export function updateProject(id: string, patch: Partial<Project>) {
-  // Capture previous members BEFORE the optimistic overwrite so the write-through
-  // diff is computed against the real prior state, not the already-applied patch.
-  const prevMembers = patch.members !== undefined ? (getProject(id)?.members ?? []) : null;
+  // Capture the previous snapshot BEFORE the optimistic overwrite so a failed
+  // write-through can be rolled back (and so the member diff is computed against
+  // the real prior state, not the already-applied patch).
+  const prev = getProject(id);
+  const prevMembers = patch.members !== undefined ? (prev?.members ?? []) : null;
 
-  // Optimistic cache update (covers all fields incl. local-only).
+  // Optimistic cache update (covers all fields incl. local-only). Keep the exact
+  // object we applied so rollback only fires when no newer edit has landed since.
+  let applied: Project | null = null;
   state = {
     ...state,
-    projects: state.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    projects: state.projects.map((p) => {
+      if (p.id !== id) return p;
+      applied = { ...p, ...patch };
+      return applied;
+    }),
   };
 
   // Local-only overlay fields.
@@ -472,16 +495,25 @@ export function updateProject(id: string, patch: Partial<Project>) {
 
   emit();
 
+  // Revert the core (Supabase-backed) fields to the prior snapshot, but only if
+  // our optimistic object is still the live one — a newer edit must win.
+  const revert = () => {
+    if (!prev) return;
+    if (getProject(id) !== applied) return;
+    state = { ...state, projects: state.projects.map((p) => (p.id === id ? prev : p)) };
+    emit();
+  };
+
   // Write-through to Supabase (the id is the persisted UUID).
   if (
     CORE_FIELDS.some((k) => patch[k] !== undefined) ||
     patch.department !== undefined ||
     patch.managerId !== undefined
   ) {
-    persistProjectPatch(id, patch);
+    persistProjectPatch(id, patch, revert);
   }
   if (patch.members !== undefined && prevMembers !== null) {
-    reconcileMembers(id, prevMembers, patch.members);
+    reconcileMembers(id, prevMembers, patch.members, revert);
   }
 }
 
@@ -505,7 +537,7 @@ export function archiveProject(id: string) {
   }
 }
 
-export function duplicateProject(id: string) {
+export function duplicateProject(id: string): Promise<Project> | null {
   const src = getProject(id);
   if (!src) return null;
   return createProject({

@@ -30,6 +30,7 @@ import {
 import { PROJECT_COLORS, PROJECT_ICONS } from "../mock-data";
 import type { EnvironmentLink, ProjectMember, ProjectPriority, ProjectStatus } from "../types";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -66,6 +67,7 @@ export function CreateProjectDialog({ open, onOpenChange, templateId }: Props) {
   const [figmaUrl, setFigmaUrl] = useState("");
   const [apiDocsUrl, setApiDocsUrl] = useState("");
   const [envs, setEnvs] = useState<EnvironmentLink[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!keyTouched) setKey(generateProjectKey(name));
@@ -106,38 +108,49 @@ export function CreateProjectDialog({ open, onOpenChange, templateId }: Props) {
 
   const canSubmit = name.trim().length >= 2 && key.trim().length >= 1 && managerId.length > 0;
 
-  function submit() {
-    if (!canSubmit) return;
+  async function submit() {
+    if (!canSubmit || submitting) return;
     const members: ProjectMember[] = [
       { employeeId: managerId, projectRole: "lead" },
       ...memberIds
         .filter((id) => id !== managerId)
         .map((id) => ({ employeeId: id, projectRole: "contributor" as const })),
     ];
-    const project = createProject({
-      key: key.toUpperCase(),
-      name: name.trim(),
-      description: description.trim(),
-      clientId: clientId === "none" ? null : clientId,
-      managerId,
-      members,
-      department: department as never,
-      startDate,
-      endDate,
-      priority,
-      status,
-      health: "healthy",
-      color,
-      icon,
-      repositoryUrl: repositoryUrl || undefined,
-      figmaUrl: figmaUrl || undefined,
-      apiDocsUrl: apiDocsUrl || undefined,
-      environments: envs,
-      templateId: tpl === "none" ? undefined : tpl,
-    });
-    onOpenChange(false);
-    reset();
-    navigate({ to: "/app/projects/$id", params: { id: project.id } });
+    setSubmitting(true);
+    try {
+      // Await the real Supabase write — only close/navigate once the project (and
+      // its member rows) actually persist. A failed insert surfaces its real
+      // error below instead of a false success that vanishes on refresh.
+      const project = await createProject({
+        key: key.toUpperCase(),
+        name: name.trim(),
+        description: description.trim(),
+        clientId: clientId === "none" ? null : clientId,
+        managerId,
+        members,
+        department: department as never,
+        startDate,
+        endDate,
+        priority,
+        status,
+        health: "healthy",
+        color,
+        icon,
+        repositoryUrl: repositoryUrl || undefined,
+        figmaUrl: figmaUrl || undefined,
+        apiDocsUrl: apiDocsUrl || undefined,
+        environments: envs,
+        templateId: tpl === "none" ? undefined : tpl,
+      });
+      onOpenChange(false);
+      reset();
+      navigate({ to: "/app/projects/$id", params: { id: project.id } });
+    } catch (err) {
+      const detail = err instanceof Error && err.message ? err.message : "Please try again.";
+      toast.error(`Couldn't create the project. ${detail}`);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -443,11 +456,11 @@ export function CreateProjectDialog({ open, onOpenChange, templateId }: Props) {
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button disabled={!canSubmit} onClick={submit}>
-            Create project
+          <Button disabled={!canSubmit || submitting} onClick={submit}>
+            {submitting ? "Creating…" : "Create project"}
           </Button>
         </DialogFooter>
       </DialogContent>

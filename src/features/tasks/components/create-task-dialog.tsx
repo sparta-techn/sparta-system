@@ -132,9 +132,13 @@ export function CreateTaskDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Project">
-              <Select value={projectId} onValueChange={setProjectId} disabled={!!parentTaskId}>
+              <Select
+                value={projectId}
+                onValueChange={setProjectId}
+                disabled={!!parentTaskId || memberProjects.length === 0}
+              >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
                   {memberProjects.map((p) => (
@@ -144,6 +148,11 @@ export function CreateTaskDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {!parentTaskId && memberProjects.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  You're not a member of any project yet — create or join one to add tasks.
+                </p>
+              ) : null}
             </Field>
             <Field label="Assignee">
               <Select value={assigneeId} onValueChange={setAssigneeId}>
@@ -227,7 +236,7 @@ export function CreateTaskDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={!title.trim()}>
+          <Button onClick={submit} disabled={!title.trim() || !project}>
             {parentTaskId ? "Add subtask" : "Create task"}
           </Button>
         </DialogFooter>

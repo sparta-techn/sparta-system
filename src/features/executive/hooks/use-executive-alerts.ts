@@ -7,16 +7,15 @@
  * restore proxy the store mutations; active/dismissed/archived/history are live
  * store selections.
  */
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { executiveAlertEngine, type AlertEngineInput } from "@/services/alerts";
 import {
   archiveAlert,
   clearArchived,
   dismissAlert,
+  filterAlertsByState,
   restoreAlert,
-  selectActive,
-  selectArchived,
-  selectDismissed,
+  selectAlerts,
   selectHistory,
   sync,
   useAlertsState,
@@ -38,10 +37,15 @@ export interface UseExecutiveAlerts {
 }
 
 export function useExecutiveAlerts(input: AlertEngineInput): UseExecutiveAlerts {
-  const active = useAlertsState(selectActive);
-  const dismissed = useAlertsState(selectDismissed);
-  const archived = useAlertsState(selectArchived);
+  // Subscribe to the stable `alerts` record; derive the per-state lists in a
+  // memo so `getSnapshot` never returns a freshly-allocated array (which would
+  // trip useSyncExternalStore's infinite-loop guard).
+  const alerts = useAlertsState(selectAlerts);
   const history = useAlertsState(selectHistory);
+
+  const active = useMemo(() => filterAlertsByState(alerts, "active"), [alerts]);
+  const dismissed = useMemo(() => filterAlertsByState(alerts, "dismissed"), [alerts]);
+  const archived = useMemo(() => filterAlertsByState(alerts, "archived"), [alerts]);
 
   const refresh = useCallback(() => {
     sync(executiveAlertEngine.evaluate(input));

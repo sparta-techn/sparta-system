@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Archive, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,9 +38,14 @@ export function ProjectSettingsTab({ project }: { project: Project }) {
     });
   }
 
-  function onDuplicate() {
-    const copy = duplicateProject(project.id);
-    if (copy) navigate({ to: "/app/projects/$id", params: { id: copy.id } });
+  async function onDuplicate() {
+    try {
+      const copy = await duplicateProject(project.id);
+      if (copy) navigate({ to: "/app/projects/$id", params: { id: copy.id } });
+    } catch (err) {
+      const detail = err instanceof Error && err.message ? err.message : "Please try again.";
+      toast.error(`Couldn't duplicate the project. ${detail}`);
+    }
   }
 
   function onArchive() {
