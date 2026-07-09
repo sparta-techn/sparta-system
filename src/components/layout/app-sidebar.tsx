@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   Bell,
@@ -13,6 +13,7 @@ import {
   Home,
   LayoutDashboard,
   LifeBuoy,
+  LogOut,
   Megaphone,
   Settings,
   ShieldCheck,
@@ -37,6 +38,7 @@ import {
 } from "@/components/ui/sidebar";
 import { FuturePlanBadge } from "@/components/future-plan";
 import { isFeatureInMvp } from "@/config/mvp-scope";
+import { useAuth } from "@/features/auth/auth-context";
 
 type NavItem = {
   /** Matches an id in `src/config/mvp-scope.ts` to resolve MVP scope. */
@@ -169,6 +171,16 @@ export function AppSidebar() {
   const currentPath = useRouterState({
     select: (s) => s.location.pathname,
   });
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Reuse the shared auth-context sign-out (records the audit event, calls
+  // supabase.auth.signOut(), and clears local state), then leave the protected
+  // area so the session is actually terminated — not just hidden.
+  const handleLogout = async () => {
+    await signOut();
+    await navigate({ to: "/auth" });
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -192,6 +204,14 @@ export function AppSidebar() {
         <SectionMenu label="System" items={SYSTEM} currentPath={currentPath} />
       </SidebarContent>
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} tooltip="Log out">
+              <LogOut className="size-4" aria-hidden />
+              <span>Log out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <p className="px-3 py-2 text-[11px] text-muted-foreground">v0.1 · Design preview</p>
       </SidebarFooter>
     </Sidebar>
