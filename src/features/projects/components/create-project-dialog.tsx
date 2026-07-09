@@ -148,7 +148,7 @@ export function CreateProjectDialog({ open, onOpenChange, templateId }: Props) {
         if (!v) reset();
       }}
     >
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col">
         <DialogHeader>
           <DialogTitle>Create a project</DialogTitle>
           <DialogDescription>
@@ -157,7 +157,7 @@ export function CreateProjectDialog({ open, onOpenChange, templateId }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 overflow-y-auto px-1 -mx-1">
           {/* Identity row */}
           <div className="grid gap-3 sm:grid-cols-[80px_1fr_140px]">
             <div className="space-y-1">
