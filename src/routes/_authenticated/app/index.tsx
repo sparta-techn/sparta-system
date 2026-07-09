@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-context";
 import { PersonalDashboard } from "@/features/dashboard/components/personal-dashboard";
+import { selectDashboardVariant } from "@/features/dashboard/select-dashboard-variant";
 import { ExecutiveDashboard } from "@/features/executive/executive-dashboard";
 import { ManagerDashboard } from "@/features/manager/manager-dashboard";
 
@@ -17,15 +18,18 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 /**
  * Root dashboard — renders the variant that matches the signed-in user's role
- * (B5 dashboard wiring). Owner/Admin get the company-wide cockpit; team leaders
- * get the operational manager view; everyone else gets the personal, check-in
- * focused dashboard. Route-level RBAC still guards the deeper /app/executive and
- * /app/manager pages; this only picks the sensible landing view.
+ * (B5 dashboard wiring). Owner/Admin get the company-wide cockpit; HR / Project
+ * Managers get the operational manager view; everyone else (team leads,
+ * employees, interns) gets the personal, check-in focused dashboard. Selection
+ * is delegated to `selectDashboardVariant` so the rule is unit-tested. Route
+ * guards still protect the deeper /app/executive and /app/manager pages; this
+ * only picks the sensible landing view.
  */
 function DashboardPage() {
-  const { hasAnyRole } = useAuth();
+  const { roles } = useAuth();
+  const variant = selectDashboardVariant(roles);
 
-  if (hasAnyRole(["owner", "admin"])) {
+  if (variant === "executive") {
     return (
       <AppShell>
         <PageHeader
@@ -39,7 +43,7 @@ function DashboardPage() {
     );
   }
 
-  if (hasAnyRole(["hr", "project_manager", "team_lead"])) {
+  if (variant === "manager") {
     return (
       <AppShell>
         <ManagerDashboard />

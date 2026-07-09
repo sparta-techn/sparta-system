@@ -1,28 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  BarChart3,
-  Bell,
-  Briefcase,
-  Calendar,
-  CheckSquare,
-  ClipboardCheck,
-  ClipboardList,
-  Gauge,
-  GaugeCircle,
-  HeartHandshake,
-  Home,
-  LayoutDashboard,
-  LifeBuoy,
-  LogOut,
-  Megaphone,
-  Settings,
-  ShieldCheck,
-  ShieldHalf,
-  Sparkles,
-  Target,
-  Users,
-  Workflow,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import {
   Sidebar,
@@ -37,82 +14,15 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { FuturePlanBadge } from "@/components/future-plan";
-import { isFeatureInMvp } from "@/config/mvp-scope";
 import { useAuth } from "@/features/auth/auth-context";
-
-type NavItem = {
-  /** Matches an id in `src/config/mvp-scope.ts` to resolve MVP scope. */
-  id: string;
-  title: string;
-  url: string;
-  icon: typeof Home;
-  /**
-   * How to surface this item when its feature is out of MVP scope.
-   * "hide" (default) drops it; "future" renders it disabled with a badge.
-   */
-  whenOutOfMvp?: "hide" | "future";
-};
-
-const PRIMARY: NavItem[] = [
-  { id: "dashboard", title: "Dashboard", url: "/app", icon: Home },
-  { id: "check-in", title: "Check-in", url: "/app/check-in", icon: Sparkles },
-  { id: "midday", title: "Midday", url: "/app/midday", icon: GaugeCircle },
-  { id: "eod", title: "End-of-day", url: "/app/eod", icon: ClipboardCheck },
-  { id: "attendance", title: "Attendance", url: "/app/attendance", icon: Calendar },
-  {
-    id: "workflow",
-    title: "Workflow",
-    url: "/app/workflow",
-    icon: ClipboardList,
-    whenOutOfMvp: "hide",
-  },
-  {
-    id: "dependencies",
-    title: "Dependencies",
-    url: "/app/dependencies",
-    icon: Workflow,
-    whenOutOfMvp: "future",
-  },
-  { id: "projects", title: "Projects", url: "/app/projects", icon: Briefcase },
-  { id: "tasks", title: "Tasks", url: "/app/tasks", icon: CheckSquare },
-  { id: "sprints", title: "Sprints", url: "/app/sprints", icon: Target, whenOutOfMvp: "future" },
-  {
-    id: "announcements",
-    title: "Announcements",
-    url: "/app/announcements",
-    icon: Megaphone,
-    whenOutOfMvp: "hide",
-  },
-  { id: "notifications", title: "Notifications", url: "/app/notifications", icon: Bell },
-];
-
-const TEAM: NavItem[] = [
-  {
-    id: "executive",
-    title: "Executive",
-    url: "/app/executive",
-    icon: Gauge,
-    whenOutOfMvp: "future",
-  },
-  { id: "manager", title: "Manager", url: "/app/manager", icon: LayoutDashboard },
-  { id: "report-review", title: "Report reviews", url: "/app/report-review", icon: ClipboardList },
-  { id: "hr", title: "HR workspace", url: "/app/hr", icon: HeartHandshake },
-  { id: "directory", title: "Directory", url: "/app/hr/employees", icon: Users },
-  {
-    id: "analytics",
-    title: "Analytics",
-    url: "/app/analytics",
-    icon: BarChart3,
-    whenOutOfMvp: "future",
-  },
-  { id: "audit", title: "Audit log", url: "/app/audit", icon: ShieldCheck, whenOutOfMvp: "future" },
-  { id: "admin", title: "Admin Console", url: "/app/admin", icon: ShieldHalf },
-];
-
-const SYSTEM: NavItem[] = [
-  { id: "settings", title: "Settings", url: "/settings", icon: Settings },
-  { id: "help", title: "Help", url: "/help", icon: LifeBuoy },
-];
+import {
+  isNavItemDeferred,
+  isNavItemVisible,
+  PRIMARY_NAV,
+  SYSTEM_NAV,
+  TEAM_NAV,
+  type NavItem,
+} from "./nav-config";
 
 function SectionMenu({
   label,
@@ -123,8 +33,9 @@ function SectionMenu({
   items: NavItem[];
   currentPath: string;
 }) {
-  // Out-of-MVP items are hidden unless they opt into the "future" display.
-  const visible = items.filter((item) => isFeatureInMvp(item.id) || item.whenOutOfMvp === "future");
+  const { roles } = useAuth();
+  // Filter by MVP scope *and* the current user's roles (see nav-config).
+  const visible = items.filter((item) => isNavItemVisible(item, roles));
   if (visible.length === 0) return null;
 
   return (
@@ -134,7 +45,7 @@ function SectionMenu({
         <SidebarMenu>
           {visible.map((item) => {
             // Deferred feature: visibly disabled with a "Future Plan" badge.
-            if (!isFeatureInMvp(item.id)) {
+            if (isNavItemDeferred(item)) {
               return (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton disabled tooltip="Planned for a future release">
@@ -199,9 +110,9 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SectionMenu label="Workspace" items={PRIMARY} currentPath={currentPath} />
-        <SectionMenu label="Team" items={TEAM} currentPath={currentPath} />
-        <SectionMenu label="System" items={SYSTEM} currentPath={currentPath} />
+        <SectionMenu label="Workspace" items={PRIMARY_NAV} currentPath={currentPath} />
+        <SectionMenu label="Team" items={TEAM_NAV} currentPath={currentPath} />
+        <SectionMenu label="System" items={SYSTEM_NAV} currentPath={currentPath} />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

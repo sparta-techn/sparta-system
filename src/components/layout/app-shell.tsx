@@ -5,6 +5,7 @@ import { Topbar } from "./topbar";
 import { FloatingActiveTimer } from "@/features/time-tracking/components/floating-active-timer";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { MaintenanceBanner } from "@/features/admin/components/maintenance-banner";
+import { useAuth } from "@/features/auth/auth-context";
 
 interface AppShellProps {
   children: ReactNode;
@@ -16,6 +17,12 @@ interface AppShellProps {
  * Use this in any authenticated layout route.
  */
 export function AppShell({ children }: AppShellProps) {
+  const { hasAnyRole } = useAuth();
+  // The floating timer is a personal time-tracker for people who do the daily
+  // work; company leadership (owner/admin) don't clock their own time, so it's
+  // hidden for them — consistent with hiding check-in/midday/eod in the nav.
+  const isLeadership = hasAnyRole(["owner", "admin"]);
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -30,7 +37,7 @@ export function AppShell({ children }: AppShellProps) {
           </ErrorBoundary>
         </main>
       </SidebarInset>
-      <FloatingActiveTimer />
+      {!isLeadership ? <FloatingActiveTimer /> : null}
     </SidebarProvider>
   );
 }
