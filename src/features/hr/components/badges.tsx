@@ -26,7 +26,7 @@ export function EmploymentStatusBadge({ status }: { status: EmploymentStatus }) 
 
 const roleLabels: Record<EmployeeRole, string> = {
   owner: "Owner",
-  super_admin: "Super Admin",
+  admin: "Admin",
   hr: "HR",
   manager: "Manager",
   team_lead: "Team Lead",

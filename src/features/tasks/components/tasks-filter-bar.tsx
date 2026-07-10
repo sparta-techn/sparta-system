@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { seedProjects } from "@/features/projects/mock-data";
+import { useProjectsState } from "@/features/projects/store";
 import {
   PRIORITY_LABEL,
   STATUS_LABEL,
@@ -41,6 +41,7 @@ export function TasksFilterBar({
   className?: string;
 }) {
   const savedFilters = useTasksState((s) => s.savedFilters);
+  const projects = useProjectsState((s) => s.projects);
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState("");
 
@@ -154,7 +155,7 @@ export function TasksFilterBar({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All projects</SelectItem>
-                  {seedProjects.map((p) => (
+                  {projects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.icon} {p.name}
                     </SelectItem>

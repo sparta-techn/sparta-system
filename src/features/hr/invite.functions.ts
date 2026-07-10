@@ -23,7 +23,7 @@ const ALLOWED_ROLES: readonly AppRole[] = ["owner", "admin", "hr"];
 
 const VALID_UI_ROLES: readonly EmployeeRole[] = [
   "owner",
-  "super_admin",
+  "admin",
   "hr",
   "manager",
   "team_lead",

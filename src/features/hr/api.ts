@@ -26,7 +26,7 @@ import type { Department, EmployeeRole, EmploymentStatus, HrEmployee, HrTeam } f
 
 const ROLE_TO_MOCK: Record<AppRole, EmployeeRole> = {
   owner: "owner",
-  admin: "super_admin",
+  admin: "admin",
   hr: "hr",
   project_manager: "manager",
   team_lead: "team_lead",

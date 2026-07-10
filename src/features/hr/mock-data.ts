@@ -23,7 +23,7 @@ export type EmploymentStatus =
   | "deactivated"
   | "offboarding";
 
-export type EmployeeRole = "owner" | "super_admin" | "hr" | "manager" | "team_lead" | "employee";
+export type EmployeeRole = "owner" | "admin" | "hr" | "manager" | "team_lead" | "employee";
 
 export interface HrEmployee {
   id: string;
@@ -288,7 +288,7 @@ export const employees: HrEmployee[] = NAMES.map((name, i) => {
     i === 0
       ? "owner"
       : i === 1
-        ? "super_admin"
+        ? "admin"
         : dept === "People Ops"
           ? "hr"
           : i % 7 === 0

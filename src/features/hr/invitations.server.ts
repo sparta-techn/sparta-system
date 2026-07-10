@@ -36,7 +36,7 @@ function admin(): SupabaseClient {
 /** UI role enum (mock-data) → canonical DB `app_role`. */
 const ROLE_TO_APP_ROLE: Record<EmployeeRole, AppRole> = {
   owner: "owner",
-  super_admin: "admin",
+  admin: "admin",
   hr: "hr",
   manager: "project_manager",
   team_lead: "team_lead",

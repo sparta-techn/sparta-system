@@ -9,8 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { seedProjects } from "@/features/projects/mock-data";
-import { employees } from "@/features/hr/mock-data";
+import { useProjectsState } from "@/features/projects/store";
 import { PRIORITY_LABEL, TASK_PRIORITIES, type TaskPriority } from "@/features/tasks/types";
 import { useTasksState } from "@/features/tasks/store";
 import type { KanbanFilters } from "../types";
@@ -25,6 +24,8 @@ export function KanbanFiltersBar({
   onOpenSettings: () => void;
 }) {
   const epics = useTasksState((s) => s.epics);
+  const projects = useProjectsState((s) => s.projects);
+  const people = useProjectsState((s) => s.people);
   const hasFilters =
     !!filters.search ||
     !!filters.projectIds?.length ||
@@ -53,14 +54,14 @@ export function KanbanFiltersBar({
       <FilterMenu
         label="Project"
         count={filters.projectIds?.length}
-        items={seedProjects.map((p) => ({ id: p.id, label: `${p.icon} ${p.name}` }))}
+        items={projects.map((p) => ({ id: p.id, label: `${p.icon} ${p.name}` }))}
         selected={filters.projectIds ?? []}
         onToggle={(id) => toggle("projectIds", id)}
       />
       <FilterMenu
         label="Assignee"
         count={filters.assigneeIds?.length}
-        items={employees.map((e) => ({ id: e.id, label: e.name }))}
+        items={people.map((e) => ({ id: e.id, label: e.name }))}
         selected={filters.assigneeIds ?? []}
         onToggle={(id) => toggle("assigneeIds", id)}
       />

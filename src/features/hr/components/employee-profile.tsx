@@ -393,12 +393,12 @@ export function EmployeeProfile({ employee }: { employee: HrEmployee }) {
               </Row>
               <Row label="Workspace access">Full</Row>
               <Row label="Can manage team">
-                {["owner", "super_admin", "hr", "manager", "team_lead"].includes(employee.role)
+                {["owner", "admin", "hr", "manager", "team_lead"].includes(employee.role)
                   ? "Yes"
                   : "No"}
               </Row>
               <Row label="Can manage billing">
-                {["owner", "super_admin"].includes(employee.role) ? "Yes" : "No"}
+                {["owner", "admin"].includes(employee.role) ? "Yes" : "No"}
               </Row>
               <p className="pt-2 text-xs text-muted-foreground">
                 Use <span className="font-medium">Manage → Assign role</span> to change this

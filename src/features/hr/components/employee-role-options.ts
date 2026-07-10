@@ -9,5 +9,5 @@ export const ROLE_OPTIONS: { value: EmployeeRole; label: string }[] = [
   { value: "team_lead", label: "Team Lead" },
   { value: "manager", label: "Manager" },
   { value: "hr", label: "HR" },
-  { value: "super_admin", label: "Super Admin" },
+  { value: "admin", label: "Admin" },
 ];
