@@ -116,6 +116,27 @@ async function resolveActorName(userId: string): Promise<string> {
 }
 
 /**
+ * True when `inviteUserByEmail` failed *specifically* because the email is already
+ * registered. That is the ONLY failure we recover from by reusing the existing
+ * auth user (a genuine idempotent re-invite). Every other error must fail visibly
+ * — most importantly a mailer/SMTP send failure, which GoTrue returns as a 500
+ * *after* it has already created the `auth.users` row. If we treated that as
+ * reuse, we'd find the just-created stub user, proceed, and report success for an
+ * invite whose email was never delivered (the "success but no email" bug).
+ */
+function isAlreadyRegisteredError(cause: unknown): boolean {
+  const err = cause as { code?: string; status?: number; message?: string } | null;
+  if (err?.code === "email_exists" || err?.code === "user_already_exists") return true;
+  const message = err?.message?.toLowerCase() ?? "";
+  return (
+    err?.status === 422 &&
+    (message.includes("already been registered") ||
+      message.includes("already registered") ||
+      message.includes("already exists"))
+  );
+}
+
+/**
  * Turn a failed `inviteUserByEmail` into an actionable error. The dominant cause
  * is the project's email/SMTP not being configured (or rate-limited): GoTrue
  * returns a 500 with an empty body, which supabase-js surfaces as an
@@ -167,9 +188,15 @@ export async function provisionInvitedEmployee(
 
   let userId = invited.data.user?.id ?? null;
   if (invited.error) {
-    // Already registered (re-invite) — reuse the existing auth user. If there's
-    // no such user, the invite genuinely failed (almost always the email/SMTP
-    // send) — surface an actionable message instead of the opaque provider error.
+    // Recover ONLY from "already registered" (a real idempotent re-invite): reuse
+    // the existing auth user. Any other error — above all a mailer/SMTP send
+    // failure, which GoTrue returns *after* creating the user row — must fail
+    // visibly. Reusing the stub user there would report success for an invite
+    // whose email never sent. Note that even on this reuse path GoTrue does not
+    // re-send the invite email; recovering the account is the caller's intent.
+    if (!isAlreadyRegisteredError(invited.error)) {
+      throw emailInviteError(invited.error);
+    }
     const existing = await findAuthUserByEmail(email);
     if (!existing) throw emailInviteError(invited.error);
     userId = existing.id;
