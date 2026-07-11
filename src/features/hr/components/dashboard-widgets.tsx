@@ -1,28 +1,26 @@
-import {
-  Cake,
-  CalendarHeart,
-  Mail,
-  AlertTriangle,
-  MoonStar,
-  PartyPopper,
-  ShieldCheck,
-} from "lucide-react";
+import { Cake, CalendarHeart, Mail, PartyPopper, ShieldCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import {
-  attendanceIssues,
-  employeeById,
-  invitations,
-  leaveRequests,
-  newHires,
+  announcements,
   upcomingAnniversaries,
   upcomingBirthdays,
-  announcements,
+  type HrEmployee,
 } from "../mock-data";
+import { hrQueries } from "../queries";
+import { useInvitations } from "../invitations-store";
 import { EmployeeAvatar } from "./employee-avatar";
 import { EmptyState } from "./empty-state";
+
+/** Employees who joined within the last `days` days, most recent first. */
+function recentJoiners(employees: HrEmployee[], days = 60): HrEmployee[] {
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  return employees
+    .filter((e) => new Date(e.joinedAt).getTime() >= cutoff)
+    .sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime());
+}
 
 function SectionCard({
   title,
@@ -49,7 +47,8 @@ function SectionCard({
 }
 
 export function NewEmployeesWidget() {
-  const list = newHires(60).slice(0, 5);
+  const { data: employees = [] } = useQuery(hrQueries.employees());
+  const list = recentJoiners(employees, 60).slice(0, 5);
   return (
     <SectionCard
       title="New employees"
@@ -92,101 +91,6 @@ export function NewEmployeesWidget() {
               </span>
             </li>
           ))}
-        </ul>
-      )}
-    </SectionCard>
-  );
-}
-
-export function AttendanceAlertsWidget() {
-  return (
-    <SectionCard
-      title="Attendance alerts"
-      icon={AlertTriangle}
-      action={
-        <Link to="/app/hr" className="text-xs text-primary hover:underline">
-          Open compliance
-        </Link>
-      }
-    >
-      {attendanceIssues.length === 0 ? (
-        <EmptyState title="All clear" description="No attendance issues today." />
-      ) : (
-        <ul className="space-y-2">
-          {attendanceIssues.slice(0, 6).map((i) => {
-            const e = employeeById(i.employeeId);
-            const labels: Record<typeof i.type, string> = {
-              late: `Late ${i.minutesLate}m`,
-              missing_checkin: "Missed check-in",
-              missing_midday: "Missed midday",
-              missing_eod: "Missed EOD",
-              no_show: "No-show",
-            };
-            return (
-              <li
-                key={i.id}
-                className="flex items-center justify-between gap-3 rounded-md p-2 hover:bg-muted/40"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  {e ? <EmployeeAvatar employee={e} size={32} /> : null}
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{e?.name ?? "Unknown"}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {new Date(i.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant={i.type === "no_show" ? "destructive" : "secondary"}>
-                  {labels[i.type]}
-                </Badge>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </SectionCard>
-  );
-}
-
-export function UpcomingLeaveWidget() {
-  const list = leaveRequests
-    .filter((r) => r.status === "approved" || r.status === "pending")
-    .slice(0, 5);
-  return (
-    <SectionCard
-      title="Upcoming leave"
-      icon={MoonStar}
-      action={
-        <Link to="/app/hr/leave" className="text-xs text-primary hover:underline">
-          Manage
-        </Link>
-      }
-    >
-      {list.length === 0 ? (
-        <EmptyState title="No upcoming leave" />
-      ) : (
-        <ul className="space-y-2">
-          {list.map((r) => {
-            const e = employeeById(r.employeeId);
-            return (
-              <li
-                key={r.id}
-                className="flex items-center justify-between gap-3 rounded-md p-2 hover:bg-muted/40"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  {e ? <EmployeeAvatar employee={e} size={32} /> : null}
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{e?.name ?? "Unknown"}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {new Date(r.from).toLocaleDateString()} →{" "}
-                      {new Date(r.to).toLocaleDateString()} · {r.days}d
-                    </p>
-                  </div>
-                </div>
-                <Badge variant={r.status === "approved" ? "default" : "secondary"}>{r.type}</Badge>
-              </li>
-            );
-          })}
         </ul>
       )}
     </SectionCard>
@@ -249,6 +153,9 @@ export function AnniversariesWidget() {
 }
 
 export function PendingInvitationsWidget() {
+  // Real pending invites from the live invitations flow (same store the
+  // Invitations tab reads/writes), not mock seed emails.
+  const invitations = useInvitations();
   const list = invitations.filter((i) => i.status === "pending").slice(0, 5);
   return (
     <SectionCard
@@ -275,9 +182,7 @@ export function PendingInvitationsWidget() {
                   {i.department} · invited {new Date(i.invitedAt).toLocaleDateString()}
                 </p>
               </div>
-              <Button size="sm" variant="outline">
-                Resend
-              </Button>
+              <Badge variant="secondary">{i.role}</Badge>
             </li>
           ))}
         </ul>

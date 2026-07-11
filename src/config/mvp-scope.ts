@@ -171,6 +171,41 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     path: "/app/tasks/time",
     note: "Time tracking — out of MVP. More specific than /app/tasks so it overrides it.",
   },
+  // HR workspace tabs deferred past the MVP. More specific than /app/hr (in MVP),
+  // so each overrides it — the route gate renders the Future Plan placeholder and
+  // the HR subnav shows the badge. Underlying feature code is retained.
+  {
+    id: "hr-leave",
+    label: "Leave",
+    inMvp: false,
+    kind: "route",
+    path: "/app/hr/leave",
+    note: "Leave management — out of MVP.",
+  },
+  {
+    id: "hr-onboarding",
+    label: "Onboarding",
+    inMvp: false,
+    kind: "route",
+    path: "/app/hr/onboarding",
+    note: "Employee onboarding — out of MVP.",
+  },
+  {
+    id: "hr-documents",
+    label: "Documents",
+    inMvp: false,
+    kind: "route",
+    path: "/app/hr/documents",
+    note: "HR documents — out of MVP.",
+  },
+  {
+    id: "hr-announcements",
+    label: "Announcements",
+    inMvp: false,
+    kind: "route",
+    path: "/app/hr/announcements",
+    note: "HR announcements — out of MVP.",
+  },
 
   // ---------- Component-level features (no route of their own) ----------
   {
