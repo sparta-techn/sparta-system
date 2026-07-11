@@ -152,7 +152,6 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
 
   // ---------- System (primary nav) ----------
   { id: "settings", label: "Settings", inMvp: true, kind: "nav", path: "/settings" },
-  { id: "help", label: "Help", inMvp: true, kind: "nav", path: "/help" },
 
   // ---------- Routes reachable but not in the sidebar ----------
   {

@@ -11,7 +11,6 @@ import {
   HeartHandshake,
   Home,
   LayoutDashboard,
-  LifeBuoy,
   Megaphone,
   Settings,
   ShieldCheck,
@@ -133,8 +132,9 @@ export const TEAM_NAV: NavItem[] = [
 ];
 
 export const SYSTEM_NAV: NavItem[] = [
-  { id: "settings", title: "Settings", url: "/settings", icon: Settings },
-  { id: "help", title: "Help", url: "/help", icon: LifeBuoy },
+  // Company-wide settings (organization profile / working hours) are leadership-only,
+  // matching the /settings route guard.
+  { id: "settings", title: "Settings", url: "/settings", icon: Settings, roles: LEADERSHIP },
 ];
 
 /** Whether a nav item's feature is deferred (out of MVP but shown disabled). */

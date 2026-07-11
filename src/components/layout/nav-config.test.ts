@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AppRole } from "@/features/auth/types";
-import {
-  isNavItemVisible,
-  PRIMARY_NAV,
-  SYSTEM_NAV,
-  TEAM_NAV,
-  type NavItem,
-} from "./nav-config";
+import { isNavItemVisible, PRIMARY_NAV, SYSTEM_NAV, TEAM_NAV, type NavItem } from "./nav-config";
 
 const ALL_ITEMS: NavItem[] = [...PRIMARY_NAV, ...TEAM_NAV, ...SYSTEM_NAV];
 
@@ -121,13 +115,20 @@ describe("nav visibility — items open to everyone", () => {
     "viewer",
   ];
 
-  it("shows Dashboard, Settings and Help to every role", () => {
+  it("shows Dashboard to every role", () => {
     for (const role of roles) {
       const v = visibleIds([role]);
       expect(v.has("dashboard")).toBe(true);
-      expect(v.has("settings")).toBe(true);
-      expect(v.has("help")).toBe(true);
     }
+  });
+
+  it("restricts Settings to leadership (owner/admin) and drops the removed Help item", () => {
+    for (const role of roles) {
+      const isLeadership = role === "owner" || role === "admin";
+      expect(visibleIds([role]).has("settings")).toBe(isLeadership);
+    }
+    // Help was removed entirely — no such nav item exists anymore.
+    expect(ALL_ITEMS.some((i) => i.id === "help")).toBe(false);
   });
 });
 

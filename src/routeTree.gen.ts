@@ -18,6 +18,7 @@ import { Route as AuthSessionExpiredRouteImport } from './routes/auth/session-ex
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as AuthAcceptInvitationRouteImport } from './routes/auth/accept-invitation'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app/tasks'
 import { Route as AuthenticatedAppSprintsRouteImport } from './routes/_authenticated/app/sprints'
@@ -116,6 +117,11 @@ const AuthAcceptInvitationRoute = AuthAcceptInvitationRouteImport.update({
   id: '/auth/accept-invitation',
   path: '/auth/accept-invitation',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/app/',
@@ -432,6 +438,7 @@ const AuthenticatedAppHrEmployeesIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -496,6 +503,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -556,6 +564,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/unauthorized': typeof UnauthorizedRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -622,6 +631,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/unauthorized'
+    | '/settings'
     | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -686,6 +696,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/unauthorized'
+    | '/settings'
     | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -745,6 +756,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/unauthorized'
+    | '/_authenticated/settings'
     | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -883,6 +895,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/accept-invitation'
       preLoaderRoute: typeof AuthAcceptInvitationRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
@@ -1419,6 +1438,7 @@ const AuthenticatedAppTasksRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRouteWithChildren
   AuthenticatedAppAuditRoute: typeof AuthenticatedAppAuditRoute
@@ -1443,6 +1463,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRouteWithChildren,
   AuthenticatedAppAuditRoute: AuthenticatedAppAuditRoute,
