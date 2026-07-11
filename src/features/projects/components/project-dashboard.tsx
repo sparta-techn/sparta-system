@@ -27,6 +27,7 @@ import {
   unifiedActivity,
 } from "@/features/project-analytics/utils";
 import { calcProjectHealth, type HealthLevel } from "@/features/project-analytics/insights";
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { highestOpenRiskSeverity } from "@/services/projects/rules";
 import type { PriorityLevel } from "@/services/projects";
 import { useTasksState } from "@/features/tasks/store";
@@ -50,6 +51,11 @@ const RISK_TONE: Record<PriorityLevel, string> = {
 };
 
 const DAY = 24 * 60 * 60 * 1000;
+
+// Time tracking and Sprints are deferred past the MVP — their widgets stay out
+// of the project dashboard until the features ship (mock data otherwise).
+const SHOW_TIME = isFeatureInMvp("time-tracking");
+const SHOW_SPRINTS = isFeatureInMvp("sprints");
 
 /**
  * ProjectDashboard — the at-a-glance project widget grid.
@@ -115,12 +121,14 @@ export function ProjectDashboard({ projectId }: { projectId: string }) {
           icon={ShieldAlert}
           hint={`${openRiskCount} open risk${openRiskCount === 1 ? "" : "s"}`}
         />
-        <StatCard
-          label="Time logged"
-          value={`${hours}h`}
-          icon={Clock}
-          hint={`${new Set(logs.map((l) => l.taskId)).size} tracked tasks`}
-        />
+        {SHOW_TIME ? (
+          <StatCard
+            label="Time logged"
+            value={`${hours}h`}
+            icon={Clock}
+            hint={`${new Set(logs.map((l) => l.taskId)).size} tracked tasks`}
+          />
+        ) : null}
         <StatCard
           label="Blocked tasks"
           value={snap.blocked}
@@ -160,31 +168,33 @@ export function ProjectDashboard({ projectId }: { projectId: string }) {
             </CardContent>
           </Card>
 
-          {/* Sprint progress */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Flag className="size-4" /> Sprint progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {sprints.length === 0 ? (
-                <p className="py-2 text-sm text-muted-foreground">No sprints for this project.</p>
-              ) : (
-                sprints.map((sp) => (
-                  <div key={sp.sprint.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium">{sp.sprint.name}</span>
-                      <span className="tabular-nums text-muted-foreground">
-                        {sp.done}/{sp.total} · {sp.pct}%
-                      </span>
+          {/* Sprint progress (deferred feature) */}
+          {SHOW_SPRINTS ? (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Flag className="size-4" /> Sprint progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {sprints.length === 0 ? (
+                  <p className="py-2 text-sm text-muted-foreground">No sprints for this project.</p>
+                ) : (
+                  sprints.map((sp) => (
+                    <div key={sp.sprint.id} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium">{sp.sprint.name}</span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {sp.done}/{sp.total} · {sp.pct}%
+                        </span>
+                      </div>
+                      <Progress value={sp.pct} className="h-1.5" />
                     </div>
-                    <Progress value={sp.pct} className="h-1.5" />
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
           {/* Milestones */}
           <Card>

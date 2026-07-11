@@ -205,6 +205,14 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     path: "/app/hr/announcements",
     note: "HR announcements — out of MVP.",
   },
+  {
+    id: "hr-audit",
+    label: "Audit",
+    inMvp: false,
+    kind: "route",
+    path: "/app/hr/audit",
+    note: "HR audit-log viewer (mock) — out of MVP, mirrors the deferred /app/audit.",
+  },
 
   // ---------- Component-level features (no route of their own) ----------
   {
@@ -227,6 +235,13 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     inMvp: false,
     kind: "feature",
     note: "Per-project analytics widgets.",
+  },
+  {
+    id: "time-tracking",
+    label: "Time tracking",
+    inMvp: false,
+    kind: "feature",
+    note: "Time logs/summaries surfaced as project/task detail tabs; hide the tab, keep the code.",
   },
   {
     id: "ai-assistant",

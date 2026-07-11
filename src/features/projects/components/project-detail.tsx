@@ -12,6 +12,11 @@ import { ProjectFiles, ProjectActivity, ProjectReports } from "./project-extras"
 import { ProjectSettingsTab } from "./project-settings-tab";
 import { ProjectTimeSummary } from "@/features/time-tracking/components/project-time-summary";
 import { ProjectAnalyticsDashboard } from "@/features/project-analytics/components/project-analytics-dashboard";
+import { isFeatureInMvp } from "@/config/mvp-scope";
+
+// Out-of-MVP feature surfaces rendered as detail tabs — hidden until they ship.
+const SHOW_ANALYTICS = isFeatureInMvp("project-analytics");
+const SHOW_TIME = isFeatureInMvp("time-tracking");
 
 export function ProjectDetail({ projectId }: { projectId: string }) {
   const project = useProjectsState((s) => s.projects.find((p) => p.id === projectId) ?? null);
@@ -113,8 +118,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="time">Time</TabsTrigger>
+          {SHOW_ANALYTICS ? <TabsTrigger value="analytics">Analytics</TabsTrigger> : null}
+          {SHOW_TIME ? <TabsTrigger value="time">Time</TabsTrigger> : null}
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -133,12 +138,16 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         <TabsContent value="reports" className="mt-4">
           <ProjectReports project={project} />
         </TabsContent>
-        <TabsContent value="analytics" className="mt-4">
-          <ProjectAnalyticsDashboard projectId={project.id} />
-        </TabsContent>
-        <TabsContent value="time" className="mt-4">
-          <ProjectTimeSummary projectId={project.id} />
-        </TabsContent>
+        {SHOW_ANALYTICS ? (
+          <TabsContent value="analytics" className="mt-4">
+            <ProjectAnalyticsDashboard projectId={project.id} />
+          </TabsContent>
+        ) : null}
+        {SHOW_TIME ? (
+          <TabsContent value="time" className="mt-4">
+            <ProjectTimeSummary projectId={project.id} />
+          </TabsContent>
+        ) : null}
         <TabsContent value="activity" className="mt-4">
           <ProjectActivity project={project} />
         </TabsContent>

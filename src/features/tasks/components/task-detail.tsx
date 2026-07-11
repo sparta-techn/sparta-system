@@ -52,6 +52,13 @@ import { ThreadedComments } from "@/features/task-communication/components/threa
 import { TaskFilesPanel } from "@/features/task-communication/components/task-files-panel";
 import { CommunicationActivity } from "@/features/task-communication/components/communication-activity";
 import { useCommState } from "@/features/task-communication/store";
+import { isFeatureInMvp } from "@/config/mvp-scope";
+
+// Threaded comments, file attachments and time tracking are deferred past the
+// MVP — their tabs stay hidden (they render mock data) until the features ship.
+const SHOW_COMMENTS = isFeatureInMvp("task-comments");
+const SHOW_FILES = isFeatureInMvp("task-file-attachments");
+const SHOW_TIME = isFeatureInMvp("time-tracking");
 
 export function TaskDetail({ taskId }: { taskId: string }) {
   const task = useTasksState((s) => s.tasks.find((t) => t.id === taskId) ?? null);
@@ -154,7 +161,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
                   Overdue
                 </span>
               ) : null}
-              <TaskTimeSummary taskId={task.id} />
+              {SHOW_TIME ? <TaskTimeSummary taskId={task.id} /> : null}
             </div>
           </Card>
 
@@ -166,15 +173,19 @@ export function TaskDetail({ taskId }: { taskId: string }) {
                   Checklist {task.checklist.length ? `· ${task.checklist.length}` : ""}
                 </TabsTrigger>
                 <TabsTrigger value="subtasks">Subtasks</TabsTrigger>
-                <TabsTrigger value="comments">
-                  <CommentsTabLabel taskId={task.id} />
-                </TabsTrigger>
-                <TabsTrigger value="files">
-                  <FilesTabLabel taskId={task.id} />
-                </TabsTrigger>
+                {SHOW_COMMENTS ? (
+                  <TabsTrigger value="comments">
+                    <CommentsTabLabel taskId={task.id} />
+                  </TabsTrigger>
+                ) : null}
+                {SHOW_FILES ? (
+                  <TabsTrigger value="files">
+                    <FilesTabLabel taskId={task.id} />
+                  </TabsTrigger>
+                ) : null}
                 <TabsTrigger value="activity">Activity</TabsTrigger>
                 <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
-                <TabsTrigger value="time">Time tracking</TabsTrigger>
+                {SHOW_TIME ? <TabsTrigger value="time">Time tracking</TabsTrigger> : null}
               </TabsList>
 
               <TabsContent value="overview" className="mt-4 space-y-4">
@@ -191,26 +202,32 @@ export function TaskDetail({ taskId }: { taskId: string }) {
                 <SubtaskTree rootId={task.id} />
               </TabsContent>
 
-              <TabsContent value="comments" className="mt-4">
-                <ThreadedComments taskId={task.id} />
-              </TabsContent>
+              {SHOW_COMMENTS ? (
+                <TabsContent value="comments" className="mt-4">
+                  <ThreadedComments taskId={task.id} />
+                </TabsContent>
+              ) : null}
 
-              <TabsContent value="files" className="mt-4">
-                <TaskFilesPanel taskId={task.id} />
-              </TabsContent>
+              {SHOW_FILES ? (
+                <TabsContent value="files" className="mt-4">
+                  <TaskFilesPanel taskId={task.id} />
+                </TabsContent>
+              ) : null}
 
               <TabsContent value="activity" className="mt-4 space-y-6">
                 <TaskActivityTimeline taskId={task.id} />
-                <CommunicationActivity taskId={task.id} />
+                {SHOW_COMMENTS ? <CommunicationActivity taskId={task.id} /> : null}
               </TabsContent>
 
               <TabsContent value="dependencies" className="mt-4">
                 <Dependencies task={task} />
               </TabsContent>
 
-              <TabsContent value="time" className="mt-4">
-                <TaskTimeTab taskId={task.id} />
-              </TabsContent>
+              {SHOW_TIME ? (
+                <TabsContent value="time" className="mt-4">
+                  <TaskTimeTab taskId={task.id} />
+                </TabsContent>
+              ) : null}
             </Tabs>
           </Card>
         </div>
