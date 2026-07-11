@@ -6,12 +6,13 @@
  * Supabase** (project-execution tables + the `profiles` people directory) and
  * mutations are **written through** the repositories.
  *
- * What is connected to Supabase: projects, members, milestones, activity, and
- * the people/department directories used by the pickers.
- * What stays local-only (no backing table): clients, templates, files, the
- * workspace settings panel, and per-project extras (favorite, environments,
- * client, template) — persisted to localStorage as an overlay. Derived task
- * counts read 0 until the tasks module is connected.
+ * What is connected to Supabase: projects (incl. their `client_id`), clients,
+ * members, milestones, activity, and the people/department directories used by
+ * the pickers.
+ * What stays local-only (no backing table): templates, files, the workspace
+ * settings panel, and per-project extras (favorite, environments, template) —
+ * persisted to localStorage as an overlay. Derived task counts read 0 until the
+ * tasks module is connected.
  */
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
@@ -19,22 +20,21 @@ import { employeeRepository } from "@/repositories";
 import { departmentRepository } from "@/repositories/hr";
 import { recordAudit } from "@/features/audit/audit-store";
 import {
+  clientRepository,
   milestoneRepository,
   projectActivityRepository,
   projectMemberRepository,
   projectRepository,
   projectRiskRepository,
 } from "@/repositories/projects";
+import { companyRepository } from "@/repositories/organization";
 import { projectRolesService } from "@/services/projects";
-import type { ProjectStatus as DbProjectStatus } from "@/services/projects";
+import type { ClientUpdate, ProjectStatus as DbProjectStatus } from "@/services/projects";
 import { projectProgressFromMilestones } from "@/services/projects/rules";
-import {
-  clients as seedClients,
-  defaultWorkspace,
-  projectTemplates as seedTemplates,
-} from "./mock-data";
+import { defaultWorkspace, projectTemplates as seedTemplates } from "./mock-data";
 import {
   activityRowToDomain,
+  clientRowToDomain,
   memberRowToDomain,
   milestoneRowToDomain,
   profileToPerson,
@@ -71,8 +71,10 @@ interface State {
   risks: Risk[];
   activity: ActivityEvent[];
   files: ProjectFile[];
-  // local-only (persisted)
+  // Supabase-backed
   clients: Client[];
+  companyId: string | null;
+  // local-only (persisted)
   templates: ProjectTemplate[];
   workspace: WorkspaceSettings;
   overlay: Record<string, ProjectOverlay>;
@@ -80,7 +82,6 @@ interface State {
 }
 
 interface LocalBlob {
-  clients: Client[];
   templates: ProjectTemplate[];
   workspace: WorkspaceSettings;
   overlay: Record<string, ProjectOverlay>;
@@ -88,7 +89,6 @@ interface LocalBlob {
 
 function defaultLocal(): LocalBlob {
   return {
-    clients: seedClients,
     templates: seedTemplates,
     workspace: defaultWorkspace,
     overlay: {},
@@ -116,7 +116,8 @@ function defaultState(): State {
     risks: [],
     activity: [],
     files: [],
-    clients: local.clients,
+    clients: [],
+    companyId: null,
     templates: local.templates,
     workspace: local.workspace,
     overlay: local.overlay,
@@ -131,7 +132,6 @@ function persistLocal() {
   if (typeof window === "undefined") return;
   try {
     const blob: LocalBlob = {
-      clients: state.clients,
       templates: state.templates,
       workspace: state.workspace,
       overlay: state.overlay,
@@ -169,11 +169,13 @@ async function hydrate() {
   if (hydrating) return hydrating;
   hydrating = (async () => {
     try {
-      const [projectRows, profiles, departments, roles] = await Promise.all([
+      const [projectRows, profiles, departments, roles, clientRows, company] = await Promise.all([
         projectRepository.list(),
         employeeRepository.list(),
         departmentRepository.list(),
         projectRolesService.list(),
+        clientRepository.list(),
+        companyRepository.getPrimary(),
       ]);
 
       const deptRefs: DepartmentRef[] = departments.map((d) => ({ id: d.id, name: d.name }));
@@ -214,6 +216,8 @@ async function hydrate() {
         milestones: perProject.flatMap((p) => p.milestones),
         risks: perProject.flatMap((p) => p.risks),
         activity: perProject.flatMap((p) => p.activity),
+        clients: clientRows.map(clientRowToDomain),
+        companyId: company?.id ?? null,
         hydrated: true,
       };
       emit();
@@ -343,6 +347,7 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
     name: input.name,
     description: input.description || undefined,
     manager_id: input.managerId,
+    client_id: input.clientId ?? null,
     department_id: departmentId,
     priority: input.priority,
     status: input.status as DbProjectStatus,
@@ -378,7 +383,6 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
   };
   setOverlay(id, {
     environments: input.environments,
-    clientId: input.clientId,
     templateId: input.templateId,
   });
   state = { ...state, projects: [created, ...state.projects] };
@@ -405,6 +409,7 @@ const CORE_FIELDS: Array<keyof Project> = [
 function persistProjectPatch(id: string, patch: Partial<Project>, restore?: () => void) {
   const corePatch: Record<string, unknown> = {};
   if (patch.managerId !== undefined) corePatch.manager_id = patch.managerId;
+  if (patch.clientId !== undefined) corePatch.client_id = patch.clientId;
   if (patch.name !== undefined) corePatch.name = patch.name;
   if (patch.description !== undefined) corePatch.description = patch.description;
   if (patch.status !== undefined) corePatch.status = patch.status;
@@ -489,7 +494,6 @@ export function updateProject(id: string, patch: Partial<Project>) {
   const overlayPatch: ProjectOverlay = {};
   if (patch.favorite !== undefined) overlayPatch.favorite = patch.favorite;
   if (patch.environments !== undefined) overlayPatch.environments = patch.environments;
-  if (patch.clientId !== undefined) overlayPatch.clientId = patch.clientId;
   if (patch.templateId !== undefined) overlayPatch.templateId = patch.templateId;
   if (Object.keys(overlayPatch).length > 0) setOverlay(id, overlayPatch);
 
@@ -508,7 +512,8 @@ export function updateProject(id: string, patch: Partial<Project>) {
   if (
     CORE_FIELDS.some((k) => patch[k] !== undefined) ||
     patch.department !== undefined ||
-    patch.managerId !== undefined
+    patch.managerId !== undefined ||
+    patch.clientId !== undefined
   ) {
     persistProjectPatch(id, patch, revert);
   }
@@ -549,7 +554,7 @@ export function duplicateProject(id: string): Promise<Project> | null {
   });
 }
 
-// ---------- Clients (local-only — no backing table) ----------
+// ---------- Clients (Supabase-backed — `clients` table) ----------
 
 export function listClients() {
   return state.clients;
@@ -557,20 +562,71 @@ export function listClients() {
 export function getClient(id: string) {
   return state.clients.find((c) => c.id === id) ?? null;
 }
-export function createClient(input: Omit<Client, "id" | "createdAt" | "projects" | "logoHue">) {
-  const client: Client = {
-    ...input,
-    id: `cli-${Date.now().toString(36)}`,
-    createdAt: new Date().toISOString(),
-    projects: [],
-    logoHue: Math.floor(Math.random() * 360),
-  };
-  state = { ...state, clients: [client, ...state.clients] };
+
+/**
+ * Create a client. Persists to Supabase FIRST and AWAITs — no optimistic
+ * "success". Any RLS / validation failure propagates as a ServiceError instead
+ * of a row that silently vanishes on the next hydrate.
+ */
+export async function createClient(
+  input: Omit<Client, "id" | "createdAt" | "projects" | "logoHue">,
+): Promise<Client> {
+  const companyId = state.companyId ?? (await companyRepository.getPrimary())?.id ?? null;
+  if (!companyId) throw new Error("No company is configured to attach this client to.");
+
+  const row = await clientRepository.create({
+    company_id: companyId,
+    company: input.company,
+    contact_person: input.contactPerson || null,
+    email: input.email || null,
+    phone: input.phone || null,
+    address: input.address || null,
+    notes: input.notes || null,
+    logo_hue: Math.floor(Math.random() * 360),
+  });
+
+  const client = clientRowToDomain(row);
+  state = { ...state, clients: [client, ...state.clients], companyId };
   emit();
   return client;
 }
-export function updateClient(id: string, patch: Partial<Client>) {
-  state = { ...state, clients: state.clients.map((c) => (c.id === id ? { ...c, ...patch } : c)) };
+
+/** Patch a client through Supabase, then reflect the persisted row in the cache. */
+export async function updateClient(id: string, patch: Partial<Client>): Promise<Client> {
+  const dbPatch: ClientUpdate = {};
+  if (patch.company !== undefined) dbPatch.company = patch.company;
+  if (patch.contactPerson !== undefined) dbPatch.contact_person = patch.contactPerson || null;
+  if (patch.email !== undefined) dbPatch.email = patch.email || null;
+  if (patch.phone !== undefined) dbPatch.phone = patch.phone || null;
+  if (patch.address !== undefined) dbPatch.address = patch.address || null;
+  if (patch.notes !== undefined) dbPatch.notes = patch.notes || null;
+  if (patch.logoHue !== undefined) dbPatch.logo_hue = patch.logoHue;
+
+  const existing = getClient(id);
+  if (Object.keys(dbPatch).length === 0 && existing) return existing;
+
+  const row = await clientRepository.update(id, dbPatch);
+  const updated = clientRowToDomain(row);
+  state = {
+    ...state,
+    // Preserve the derived `projects` array; it's computed from the project list.
+    clients: state.clients.map((c) => (c.id === id ? { ...updated, projects: c.projects } : c)),
+  };
+  emit();
+  return updated;
+}
+
+/**
+ * Delete a client through Supabase. `projects.client_id` is ON DELETE SET NULL,
+ * so any linked project is unlinked server-side; mirror that in the cache.
+ */
+export async function deleteClient(id: string): Promise<void> {
+  await clientRepository.remove(id);
+  state = {
+    ...state,
+    clients: state.clients.filter((c) => c.id !== id),
+    projects: state.projects.map((p) => (p.clientId === id ? { ...p, clientId: null } : p)),
+  };
   emit();
 }
 

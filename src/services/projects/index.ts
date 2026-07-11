@@ -12,6 +12,7 @@ export { EpicsService, epicsService } from "./epics.service";
 export { ProjectActivityService, projectActivityService } from "./project-activity.service";
 export { ProjectCalendarService, projectCalendarService } from "./project-calendar.service";
 export { ProjectRisksService, projectRisksService } from "./project-risks.service";
+export { ClientsService, clientsService } from "./clients.service";
 export {
   WorkspaceService,
   workspaceService,
@@ -54,4 +55,7 @@ export type {
   ProjectRiskInsert,
   ProjectRiskUpdate,
   RiskStatus,
+  ClientRow,
+  ClientInsert,
+  ClientUpdate,
 } from "./types";

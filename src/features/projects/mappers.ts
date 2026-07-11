@@ -6,6 +6,7 @@
  */
 import type { Profile } from "@/features/auth/types";
 import type {
+  ClientRow,
   MilestoneRow,
   ProjectActivityRow,
   ProjectMemberRow,
@@ -15,6 +16,7 @@ import type {
 import type { Department } from "@/features/hr/mock-data";
 import type {
   ActivityEvent,
+  Client,
   EnvironmentLink,
   Milestone,
   Person,
@@ -28,7 +30,6 @@ import type {
 export interface ProjectOverlay {
   favorite?: boolean;
   environments?: EnvironmentLink[];
-  clientId?: string | null;
   templateId?: string;
 }
 
@@ -80,7 +81,7 @@ export function projectRowToDomain(
     key: row.key,
     name: row.name,
     description: row.description ?? "",
-    clientId: overlay.clientId ?? null,
+    clientId: row.client_id ?? null,
     managerId: row.manager_id,
     members,
     department: departmentName(row.department_id) as Department,
@@ -148,6 +149,26 @@ export function riskRowToDomain(row: ProjectRiskRow): Risk {
     severity: row.severity,
     likelihood: row.likelihood,
     status: row.status,
+  };
+}
+
+/**
+ * Map a `clients` row to the camelCase {@link Client} the UI consumes. The
+ * `projects` array is derived by the store from the hydrated project list
+ * (via `project.clientId`), so it starts empty here.
+ */
+export function clientRowToDomain(row: ClientRow): Client {
+  return {
+    id: row.id,
+    company: row.company,
+    contactPerson: row.contact_person ?? "",
+    email: row.email ?? "",
+    phone: row.phone ?? "",
+    address: row.address ?? "",
+    notes: row.notes ?? "",
+    logoHue: row.logo_hue,
+    projects: [],
+    createdAt: row.created_at,
   };
 }
 

@@ -1,7 +1,6 @@
 import { employees, type Department } from "@/features/hr/mock-data";
 import type {
   ActivityEvent,
-  Client,
   Milestone,
   Project,
   ProjectFile,
@@ -24,56 +23,8 @@ function membersSlice(start: number, count: number) {
   });
 }
 
-export const clients: Client[] = [
-  {
-    id: "cli-etihad",
-    company: "Etihad Transit Authority",
-    contactPerson: "Mahmoud Al-Hassan",
-    email: "ops@etihad-transit.ae",
-    phone: "+971 2 555 8821",
-    address: "Corniche Rd, Abu Dhabi, UAE",
-    notes: "Long-running public transit modernization. Quarterly steering committee.",
-    logoHue: 200,
-    projects: ["proj-etihad-bus"],
-    createdAt: "2024-09-12T09:00:00Z",
-  },
-  {
-    id: "cli-laundromat",
-    company: "Brightwash Holdings",
-    contactPerson: "Sara Khalifa",
-    email: "sara@brightwash.com",
-    phone: "+971 4 211 9920",
-    address: "Business Bay, Dubai, UAE",
-    notes: "Consumer laundry platform — strict launch window before Ramadan.",
-    logoHue: 30,
-    projects: ["proj-laundry"],
-    createdAt: "2025-01-22T08:00:00Z",
-  },
-  {
-    id: "cli-finx",
-    company: "FinX Mobile",
-    contactPerson: "Daniel Park",
-    email: "daniel@finx.io",
-    phone: "+1 415 200 1234",
-    address: "San Francisco, CA, USA",
-    notes: "Neobank build. PCI compliance critical.",
-    logoHue: 145,
-    projects: ["proj-banking"],
-    createdAt: "2024-11-03T10:00:00Z",
-  },
-  {
-    id: "cli-internal",
-    company: "SpartaFlow (internal)",
-    contactPerson: "Founders",
-    email: "founders@spartaflow.com",
-    phone: "—",
-    address: "Remote",
-    notes: "Internal tooling. No invoicing.",
-    logoHue: 260,
-    projects: ["proj-engineering-portal", "proj-crm"],
-    createdAt: "2024-06-01T08:00:00Z",
-  },
-];
+// Clients are Supabase-backed (see features/projects/store.ts + the `clients`
+// table, migration 20260711120000) — no mock seed lives here anymore.
 
 export const projectTemplates: ProjectTemplate[] = [
   {

@@ -31,3 +31,4 @@ export {
   projectActivityRepository,
 } from "./project-activity.repository";
 export { ProjectRiskRepository, projectRiskRepository } from "./project-risk.repository";
+export { ClientRepository, clientRepository } from "./client.repository";

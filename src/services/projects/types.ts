@@ -48,6 +48,7 @@ export interface ProjectRow {
   name: string;
   description: string | null;
   manager_id: string;
+  client_id: string | null;
   department_id: string | null;
   team_id: string | null;
   priority: PriorityLevel;
@@ -71,6 +72,27 @@ export type ProjectInsert = Pick<ProjectRow, "key" | "name" | "manager_id"> &
   // row and its persisted row share one stable id (no post-insert id swap).
   Partial<Omit<ProjectRow, "key" | "name" | "manager_id" | "created_at" | "updated_at">>;
 export type ProjectUpdate = Partial<Omit<ProjectRow, "id" | "created_at" | "updated_at">>;
+
+// ── clients (migration 20260711120000) ──────────────────────────────────────
+
+export interface ClientRow {
+  id: string;
+  company_id: string;
+  company: string;
+  contact_person: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  logo_hue: number;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type ClientInsert = Pick<ClientRow, "company_id" | "company"> &
+  Partial<Omit<ClientRow, "company_id" | "company" | "id" | "created_at" | "updated_at">>;
+export type ClientUpdate = Partial<Omit<ClientRow, "id" | "company_id" | "created_at" | "updated_at">>;
 
 // ── project_roles (reference catalog) ───────────────────────────────────────
 
