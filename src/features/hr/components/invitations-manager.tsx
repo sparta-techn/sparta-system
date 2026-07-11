@@ -24,11 +24,12 @@ import type { HrInvitation, InvitationStatus } from "../mock-data";
 import {
   cancelInvitation,
   EXPIRY_OPTIONS,
-  resendInvitation,
+  resendInvitationEmail,
   updateSettings,
   useInvitations,
   useInvitationSettings,
 } from "../invitations-store";
+import { getErrorMessage } from "@/lib/errors";
 import { InvitationStatusBadge, RoleBadge } from "./badges";
 import { EmptyState } from "./empty-state";
 import { InviteEmployeeDialog } from "./invite-employee-dialog";
@@ -57,9 +58,13 @@ export function InvitationsManager() {
     return g;
   }, [invitations]);
 
-  function handleResend(inv: HrInvitation) {
-    resendInvitation(inv.id);
-    toast.success("Invitation resent", { description: inv.email });
+  async function handleResend(inv: HrInvitation) {
+    try {
+      await resendInvitationEmail(inv);
+      toast.success("Invitation resent", { description: inv.email });
+    } catch (err) {
+      toast.error("Couldn't resend invitation", { description: getErrorMessage(err) });
+    }
   }
 
   function handleCancel(inv: HrInvitation) {

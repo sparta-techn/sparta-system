@@ -254,9 +254,31 @@ export async function issueInvitation(input: CreateInvitationInput): Promise<HrI
 }
 
 /**
+ * Re-send a pending/expired invitation's **email** for real. Runs the same
+ * server round trip as issuance — which now re-sends by recreating a
+ * still-pending invitee (see `invitations.server.ts`) — then refreshes the local
+ * tracking record. Previously the UI only called {@link resendInvitation}, which
+ * updated local state without emailing anything ("Resend" did nothing).
+ * Throws if the server can't send (surfaced by the caller).
+ */
+export async function resendInvitationEmail(inv: HrInvitation): Promise<HrInvitation | null> {
+  await inviteEmployeeFn({
+    data: {
+      email: inv.email,
+      role: inv.role,
+      department: inv.department,
+      fullName: inv.name,
+      redirectTo: acceptInvitationRedirectUrl(),
+    },
+  });
+  return resendInvitation(inv.id);
+}
+
+/**
  * Resend a pending/expired invitation: refresh the window (using the current
  * default expiry), reset it to pending, and mint a fresh token so the old
- * link stops working.
+ * link stops working. Local-record only — {@link resendInvitationEmail} wraps
+ * this with the server round trip that actually re-sends the email.
  */
 export function resendInvitation(id: string): HrInvitation | null {
   const now = new Date();

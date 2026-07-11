@@ -68,13 +68,15 @@ export interface ProvisionInvitedEmployeeResult {
 }
 
 /** Page through auth users to find one by email (re-invite / partial-run path). */
-async function findAuthUserByEmail(email: string): Promise<{ id: string } | null> {
+async function findAuthUserByEmail(
+  email: string,
+): Promise<{ id: string; emailConfirmedAt: string | null } | null> {
   const target = email.trim().toLowerCase();
   for (let page = 1; page <= 100; page++) {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw toServiceError(error, "Failed to look up existing users.");
     const match = data.users.find((u) => u.email?.toLowerCase() === target);
-    if (match) return { id: match.id };
+    if (match) return { id: match.id, emailConfirmedAt: match.email_confirmed_at ?? null };
     if (data.users.length < 200) break;
   }
   return null;
@@ -117,12 +119,12 @@ async function resolveActorName(userId: string): Promise<string> {
 
 /**
  * True when `inviteUserByEmail` failed *specifically* because the email is already
- * registered. That is the ONLY failure we recover from by reusing the existing
- * auth user (a genuine idempotent re-invite). Every other error must fail visibly
- * — most importantly a mailer/SMTP send failure, which GoTrue returns as a 500
- * *after* it has already created the `auth.users` row. If we treated that as
- * reuse, we'd find the just-created stub user, proceed, and report success for an
- * invite whose email was never delivered (the "success but no email" bug).
+ * registered. That is the ONLY failure we recover from (by re-inviting a pending
+ * invitee — see the handler). Every other error must fail visibly — most
+ * importantly a mailer/SMTP send failure, which GoTrue returns as a 500 *after* it
+ * has already created the `auth.users` row. If we treated that as "already
+ * registered", we'd proceed and report success for an invite whose email was never
+ * delivered (the "success but no email" bug).
  */
 function isAlreadyRegisteredError(cause: unknown): boolean {
   const err = cause as { code?: string; status?: number; message?: string } | null;
@@ -178,28 +180,50 @@ export async function provisionInvitedEmployee(
   // 1. Create the auth user via an admin invite. `invited_at` is set, so
   //    handle_new_user honors the role metadata and bypasses the signup gate,
   //    and Supabase emails the setup link.
-  const invited = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+  const inviteOptions = {
     data: { full_name: fullName, display_name: fullName, role: appRole },
     // Land the invitee directly on the set-password page (which has no route
     // guard), so the token is exchanged there instead of bouncing through the
     // root/dashboard flow — where a missing session redirects them to sign-in.
     ...(input.redirectTo ? { redirectTo: input.redirectTo } : {}),
-  });
+  };
+  const invited = await supabaseAdmin.auth.admin.inviteUserByEmail(email, inviteOptions);
 
   let userId = invited.data.user?.id ?? null;
   if (invited.error) {
-    // Recover ONLY from "already registered" (a real idempotent re-invite): reuse
-    // the existing auth user. Any other error — above all a mailer/SMTP send
-    // failure, which GoTrue returns *after* creating the user row — must fail
-    // visibly. Reusing the stub user there would report success for an invite
-    // whose email never sent. Note that even on this reuse path GoTrue does not
-    // re-send the invite email; recovering the account is the caller's intent.
+    // A non-"already registered" error is a real failure (most importantly a
+    // mailer/SMTP send failure, which GoTrue returns *after* creating the user
+    // row) — fail visibly.
     if (!isAlreadyRegisteredError(invited.error)) {
       throw emailInviteError(invited.error);
     }
+    // The address already has an auth user. `inviteUserByEmail` only emails on
+    // user *creation* and there is no admin "re-send invite" call, so a plain
+    // reuse would report success for an email that never went out (the original
+    // "success but no email" bug). Instead:
+    //   • already accepted (email confirmed) → do NOT touch the live account;
+    //     surface that they already have access.
+    //   • still pending (never accepted) → delete the stub (its profile/role/
+    //     employee rows are ON DELETE CASCADE) and invite again, which sends a
+    //     fresh setup email.
     const existing = await findAuthUserByEmail(email);
     if (!existing) throw emailInviteError(invited.error);
-    userId = existing.id;
+    if (existing.id === input.invitedByUserId) {
+      throw new ServiceError("You can't invite your own account.", "invalid_request");
+    }
+    if (existing.emailConfirmedAt) {
+      throw new ServiceError(
+        `${email} has already accepted an invitation and has an active account.`,
+        "invalid_request",
+      );
+    }
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(existing.id);
+    if (deleteError) {
+      throw toServiceError(deleteError, "Couldn't refresh the pending invitation to resend it.");
+    }
+    const reinvited = await supabaseAdmin.auth.admin.inviteUserByEmail(email, inviteOptions);
+    if (reinvited.error) throw emailInviteError(reinvited.error);
+    userId = reinvited.data.user?.id ?? null;
   }
   if (!userId) throw new Error("Failed to resolve the invited user id.");
 
