@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
+import type { EmailOtpType } from "@supabase/supabase-js";
+
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { PasswordStrength } from "@/features/auth/components/password-strength";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/features/auth/validation";
@@ -15,6 +17,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+/**
+ * Credentials a recovery link can carry, depending on GoTrue's flow:
+ * - implicit: an `access_token` + `refresh_token` pair in the URL hash
+ * - PKCE/OTP: a single-use `token_hash` in the query string or hash
+ */
+type RecoveryCredentials =
+  | { kind: "tokens"; accessToken: string; refreshToken: string }
+  | { kind: "otp"; tokenHash: string; type: EmailOtpType };
+
+/**
+ * Read the recovery token off the current URL. Runs synchronously before any
+ * `await`. With `detectSessionInUrl` disabled (see supabase/client.ts) nothing
+ * else consumes the hash, so we exchange the token ourselves here rather than
+ * relying on Supabase to have implicitly established the recovery session.
+ */
+function readRecoveryCredentialsFromUrl(): RecoveryCredentials | null {
+  if (typeof window === "undefined") return null;
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+
+  const accessToken = hash.get("access_token");
+  const refreshToken = hash.get("refresh_token");
+  if (accessToken && refreshToken) {
+    return { kind: "tokens", accessToken, refreshToken };
+  }
+
+  const tokenHash = query.get("token_hash") ?? hash.get("token_hash");
+  if (tokenHash) {
+    const type = (query.get("type") ?? hash.get("type") ?? "recovery") as EmailOtpType;
+    return { kind: "otp", tokenHash, type };
+  }
+
+  return null;
+}
 
 export const Route = createFileRoute("/auth/reset-password")({
   ssr: false,
@@ -40,11 +77,43 @@ function ResetPasswordPage() {
     defaultValues: { password: "", confirm: "" },
   });
 
-  // The recovery link puts Supabase into a temporary recovery session.
-  // Confirm we actually have a session before showing the form.
   useEffect(() => {
     let cancelled = false;
+    // Read the recovery token synchronously, before any await.
+    const recoveryCreds = readRecoveryCredentialsFromUrl();
+
     void (async () => {
+      // Establish the recovery session explicitly from the link's token instead
+      // of relying on the client's (now-disabled) detectSessionInUrl.
+      if (recoveryCreds) {
+        // Drop any existing local session first so the reset always applies to
+        // the account named in the link, not whoever is currently signed in.
+        await supabase.auth.signOut({ scope: "local" });
+
+        const { error } =
+          recoveryCreds.kind === "tokens"
+            ? await supabase.auth.setSession({
+                access_token: recoveryCreds.accessToken,
+                refresh_token: recoveryCreds.refreshToken,
+              })
+            : await supabase.auth.verifyOtp({
+                token_hash: recoveryCreds.tokenHash,
+                type: recoveryCreds.type,
+              });
+
+        if (!cancelled && error) {
+          setLinkError("This reset link is invalid or has expired. Request a new one to continue.");
+          setChecking(false);
+          return;
+        }
+
+        // Strip the token from the URL so it can't be reused or leak on refresh.
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
+      // Confirm we actually hold a recovery session before showing the form.
       const { data } = await supabase.auth.getSession();
       if (cancelled) return;
       if (!data.session) {

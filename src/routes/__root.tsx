@@ -14,6 +14,7 @@ import { reportError } from "../lib/errors";
 import { ThemeProvider } from "../lib/theme";
 import { Toaster } from "../components/ui/sonner";
 import { AuthProvider } from "../features/auth/auth-context";
+import { redirectSetupTokens } from "../features/auth/setup-token-redirect";
 import { ErrorBoundary } from "../components/error-boundary";
 import { ErrorScreen } from "../components/error-screen";
 import { ConnectionBanner } from "../components/layout/connection-banner";
@@ -105,6 +106,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Before mounting AuthProvider or any route, reroute a misdelivered setup
+  // token to the page that exchanges it, and short-circuit the tree while the
+  // browser navigates.
+  if (redirectSetupTokens()) return null;
 
   return (
     <QueryClientProvider client={queryClient}>

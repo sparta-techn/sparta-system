@@ -54,6 +54,11 @@ function createSupabaseClient() {
       storage: typeof window !== "undefined" ? localStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
+      // Never let a token in the URL implicitly establish a session. Setup
+      // links (invite/signup/recovery) are exchanged explicitly on their
+      // dedicated pages; a stray token landing on any other route must not
+      // silently sign anyone in. See redirectSetupTokens in routes/__root.tsx.
+      detectSessionInUrl: false,
     },
   });
 }
