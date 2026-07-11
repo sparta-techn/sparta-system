@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { companyRepository } from "@/repositories/organization";
+import { companyRepository, LOGO_ACCEPTED_MIME, LOGO_MAX_BYTES } from "@/repositories/organization";
 import type { CompanyUpdate } from "@/services/organization";
 
 import { orgQueries } from "../organization-queries";
@@ -27,7 +27,6 @@ interface OrgForm {
   name: string;
   legal_name: string;
   timezone: string;
-  logo_url: string;
   support_email: string;
   work_start_time: string;
   work_end_time: string;
@@ -38,7 +37,6 @@ const EMPTY_FORM: OrgForm = {
   name: "",
   legal_name: "",
   timezone: "UTC",
-  logo_url: "",
   support_email: "",
   work_start_time: "09:00",
   work_end_time: "17:00",
@@ -57,7 +55,6 @@ export function OrganizationSettingsPanel() {
       name: company.name,
       legal_name: company.legal_name ?? "",
       timezone: company.timezone,
-      logo_url: company.logo_url ?? "",
       support_email: company.support_email ?? "",
       work_start_time: company.work_start_time ?? "09:00",
       work_end_time: company.work_end_time ?? "17:00",
@@ -98,7 +95,6 @@ export function OrganizationSettingsPanel() {
       name: form.name.trim(),
       legal_name: form.legal_name.trim() || null,
       timezone: form.timezone,
-      logo_url: form.logo_url.trim() || null,
       support_email: form.support_email.trim() || null,
       work_start_time: form.work_start_time || null,
       work_end_time: form.work_end_time || null,
@@ -179,30 +175,8 @@ export function OrganizationSettingsPanel() {
             </div>
           </div>
 
-          {/* Logo — plain URL for now (Storage bucket out of MVP scope). */}
-          <div className="space-y-1.5">
-            <Label htmlFor="org-logo">Company logo URL</Label>
-            <div className="flex items-center gap-3">
-              {form.logo_url ? (
-                <img
-                  src={form.logo_url}
-                  alt="Company logo preview"
-                  className="size-10 rounded border object-contain"
-                />
-              ) : (
-                <div className="grid size-10 place-items-center rounded border bg-muted text-xs text-muted-foreground">
-                  Logo
-                </div>
-              )}
-              <Input
-                id="org-logo"
-                value={form.logo_url}
-                onChange={(e) => set("logo_url", e.target.value)}
-                placeholder="https://…/logo.png"
-                className="flex-1"
-              />
-            </div>
-          </div>
+          {/* Company logo — real upload to the company-assets Storage bucket. */}
+          <LogoField companyId={company.id} companyName={company.name} logoUrl={company.logo_url} />
 
           {/* Working hours */}
           <div className="space-y-3 rounded-lg border p-4">
@@ -261,5 +235,113 @@ export function OrganizationSettingsPanel() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * Logo upload field — a self-contained upload with its own preview and
+ * loading/error/success, kept separate from the main form because it uploads a
+ * file to Storage rather than patching plain columns.
+ */
+function LogoField({
+  companyId,
+  companyName,
+  logoUrl,
+}: {
+  companyId: string;
+  companyName: string;
+  logoUrl: string | null;
+}) {
+  const qc = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [selected, setSelected] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Local object-URL preview for a newly-picked file (before upload).
+  useEffect(() => {
+    if (!selected) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(selected);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [selected]);
+
+  const upload = useMutation({
+    mutationFn: (file: File) => companyRepository.uploadLogo(companyId, file),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: orgQueries.company().queryKey });
+      setSelected(null);
+      toast.success("Logo updated");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Couldn't upload logo.");
+    },
+  });
+
+  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    if (!LOGO_ACCEPTED_MIME.includes(file.type as (typeof LOGO_ACCEPTED_MIME)[number])) {
+      toast.error("Logo must be a PNG, JPG, SVG, or WebP image.");
+      return;
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      toast.error("Logo must be 2 MB or smaller.");
+      return;
+    }
+    setSelected(file);
+  }
+
+  const shown = previewUrl ?? logoUrl;
+
+  return (
+    <div className="space-y-1.5">
+      <Label>Company logo</Label>
+      <div className="flex items-center gap-3">
+        {shown ? (
+          <img
+            src={shown}
+            alt="Company logo preview"
+            className="size-12 rounded border bg-muted object-contain p-1"
+          />
+        ) : (
+          <div className="grid size-12 place-items-center rounded border bg-muted text-sm font-semibold text-muted-foreground">
+            {companyName.charAt(0).toUpperCase() || "Logo"}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            ref={inputRef}
+            type="file"
+            accept={LOGO_ACCEPTED_MIME.join(",")}
+            className="hidden"
+            onChange={onPick}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+            disabled={upload.isPending}
+          >
+            Choose image
+          </Button>
+          {selected ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => upload.mutate(selected)}
+              disabled={upload.isPending}
+            >
+              {upload.isPending ? "Uploading…" : "Upload logo"}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">PNG, JPG, SVG, or WebP · up to 2 MB.</p>
+    </div>
   );
 }

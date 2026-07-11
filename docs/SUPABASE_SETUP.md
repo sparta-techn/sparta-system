@@ -102,6 +102,7 @@ Declared buckets (create these before use — §4):
 | Constant                            | Bucket               | Suggested visibility  |
 | ----------------------------------- | -------------------- | --------------------- |
 | `STORAGE_BUCKETS.avatars`           | `avatars`            | public                |
+| `STORAGE_BUCKETS.companyAssets`     | `company-assets`     | public (logo/favicon; created + policied by migration 20260711130000) |
 | `STORAGE_BUCKETS.taskAttachments`   | `task-attachments`   | private (signed URLs) |
 | `STORAGE_BUCKETS.projectFiles`      | `project-files`      | private (signed URLs) |
 | `STORAGE_BUCKETS.reportAttachments` | `report-attachments` | private (signed URLs) |

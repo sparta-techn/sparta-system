@@ -8,4 +8,9 @@
  * NOTE: intentionally NOT re-exported from the root `@/repositories` barrel —
  * same convention as `@/repositories/reports` and `@/repositories/hr`.
  */
-export { CompanyRepository, companyRepository } from "./company.repository";
+export {
+  CompanyRepository,
+  companyRepository,
+  LOGO_ACCEPTED_MIME,
+  LOGO_MAX_BYTES,
+} from "./company.repository";

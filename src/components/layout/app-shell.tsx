@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
+import { FaviconManager } from "./favicon-manager";
 import { Topbar } from "./topbar";
 import { FloatingActiveTimer } from "@/features/time-tracking/components/floating-active-timer";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -25,6 +26,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <SidebarProvider>
+      <FaviconManager />
       <AppSidebar />
       <SidebarInset className="bg-background">
         <Topbar />

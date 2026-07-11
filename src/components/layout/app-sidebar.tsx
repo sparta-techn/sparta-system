@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
 
@@ -14,6 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { FuturePlanBadge } from "@/components/future-plan";
+import { orgQueries } from "@/features/admin/organization-queries";
 import { useAuth } from "@/features/auth/auth-context";
 import {
   isNavItemDeferred,
@@ -82,6 +84,7 @@ export function AppSidebar() {
   const currentPath = useRouterState({
     select: (s) => s.location.pathname,
   });
+  const { data: company } = useQuery(orgQueries.company());
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -97,12 +100,21 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <div
-            className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-display font-bold"
-            aria-hidden
-          >
-            S
-          </div>
+          {company?.logo_url ? (
+            <img
+              src={company.logo_url}
+              alt=""
+              className="size-8 shrink-0 rounded-lg object-contain"
+              aria-hidden
+            />
+          ) : (
+            <div
+              className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-display font-bold"
+              aria-hidden
+            >
+              S
+            </div>
+          )}
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold text-sidebar-foreground">SpartaFlow</p>
             <p className="truncate text-[11px] text-muted-foreground">Operations Hub</p>

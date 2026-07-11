@@ -16,6 +16,7 @@ import { supabaseClient } from "./client";
  */
 export const STORAGE_BUCKETS = {
   avatars: "avatars",
+  companyAssets: "company-assets",
   taskAttachments: "task-attachments",
   projectFiles: "project-files",
   reportAttachments: "report-attachments",
