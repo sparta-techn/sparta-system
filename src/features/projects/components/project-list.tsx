@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { listClients, useProjectsState } from "../store";
+import { mergeRollup, useProjectTaskRollups } from "../use-project-task-rollups";
 import { ProjectCard, ProjectRow } from "./project-card";
 import { CreateProjectDialog } from "./create-project-dialog";
 import type { Project, ProjectStatus } from "../types";
@@ -20,7 +21,13 @@ type View = "grid" | "list";
 type Sort = "recent" | "name" | "progress" | "health";
 
 export function ProjectList() {
-  const projects = useProjectsState((s) => s.projects);
+  const storedProjects = useProjectsState((s) => s.projects);
+  const rollups = useProjectTaskRollups();
+  // Overlay live task counts so cards, rows, and the progress sort are real.
+  const projects = useMemo(
+    () => storedProjects.map((p) => mergeRollup(p, rollups)),
+    [storedProjects, rollups],
+  );
   const clients = useMemo(() => listClients(), []);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");

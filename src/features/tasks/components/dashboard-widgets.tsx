@@ -2,13 +2,12 @@ import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/features/auth/auth-context";
 import { applyFilters, useTasksState } from "../store";
 import type { TaskFilters, TaskSort } from "../types";
 import { TaskPriorityBadge, TaskStatusBadge } from "./badges";
 import { EmployeeChip } from "./employee-chip";
 import { formatDate, isOverdue, projectById } from "../utils";
-
-const CURRENT_USER_ID = "emp_001";
 
 function WidgetShell({
   title,
@@ -102,8 +101,10 @@ function CompactList({
 }
 
 export function MyTasksWidget() {
+  // Real signed-in user (task.assigneeId references profiles.id = auth uid).
+  const userId = useAuth().user?.id ?? "";
   const filters: TaskFilters = {
-    assigneeIds: [CURRENT_USER_ID],
+    assigneeIds: [userId],
     status: ["todo", "in_progress", "review", "qa"],
   };
   const count = useTasksState((s) => applyFilters(s.tasks, filters).length);
@@ -180,7 +181,8 @@ export function RecentlyUpdatedWidget() {
 }
 
 export function AssignedToMeWidget() {
-  const filters: TaskFilters = { assigneeIds: [CURRENT_USER_ID] };
+  const userId = useAuth().user?.id ?? "";
+  const filters: TaskFilters = { assigneeIds: [userId] };
   const count = useTasksState((s) => applyFilters(s.tasks, filters).length);
   return (
     <WidgetShell title="Assigned to me" href="/app/tasks/all" count={count}>

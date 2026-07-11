@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { useProjectsState } from "../store";
+import { mergeRollup, useProjectTaskRollups } from "../use-project-task-rollups";
 import { ProjectHealthBadge, ProjectStatusBadge } from "./badges";
 import type { ProjectHealth, ProjectStatus } from "../types";
 
@@ -29,7 +30,13 @@ const STATUS_RANK: Record<ProjectStatus, number> = {
 };
 
 export function ProjectsDashboard() {
-  const projects = useProjectsState((s) => s.projects);
+  const storedProjects = useProjectsState((s) => s.projects);
+  const rollups = useProjectTaskRollups();
+  // Overlay live task counts (the projects table has no task columns).
+  const projects = useMemo(
+    () => storedProjects.map((p) => mergeRollup(p, rollups)),
+    [storedProjects, rollups],
+  );
 
   const stats = useMemo(() => {
     // Working set = every non-archived project. Scoping to status === "active"
@@ -79,12 +86,7 @@ export function ProjectsDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Projects"
-          value={stats.live.length}
-          icon={Briefcase}
-          hint={statusHint}
-        />
+        <StatCard label="Projects" value={stats.live.length} icon={Briefcase} hint={statusHint} />
         <StatCard label="Avg. progress" value={`${stats.avgProgress}%`} icon={TrendingUp} />
         <StatCard
           label="At-risk"
@@ -144,9 +146,7 @@ export function ProjectsDashboard() {
                 </li>
               ))}
               {recentLive.length === 0 ? (
-                <li className="py-6 text-center text-sm text-muted-foreground">
-                  No projects yet.
-                </li>
+                <li className="py-6 text-center text-sm text-muted-foreground">No projects yet.</li>
               ) : null}
             </ul>
           </CardContent>

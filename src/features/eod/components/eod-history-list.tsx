@@ -19,15 +19,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { generateHistorySeed } from "../mock-data";
 import { useEodHistory } from "../store";
 import type { EodSubmission } from "../types";
 
 type RangeKey = "all" | "7d" | "30d" | "90d";
 
 export function EodHistoryList() {
-  const real = useEodHistory();
-  const items: EodSubmission[] = real.length > 0 ? real : generateHistorySeed();
+  // Real submissions only — no mock seed fallback, so an empty history reads
+  // honestly as empty rather than showing fabricated past reports.
+  const items: EodSubmission[] = useEodHistory();
 
   const [search, setSearch] = useState("");
   const [range, setRange] = useState<RangeKey>("all");

@@ -62,8 +62,10 @@ function EodPage() {
 }
 
 /**
- * Synthesise the work-session summary from the in-memory mock stores.
- * Replace this with `select_today_work_session_summary` RPC when the backend lands.
+ * Synthesise the work-session summary from the (Supabase-backed) check-in and
+ * midday stores. Break minutes and dependency counts have no real source in this
+ * summary yet, so they read 0 rather than fabricated constants. Replace with the
+ * `select_today_work_session_summary` RPC when it lands.
  */
 function buildSessionSummary(): WorkSessionSummary {
   if (typeof window === "undefined") {
@@ -82,7 +84,7 @@ function buildSessionSummary(): WorkSessionSummary {
   const now = new Date();
   const checkOut = now;
   const workedMinutes = checkInTime
-    ? Math.max(0, Math.round((checkOut.getTime() - checkInTime.getTime()) / 60000) - 45)
+    ? Math.max(0, Math.round((checkOut.getTime() - checkInTime.getTime()) / 60000))
     : 0;
   return {
     checkIn: checkInTime
@@ -90,10 +92,10 @@ function buildSessionSummary(): WorkSessionSummary {
       : undefined,
     checkOut: checkOut.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     workedMinutes,
-    breakMinutes: 45,
+    breakMinutes: 0,
     morningCheckInDone: !!morning,
     middayStatusDone: !!midday,
-    dependenciesCreated: 1,
+    dependenciesCreated: 0,
     dependenciesResolved: midday?.blockerLinks.filter((b) => b.resolved).length ?? 0,
   };
 }

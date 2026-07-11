@@ -13,13 +13,17 @@ import { ProjectSettingsTab } from "./project-settings-tab";
 import { ProjectTimeSummary } from "@/features/time-tracking/components/project-time-summary";
 import { ProjectAnalyticsDashboard } from "@/features/project-analytics/components/project-analytics-dashboard";
 import { isFeatureInMvp } from "@/config/mvp-scope";
+import { mergeRollup, useProjectTaskRollups } from "../use-project-task-rollups";
 
 // Out-of-MVP feature surfaces rendered as detail tabs — hidden until they ship.
 const SHOW_ANALYTICS = isFeatureInMvp("project-analytics");
 const SHOW_TIME = isFeatureInMvp("time-tracking");
 
 export function ProjectDetail({ projectId }: { projectId: string }) {
-  const project = useProjectsState((s) => s.projects.find((p) => p.id === projectId) ?? null);
+  const stored = useProjectsState((s) => s.projects.find((p) => p.id === projectId) ?? null);
+  const rollups = useProjectTaskRollups();
+  // Overlay live task counts onto the (zeroed) stored project.
+  const project = stored ? mergeRollup(stored, rollups) : null;
   const navigate = useNavigate();
 
   if (!project) {
