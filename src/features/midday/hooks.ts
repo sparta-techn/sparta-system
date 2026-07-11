@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { resolveWorkDate } from "@/features/daily-sync";
 import { fetchHrEmployees } from "@/features/hr/api";
+import { isPartTime } from "@/features/hr/employment-type";
 import type { HrEmployee } from "@/features/hr/mock-data";
 import { statusUpdateRepository } from "@/repositories/reports";
 
@@ -44,7 +45,9 @@ export function useTeamMiddayOverview() {
       const byUser = new Map(rows.filter((r) => r.submitted_at).map((r) => [r.user_id, r]));
 
       const entries: TeamMiddayEntry[] = employees
-        .filter((e) => e.userId && e.status === "active")
+        // Part-timers don't file a midday pulse, so they must never count as
+        // "missing" in the participation roll-up. Full-timers are unaffected.
+        .filter((e) => e.userId && e.status === "active" && !isPartTime(e.employmentType))
         .map((e) => {
           const row = byUser.get(e.userId!);
           const blockers = (row?.blockers as unknown as BlockerLink[]) ?? [];

@@ -39,6 +39,8 @@ export interface EmployeeEditInput {
   department: string;
   team: string;
   workMode: HrEmployee["workMode"];
+  /** Employment type row id (`employment_types.id`); omitted leaves it unchanged. */
+  employmentTypeId?: string;
 }
 
 /** Canonical UUID — the shape of a real Supabase employee id. */
@@ -92,6 +94,8 @@ export function useEmployeeManagement() {
     // Only overwrite the FK when the name resolves to a real row.
     if (departmentId) patch.department_id = departmentId;
     if (teamId) patch.team_id = teamId;
+    // Employment type is a direct row id from the form's selector.
+    if (input.employmentTypeId) patch.employment_type_id = input.employmentTypeId;
     await hrEmployeeRepository.update(employee.id, patch);
 
     recordEmployeeAudit(employee.id, "edited");

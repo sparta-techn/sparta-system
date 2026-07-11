@@ -36,9 +36,14 @@ export interface InviteEmployeeInput {
   department: Department;
   fullName?: string;
   positionTitle?: string;
+  /** Employment type row id (`employment_types.id`) to stamp on the employee. */
+  employmentTypeId?: string;
   /** Absolute URL GoTrue should send the invitee to (the set-password page). */
   redirectTo?: string;
 }
+
+/** Canonical UUID shape — an employment type id must be a real row reference. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Where the invite email should land the invitee: the in-app set-password page.
@@ -67,6 +72,11 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
     if (!department) {
       throw new Error("A department is required.");
     }
+    // Employment type is optional, but when present it must be a real row id.
+    const employmentTypeId = data?.employmentTypeId?.trim() || undefined;
+    if (employmentTypeId && !UUID_RE.test(employmentTypeId)) {
+      throw new Error("A valid employment type is required.");
+    }
     // Only allow an absolute http(s) URL — this becomes a link in an email, so a
     // malformed/other-scheme value must never flow through to GoTrue.
     const redirectTo = data?.redirectTo?.trim() || undefined;
@@ -86,6 +96,7 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
       department: department as Department,
       fullName: data.fullName?.trim() || undefined,
       positionTitle: data.positionTitle?.trim() || undefined,
+      employmentTypeId,
       redirectTo,
     };
   })

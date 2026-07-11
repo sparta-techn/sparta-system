@@ -101,6 +101,24 @@ describe("nav visibility — individual contributors (employee / intern)", () =>
       expect(v.has("executive")).toBe(false);
     }
   });
+
+  it("hides Midday for part-time employees but keeps check-in / end-of-day", () => {
+    const partTime = new Set(
+      ALL_ITEMS.filter((i) => isNavItemVisible(i, ["employee"], "part-time")).map((i) => i.id),
+    );
+    expect(partTime.has("check-in")).toBe(true);
+    expect(partTime.has("midday")).toBe(false);
+    expect(partTime.has("eod")).toBe(true);
+  });
+
+  it("keeps Midday for full-time employees (and when employment type is unknown)", () => {
+    for (const type of ["full-time", null, undefined]) {
+      const v = new Set(
+        ALL_ITEMS.filter((i) => isNavItemVisible(i, ["employee"], type)).map((i) => i.id),
+      );
+      expect(v.has("midday")).toBe(true);
+    }
+  });
 });
 
 describe("nav visibility — items open to everyone", () => {

@@ -166,6 +166,15 @@ omitted so the `DEFAULT auth.uid()` fires.
 4. **UI not connected** (by request). Next: feature `queries.ts` (`queryOptions`
    - key factories) + mutation hooks that call these repositories, then swap the
      `localStorage`/in-memory stores in `features/checkin|midday|eod|dependencies`.
+5. **Employment-type target not in this layer.** The live "finish work" path is
+   the `finish_work_session` RPC on `work_sessions` (called from
+   `features/attendance/api.ts`), **not** `AttendanceRepository.checkOut`. That
+   RPC branches on employment type — part-time targets 240 min for
+   `overtime_seconds` and the `half_day` / `on_time` classification (migration
+   `20260711140000`, business rule #10). `AttendanceRepository.checkOut` here is
+   currently unused by any feature and still applies a single flat
+   `AttendancePolicy`; if it is ever promoted to the live path it will need the
+   same per-employee 4h override. See `docs/BUSINESS_RULES.md` #10.
 
 ---
 

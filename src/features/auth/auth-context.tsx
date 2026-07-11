@@ -12,7 +12,12 @@ import type { Session, User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
 import { setCurrentActor } from "@/features/audit/audit-store";
-import { fetchProfile, fetchRoles, signOut as serviceSignOut } from "./auth-service";
+import {
+  fetchEmploymentType,
+  fetchProfile,
+  fetchRoles,
+  signOut as serviceSignOut,
+} from "./auth-service";
 import { permissionsForRoles } from "./permissions";
 import type { AppRole, AuthState, Permission, Profile } from "./types";
 
@@ -22,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [employmentType, setEmploymentType] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const lastUserIdRef = useRef<string | null>(null);
@@ -30,13 +36,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!nextUser) {
       setProfile(null);
       setRoles([]);
+      setEmploymentType(null);
       setCurrentActor(null);
       return;
     }
     try {
-      const [p, r] = await Promise.all([fetchProfile(nextUser.id), fetchRoles(nextUser.id)]);
+      const [p, r, et] = await Promise.all([
+        fetchProfile(nextUser.id),
+        fetchRoles(nextUser.id),
+        fetchEmploymentType(nextUser.id),
+      ]);
       setProfile(p);
       setRoles(r);
+      setEmploymentType(et);
       // Attribute subsequent audit events to this user.
       setCurrentActor({
         id: nextUser.id,
@@ -46,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("[auth] failed to load identity", err);
       setProfile(null);
       setRoles([]);
+      setEmploymentType(null);
     }
   }, []);
 
@@ -65,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "SIGNED_OUT") {
         setProfile(null);
         setRoles([]);
+        setEmploymentType(null);
         return;
       }
 
@@ -111,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setProfile(null);
     setRoles([]);
+    setEmploymentType(null);
     setCurrentActor(null);
   }, []);
 
@@ -125,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       profile,
       roles,
+      employmentType,
       loading,
       initialized,
       isAuthenticated: !!user,
@@ -135,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refresh,
       signOut,
     };
-  }, [user, profile, roles, loading, initialized, refresh, signOut]);
+  }, [user, profile, roles, employmentType, loading, initialized, refresh, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

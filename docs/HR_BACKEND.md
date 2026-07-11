@@ -132,6 +132,24 @@ domain methods. Repositories expose the same surface plus the aggregates noted.
 | `assignManager(id, managerId\|null)`               | Reporting line (cycle-guarded in DB).                |
 | `setDepartment` / `setTeam` / `setPosition`        | Re-org moves (or clear with `null`).                 |
 
+### Employment type (`employment_type_id`)
+
+`employees.employment_type_id` → the seeded `employment_types` reference table
+(Full-time / Part-time / Contractor / Intern) is a real, employee-driven value —
+not just a read-time default. It is written in two places:
+
+- **Invite** — the Invite dialog and the "New employee" form pass the selected
+  `employmentTypeId` through `inviteEmployeeFn` → `provisionInvitedEmployee`,
+  which stamps it on the `employees` upsert (only when chosen, so a re-invite
+  never wipes an existing value).
+- **Edit** — `useEmployeeManagement.edit` writes `employment_type_id` via
+  `employeeRepository.update`; the edit dialog pre-selects the current type.
+
+Both selectors read the live options from `fetchHrEmploymentTypes()` /
+`hrQueries.employmentTypes()`. The **behavioural** consequences of the value
+(part-time = 4h day, no Midday report) are documented as **rule #10** in
+`docs/BUSINESS_RULES.md` and centralised in `features/hr/employment-type.ts`.
+
 ---
 
 ## 5. Usage

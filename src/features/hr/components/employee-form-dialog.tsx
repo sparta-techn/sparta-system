@@ -34,6 +34,7 @@ interface FormState {
   department: Department;
   team: string;
   role: EmployeeRole;
+  employmentTypeId: string;
   workMode: HrEmployee["workMode"];
 }
 
@@ -45,6 +46,8 @@ function fromEmployee(e?: HrEmployee): FormState {
     department: e?.department ?? ("" as Department),
     team: e?.team && e.team !== "—" ? e.team : "",
     role: e?.role ?? "employee",
+    // Resolved to a real id from the loaded employment types (see effect below).
+    employmentTypeId: "",
     workMode: e?.workMode ?? "Remote",
   };
 }
@@ -63,12 +66,26 @@ export function EmployeeFormDialog({
   const mgmt = useEmployeeManagement();
   // Live, org-specific department list (Supabase-backed) — not a fixed sample.
   const { data: departments = [] } = useQuery(hrQueries.departments());
+  // Real employment types (Full-time / Part-time / …) from the reference table.
+  const { data: employmentTypes = [] } = useQuery(hrQueries.employmentTypes());
   const [form, setForm] = useState<FormState>(fromEmployee(employee));
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) setForm(fromEmployee(employee));
   }, [open, employee]);
+
+  // Resolve the selected employment type id once the reference list is loaded:
+  // on edit, match the employee's current type by name; on create, default to
+  // Full-time (else the first option). Skips if a choice was already made.
+  useEffect(() => {
+    if (!open || employmentTypes.length === 0 || form.employmentTypeId) return;
+    const current = employee
+      ? employmentTypes.find((t) => t.name === employee.employmentType)
+      : undefined;
+    const fullTime = employmentTypes.find((t) => t.slug === "full-time");
+    set("employmentTypeId", (current ?? fullTime ?? employmentTypes[0]).id);
+  }, [open, employmentTypes, employee, form.employmentTypeId]);
 
   // Default the department to the first live option when creating (no preset).
   // On edit, an existing department is preserved even if it's since been archived.
@@ -120,6 +137,7 @@ export function EmployeeFormDialog({
           department: form.department,
           fullName: form.name,
           positionTitle: form.jobTitle || undefined,
+          employmentTypeId: form.employmentTypeId || undefined,
           redirectTo: acceptInvitationRedirectUrl(),
         },
       });
@@ -207,6 +225,27 @@ export function EmployeeFormDialog({
                 onChange={(e) => set("team", e.target.value)}
               />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="emp-employment-type">Employment type</Label>
+            <Select
+              value={form.employmentTypeId}
+              onValueChange={(v) => set("employmentTypeId", v)}
+            >
+              <SelectTrigger id="emp-employment-type">
+                <SelectValue placeholder="Select employment type" />
+              </SelectTrigger>
+              <SelectContent>
+                {employmentTypes.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Part-time works a 4-hour day and skips the midday report.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* Role is set here only when creating; edits use the dedicated

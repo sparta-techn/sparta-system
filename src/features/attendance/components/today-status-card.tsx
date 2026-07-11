@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/features/auth/auth-context";
+import { expectedWorkMinutesFor } from "@/features/hr/employment-type";
 import { cn } from "@/lib/utils";
 
 import { endBreak, finishWork, startBreak, startWork } from "../api";
@@ -29,7 +30,7 @@ interface Props {
 }
 
 export function TodayStatusCard({ compact = false }: Props) {
-  const { user } = useAuth();
+  const { user, employmentType } = useAuth();
   const userId = user?.id ?? null;
   const qc = useQueryClient();
 
@@ -51,7 +52,10 @@ export function TodayStatusCard({ compact = false }: Props) {
   const workedSeconds = Math.max(0, totalSinceStart - completedBreakSeconds - openBreakElapsed);
   const breakSecondsTotal = completedBreakSeconds + openBreakElapsed;
 
-  const expectedSeconds = (settingsQ.data?.expected_work_minutes ?? 480) * 60;
+  // Target working hours branch on employment type: part-time targets a 4h day;
+  // everyone else keeps the company-wide default (not a hardcoded 8h).
+  const companyDefaultMinutes = settingsQ.data?.expected_work_minutes ?? 480;
+  const expectedSeconds = expectedWorkMinutesFor(employmentType, companyDefaultMinutes) * 60;
   const remainingSeconds = Math.max(0, expectedSeconds - workedSeconds);
   const maxBreakSeconds = (settingsQ.data?.max_break_minutes ?? 60) * 60;
   const breakOver = breakSecondsTotal > maxBreakSeconds;

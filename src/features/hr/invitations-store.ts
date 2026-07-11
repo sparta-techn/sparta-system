@@ -186,6 +186,8 @@ export interface CreateInvitationInput {
   name?: string;
   /** Optional position/job title to attach to the employee record. */
   positionTitle?: string;
+  /** Employment type row id (`employment_types.id`) to stamp on the employee. */
+  employmentTypeId?: string;
   /** Override the configured default expiry window for this invite. */
   expiryDays?: number;
   invitedBy?: string;
@@ -235,6 +237,7 @@ export async function issueInvitation(input: CreateInvitationInput): Promise<HrI
       department: input.department,
       fullName: input.name,
       positionTitle: input.positionTitle,
+      employmentTypeId: input.employmentTypeId,
       redirectTo: acceptInvitationRedirectUrl(),
     },
   });

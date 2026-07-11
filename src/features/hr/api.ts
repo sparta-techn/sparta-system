@@ -196,6 +196,27 @@ export async function fetchHrDepartments(): Promise<string[]> {
   return departments.map((d) => d.name);
 }
 
+/** A selectable employment type (Full-time / Part-time / …) from the reference table. */
+export interface HrEmploymentType {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/**
+ * Active employment types (reference data) for the invite / edit selectors.
+ * Ordered by name so Full-time / Part-time surface predictably.
+ */
+export async function fetchHrEmploymentTypes(): Promise<HrEmploymentType[]> {
+  const { data, error } = await db
+    .from("employment_types")
+    .select("id, name, slug")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as HrEmploymentType[];
+}
+
 /** Active teams, mapped to the UI `HrTeam` shape (with member counts). */
 export async function fetchHrTeams(): Promise<HrTeam[]> {
   const [teams, departments] = await Promise.all([

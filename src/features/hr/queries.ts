@@ -5,13 +5,19 @@
  */
 import { queryOptions } from "@tanstack/react-query";
 
-import { fetchHrDepartments, fetchHrEmployees, fetchHrTeams } from "./api";
+import {
+  fetchHrDepartments,
+  fetchHrEmployees,
+  fetchHrEmploymentTypes,
+  fetchHrTeams,
+} from "./api";
 
 export const hrKeys = {
   all: ["hr"] as const,
   employees: () => [...hrKeys.all, "employees"] as const,
   departments: () => [...hrKeys.all, "departments"] as const,
   teams: () => [...hrKeys.all, "teams"] as const,
+  employmentTypes: () => [...hrKeys.all, "employment-types"] as const,
 };
 
 export const hrQueries = {
@@ -32,5 +38,11 @@ export const hrQueries = {
       queryKey: hrKeys.teams(),
       queryFn: fetchHrTeams,
       staleTime: 5 * 60_000,
+    }),
+  employmentTypes: () =>
+    queryOptions({
+      queryKey: hrKeys.employmentTypes(),
+      queryFn: fetchHrEmploymentTypes,
+      staleTime: 10 * 60_000,
     }),
 };

@@ -117,6 +117,12 @@ export interface AuthState {
   user: User | null;
   profile: Profile | null;
   roles: AppRole[];
+  /**
+   * The user's employment type slug (`full-time` / `part-time` / …), or `null`
+   * when none is set. Drives attendance target hours and the midday requirement
+   * — see `@/features/hr/employment-type`.
+   */
+  employmentType: string | null;
   loading: boolean;
   initialized: boolean;
   isAuthenticated: boolean;

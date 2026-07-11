@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { StatCard } from "@/components/stat-card";
 import { useAuth } from "@/features/auth/auth-context";
-import { todaySessionQuery } from "@/features/attendance/queries";
+import { companySettingsQuery, todaySessionQuery } from "@/features/attendance/queries";
+import { expectedWorkMinutesFor } from "@/features/hr/employment-type";
 import { useUnreadCount } from "@/features/notifications/store";
 import { useTasksState } from "@/features/tasks/store";
 
@@ -15,10 +16,12 @@ function formatHm(totalSeconds: number): string {
 
 /** Employee dashboard KPI row — live tasks, dependencies, notifications, hours. */
 export function QuickSummary() {
-  const userId = useAuth().user?.id ?? null;
+  const { user, employmentType } = useAuth();
+  const userId = user?.id ?? null;
   const tasks = useTasksState((s) => s.tasks);
   const unread = useUnreadCount(userId);
   const { data: today } = useQuery(todaySessionQuery(userId ?? ""));
+  const { data: settings } = useQuery(companySettingsQuery());
 
   const mine = tasks.filter((t) => t.assigneeId === userId && !t.deletedAt && !t.archivedAt);
   const completed = mine.filter((t) => t.status === "done").length;
@@ -30,6 +33,10 @@ export function QuickSummary() {
   ).length;
 
   const workingSeconds = today?.session?.working_seconds ?? 0;
+  const targetMinutes = expectedWorkMinutesFor(
+    employmentType,
+    settings?.expected_work_minutes ?? 480,
+  );
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -46,7 +53,7 @@ export function QuickSummary() {
         label="Hours worked"
         value={formatHm(workingSeconds)}
         icon={Clock}
-        hint="of 8h target"
+        hint={`of ${formatHm(targetMinutes * 60)} target`}
       />
     </div>
   );

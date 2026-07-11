@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/services/core";
 import { recordAudit } from "@/features/audit/audit-store";
+import { employmentTypeSlug } from "@/features/hr/employment-type";
 import type { AppRole, Profile } from "./types";
 
 const SITE_ORIGIN = () => (typeof window !== "undefined" ? window.location.origin : "");
@@ -75,4 +77,24 @@ export async function fetchRoles(userId: string): Promise<AppRole[]> {
   const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   if (error) throw error;
   return (data ?? []).map((r) => r.role as AppRole);
+}
+
+/**
+ * The signed-in user's employment type slug (`full-time` / `part-time` / …), or
+ * `null` when they have no employee record or none is set. Drives the daily
+ * workflow differences (attendance target, midday requirement) via the helpers
+ * in `@/features/hr/employment-type`. Uses the relaxed `db` client because
+ * `employees` / `employment_types` are not in the generated Supabase types.
+ */
+export async function fetchEmploymentType(userId: string): Promise<string | null> {
+  const { data, error } = await db
+    .from("employees")
+    .select("employment_type:employment_types ( slug )")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  const embed = (data as { employment_type: { slug: string } | { slug: string }[] | null } | null)
+    ?.employment_type;
+  const row = Array.isArray(embed) ? (embed[0] ?? null) : embed;
+  return employmentTypeSlug(row?.slug);
 }

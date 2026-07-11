@@ -41,10 +41,13 @@ export function InviteEmployeeDialog({
   const settings = useInvitationSettings();
   // Live, org-specific department list (Supabase-backed) — not a fixed sample.
   const { data: departments = [] } = useQuery(hrQueries.departments());
+  // Real employment types (Full-time / Part-time / …) from the reference table.
+  const { data: employmentTypes = [] } = useQuery(hrQueries.employmentTypes());
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [department, setDepartment] = useState<Department>("" as Department);
   const [role, setRole] = useState<EmployeeRole>("employee");
+  const [employmentTypeId, setEmploymentTypeId] = useState("");
   const [expiryDays, setExpiryDays] = useState<number>(settings.expiryDays);
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,9 +58,18 @@ export function InviteEmployeeDialog({
       setEmail("");
       setDepartment("" as Department);
       setRole("employee");
+      setEmploymentTypeId("");
       setExpiryDays(settings.expiryDays);
     }
   }, [open, settings.expiryDays]);
+
+  // Default employment type to Full-time (else the first option) once loaded.
+  useEffect(() => {
+    if (open && employmentTypes.length > 0 && !employmentTypeId) {
+      const fullTime = employmentTypes.find((t) => t.slug === "full-time");
+      setEmploymentTypeId((fullTime ?? employmentTypes[0]).id);
+    }
+  }, [open, employmentTypes, employmentTypeId]);
 
   // Default the department to the first live option once the list is available.
   useEffect(() => {
@@ -73,7 +85,14 @@ export function InviteEmployeeDialog({
     try {
       // Real round trip: creates the auth user + profile + role + employee row
       // server-side and emails the setup link, then records the local invite.
-      const invitation = await issueInvitation({ name, email, department, role, expiryDays });
+      const invitation = await issueInvitation({
+        name,
+        email,
+        department,
+        role,
+        employmentTypeId: employmentTypeId || undefined,
+        expiryDays,
+      });
       onOpenChange(false);
       toast.success("Invitation sent", {
         description: `${invitation.email} has ${expiryDays} days to accept.`,
@@ -146,6 +165,24 @@ export function InviteEmployeeDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="invite-employment-type">Employment type</Label>
+            <Select value={employmentTypeId} onValueChange={setEmploymentTypeId}>
+              <SelectTrigger id="invite-employment-type">
+                <SelectValue placeholder="Select employment type" />
+              </SelectTrigger>
+              <SelectContent>
+                {employmentTypes.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Part-time works a 4-hour day and skips the midday report.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="invite-expiry">Invitation expires after</Label>

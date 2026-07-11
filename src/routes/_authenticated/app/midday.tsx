@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
+import { useAuth } from "@/features/auth/auth-context";
+import { requiresMidday } from "@/features/hr/employment-type";
 import { ManagerMiddayOverview } from "@/features/midday/components/manager-midday-overview";
 import { MiddayWizard } from "@/features/midday/components/midday-wizard";
 import { canEditMidday, getMiddaySubmission } from "@/features/midday/store";
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/app/midday")({
 
 function MiddayPage() {
   const { edit, view } = Route.useSearch();
+  const { employmentType } = useAuth();
 
   if (view === "manager" || view === "hr") {
     return (
@@ -34,6 +37,21 @@ function MiddayPage() {
           }
         />
         <ManagerMiddayOverview hrMode={view === "hr"} />
+      </AppShell>
+    );
+  }
+
+  // Part-time employees don't file a midday pulse — the nav item and dashboard
+  // tile are already hidden for them; guard the direct URL too so they don't see
+  // (or submit) the wizard. The manager/HR overview above stays available.
+  if (!requiresMidday(employmentType)) {
+    return (
+      <AppShell>
+        <PageHeader
+          eyebrow="Midday update"
+          title="Not part of your schedule"
+          description="Midday status reports aren't required for part-time employees. Your check-in and end-of-day reports are all you need."
+        />
       </AppShell>
     );
   }

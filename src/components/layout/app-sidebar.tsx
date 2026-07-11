@@ -35,9 +35,10 @@ function SectionMenu({
   items: NavItem[];
   currentPath: string;
 }) {
-  const { roles } = useAuth();
-  // Filter by MVP scope *and* the current user's roles (see nav-config).
-  const visible = items.filter((item) => isNavItemVisible(item, roles));
+  const { roles, employmentType } = useAuth();
+  // Filter by MVP scope, the current user's roles, and part-time daily-workflow
+  // trim (Midday is hidden for part-timers) — see nav-config.
+  const visible = items.filter((item) => isNavItemVisible(item, roles, employmentType));
   if (visible.length === 0) return null;
 
   return (

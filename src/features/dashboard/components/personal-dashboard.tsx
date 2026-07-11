@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-context";
+import { requiresMidday } from "@/features/hr/employment-type";
 import { CheckInWidget } from "@/features/checkin/components/check-in-widget";
 import { CurrentTasks } from "@/features/dashboard/components/current-tasks";
 import { EodWidget } from "@/features/eod/components/eod-widget";
@@ -26,9 +27,11 @@ import { useTodaySession } from "@/features/attendance/hooks/use-today-session";
  * Attendance reminders live here so they only fire for people who check in.
  */
 export function PersonalDashboard() {
-  const { profile, user } = useAuth();
+  const { profile, user, employmentType } = useAuth();
   const todayQ = useTodaySession(user?.id ?? null);
   useAttendanceReminders(todayQ.data);
+  // Part-time employees skip the midday pulse entirely — no widget, no reminder.
+  const showMidday = requiresMidday(employmentType);
   const greetingName =
     profile?.display_name ?? profile?.full_name ?? user?.email?.split("@")[0] ?? "there";
   const hour = new Date().getHours();
@@ -70,7 +73,7 @@ export function PersonalDashboard() {
         </div>
         <div className="space-y-4">
           <CheckInWidget />
-          <MiddayWidget />
+          {showMidday ? <MiddayWidget /> : null}
           <EodWidget />
         </div>
       </section>
@@ -88,7 +91,7 @@ export function PersonalDashboard() {
           <PendingActionsWidget />
         </div>
       </section>
-      <MiddayReminder />
+      {showMidday ? <MiddayReminder /> : null}
     </>
   );
 }

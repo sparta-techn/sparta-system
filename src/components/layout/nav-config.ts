@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { isFeatureInMvp } from "@/config/mvp-scope";
+import { requiresMidday } from "@/features/hr/employment-type";
 import type { AppRole } from "@/features/auth/types";
 
 export type NavItem = {
@@ -42,6 +43,12 @@ export type NavItem = {
    * only controls nav visibility.
    */
   roles?: AppRole[];
+  /**
+   * Hidden for part-time employees (who skip this part of the daily workflow).
+   * Currently only the Midday report — part-timers file check-in and end-of-day
+   * but not the midday pulse. See `@/features/hr/employment-type`.
+   */
+  hiddenForPartTime?: boolean;
 };
 
 // ── Role groups (mirror of the permission catalog / RLS intent) ───────────────
@@ -63,7 +70,14 @@ const IC_DAILY: AppRole[] = ["hr", "project_manager", "team_lead", "employee", "
 export const PRIMARY_NAV: NavItem[] = [
   { id: "dashboard", title: "Dashboard", url: "/app", icon: Home },
   { id: "check-in", title: "Check-in", url: "/app/check-in", icon: Sparkles, roles: IC_DAILY },
-  { id: "midday", title: "Midday", url: "/app/midday", icon: GaugeCircle, roles: IC_DAILY },
+  {
+    id: "midday",
+    title: "Midday",
+    url: "/app/midday",
+    icon: GaugeCircle,
+    roles: IC_DAILY,
+    hiddenForPartTime: true,
+  },
   { id: "eod", title: "End-of-day", url: "/app/eod", icon: ClipboardCheck, roles: IC_DAILY },
   { id: "attendance", title: "Attendance", url: "/app/attendance", icon: Calendar },
   {
@@ -143,13 +157,19 @@ export function isNavItemDeferred(item: NavItem): boolean {
 }
 
 /**
- * Whether a nav item should appear for a user holding `roles`. Combines MVP
- * scope (in-MVP, or explicitly surfaced as a "future" item) with the item's
- * role allowlist (absent = everyone).
+ * Whether a nav item should appear for a user holding `roles` with the given
+ * `employmentType` slug. Combines MVP scope (in-MVP, or explicitly surfaced as a
+ * "future" item), the item's role allowlist (absent = everyone), and the
+ * part-time daily-workflow trim (Midday is hidden for part-timers).
  */
-export function isNavItemVisible(item: NavItem, roles: AppRole[]): boolean {
+export function isNavItemVisible(
+  item: NavItem,
+  roles: AppRole[],
+  employmentType?: string | null,
+): boolean {
   const inScope = isFeatureInMvp(item.id) || item.whenOutOfMvp === "future";
   if (!inScope) return false;
   if (item.roles && !item.roles.some((role) => roles.includes(role))) return false;
+  if (item.hiddenForPartTime && !requiresMidday(employmentType)) return false;
   return true;
 }

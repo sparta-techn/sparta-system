@@ -50,6 +50,8 @@ export interface ProvisionInvitedEmployeeInput {
   department: Department;
   /** Optional position/job title to attach (resolved against `positions.title`). */
   positionTitle?: string;
+  /** Optional employment type row id (`employment_types.id`) to stamp. */
+  employmentTypeId?: string;
   /** Authenticated inviter (from the JWT) — the audit actor. */
   invitedByUserId: string;
   /** Absolute URL the invite email should send the invitee to. */
@@ -251,6 +253,9 @@ export async function provisionInvitedEmployee(
         user_id: userId,
         department_id: departmentId,
         position_id: positionId,
+        // Only overwrite the employment type when one was chosen, so a re-invite
+        // that omits it doesn't wipe a previously-set value.
+        ...(input.employmentTypeId ? { employment_type_id: input.employmentTypeId } : {}),
         status: "invited",
         created_by: input.invitedByUserId,
       },
@@ -268,7 +273,14 @@ export async function provisionInvitedEmployee(
       action: "employee.invited",
       targetTable: "employees",
       targetId: employeeId,
-      after: { userId, email, appRole, departmentId, positionId },
+      after: {
+        userId,
+        email,
+        appRole,
+        departmentId,
+        positionId,
+        employmentTypeId: input.employmentTypeId ?? null,
+      },
       reason: `Invited ${email} as ${appRole}`,
     },
     { userId: input.invitedByUserId },
