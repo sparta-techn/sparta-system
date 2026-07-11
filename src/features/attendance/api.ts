@@ -146,5 +146,14 @@ export async function getTeamToday(): Promise<TeammateToday[]> {
     .eq("work_date", workDate)
     .order("started_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as unknown as TeammateToday[];
+  // Supabase returns each row as the work_session columns at the root with the
+  // joined profile nested under `profile` — not as { session, profile }. Reshape
+  // into the consumed shape and drop rows whose profile join didn't resolve
+  // (defensive; the FK should guarantee one, but a null would crash the grid).
+  return (data ?? []).flatMap((row) => {
+    const { profile, ...session } = row as unknown as WorkSessionRow & {
+      profile: TeammateToday["profile"] | null;
+    };
+    return profile ? [{ session: session as WorkSessionRow, profile }] : [];
+  });
 }

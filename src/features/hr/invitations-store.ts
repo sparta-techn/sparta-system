@@ -149,8 +149,27 @@ export function getSettings(): InvitationSettings {
   return state.settings;
 }
 
+/**
+ * `listInvitations()` derives a fresh array on every call (map + sort), which
+ * violates `useSyncExternalStore`'s getSnapshot stability contract and throws
+ * "The result of getSnapshot should be cached to avoid an infinite loop". Memoize
+ * on the current `state` reference (reassigned immutably by every mutation) so the
+ * hook returns a stable array between renders and only recomputes when state changes.
+ */
+let listSnapshot: { state: State; list: HrInvitation[] } | null = null;
+
+function invitationsSnapshot(): HrInvitation[] {
+  if (!listSnapshot || listSnapshot.state !== state) {
+    listSnapshot = { state, list: listInvitations() };
+  }
+  return listSnapshot.list;
+}
+
+// getServerSnapshot must likewise return a cached value, computed once.
+const serverInvitations = defaultState().invitations;
+
 export function useInvitations(): HrInvitation[] {
-  return useSyncExternalStore(subscribe, listInvitations, () => defaultState().invitations);
+  return useSyncExternalStore(subscribe, invitationsSnapshot, () => serverInvitations);
 }
 
 export function useInvitationSettings(): InvitationSettings {
