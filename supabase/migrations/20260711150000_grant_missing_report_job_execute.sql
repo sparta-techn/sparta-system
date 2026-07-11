@@ -1,0 +1,15 @@
+-- =========================================================================
+-- Grant service_role EXECUTE on the missing-report reminder job so it can be
+-- invoked on demand from the manager dashboard "Send reminder" quick action
+-- (see src/features/manager/reminders.functions.ts → sendMissingReportRemindersFn).
+--
+-- The job (public.job_missing_report_reminders) was defined SECURITY DEFINER in
+-- 20260707130000 and had EXECUTE revoked from PUBLIC, anon, and authenticated so
+-- only the scheduled pg_cron run could call it. The on-demand path runs through a
+-- server function guarded by requireSupabaseAuth + a reviewer-role check, using
+-- the service-role admin client — so we grant EXECUTE narrowly to service_role
+-- only (never to authenticated/anon). The job is idempotent per day (it skips a
+-- recipient who already has today's reminder), so a manual run after the 17:30
+-- UTC cron never double-notifies.
+-- =========================================================================
+GRANT EXECUTE ON FUNCTION public.job_missing_report_reminders() TO service_role;

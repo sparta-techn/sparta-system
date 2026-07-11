@@ -1,3 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { TeamSnapshot } from "@/features/dashboard/components/team-snapshot";
@@ -11,6 +13,7 @@ import {
 } from "@/features/tasks/components/dashboard-widgets";
 import { KpiGrid } from "@/features/manager/components/kpi-grid";
 import { ManagerQuickActions } from "@/features/manager/components/manager-quick-actions";
+import { useSendReminders } from "@/features/manager/hooks/use-send-reminders";
 
 /**
  * Manager dashboard — the operational cockpit for people who lead a team
@@ -23,6 +26,9 @@ import { ManagerQuickActions } from "@/features/manager/components/manager-quick
  * them here once the backing tables/RPCs exist.
  */
 export function ManagerDashboard() {
+  const navigate = useNavigate();
+  const { send: sendReminder, sending: sendingReminder } = useSendReminders();
+
   return (
     <>
       <PageHeader
@@ -31,8 +37,12 @@ export function ManagerDashboard() {
         description="What needs your attention right now — who's around, what's overdue, and pending actions."
         actions={
           <>
-            <Button variant="outline">Send reminder</Button>
-            <Button>New announcement</Button>
+            <Button variant="outline" onClick={sendReminder} disabled={sendingReminder}>
+              Send reminder
+            </Button>
+            <Button onClick={() => navigate({ to: "/app/hr/announcements" })}>
+              New announcement
+            </Button>
           </>
         }
       />
