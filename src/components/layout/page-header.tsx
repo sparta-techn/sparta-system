@@ -13,7 +13,9 @@ export function PageHeader({ title, description, eyebrow, actions, className }: 
   return (
     <header
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 pb-6 sm:flex sm:flex-wrap sm:items-end sm:justify-between",
+        // Stack title over actions on mobile so the title gets full width
+        // (no mid-word clipping); sit them side by side from sm up.
+        "flex flex-col gap-4 pb-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between",
         className,
       )}
     >
@@ -30,7 +32,7 @@ export function PageHeader({ title, description, eyebrow, actions, className }: 
           <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
   );
 }
