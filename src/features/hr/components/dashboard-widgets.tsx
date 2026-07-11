@@ -1,14 +1,9 @@
-import { Cake, CalendarHeart, Mail, PartyPopper, ShieldCheck } from "lucide-react";
+import { Mail, PartyPopper } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
-import {
-  announcements,
-  upcomingAnniversaries,
-  upcomingBirthdays,
-  type HrEmployee,
-} from "../mock-data";
+import { type HrEmployee } from "../mock-data";
 import { hrQueries } from "../queries";
 import { useInvitations } from "../invitations-store";
 import { EmployeeAvatar } from "./employee-avatar";
@@ -97,61 +92,6 @@ export function NewEmployeesWidget() {
   );
 }
 
-export function BirthdaysWidget() {
-  const list = upcomingBirthdays(30);
-  return (
-    <SectionCard title="Birthdays" icon={Cake}>
-      {list.length === 0 ? (
-        <EmptyState title="No birthdays this month" />
-      ) : (
-        <ul className="space-y-2">
-          {list.slice(0, 5).map((e) => (
-            <li
-              key={e.id}
-              className="flex items-center justify-between gap-3 rounded-md p-2 hover:bg-muted/40"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <EmployeeAvatar employee={e} size={32} />
-                <p className="truncate text-sm font-medium">{e.name}</p>
-              </div>
-              <span className="text-xs text-muted-foreground">{e.birthday}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </SectionCard>
-  );
-}
-
-export function AnniversariesWidget() {
-  const list = upcomingAnniversaries(60);
-  return (
-    <SectionCard title="Work anniversaries" icon={CalendarHeart}>
-      {list.length === 0 ? (
-        <EmptyState title="No anniversaries soon" />
-      ) : (
-        <ul className="space-y-2">
-          {list.slice(0, 5).map((x) => (
-            <li
-              key={x.employee.id}
-              className="flex items-center justify-between gap-3 rounded-md p-2 hover:bg-muted/40"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <EmployeeAvatar employee={x.employee} size={32} />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{x.employee.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">in {x.in} days</p>
-                </div>
-              </div>
-              <Badge variant="outline">{x.years}y</Badge>
-            </li>
-          ))}
-        </ul>
-      )}
-    </SectionCard>
-  );
-}
-
 export function PendingInvitationsWidget() {
   // Real pending invites from the live invitations flow (same store the
   // Invitations tab reads/writes), not mock seed emails.
@@ -186,28 +126,6 @@ export function PendingInvitationsWidget() {
             </li>
           ))}
         </ul>
-      )}
-    </SectionCard>
-  );
-}
-
-export function PolicyAcknowledgementsWidget() {
-  const policy = announcements.find((a) => a.title.toLowerCase().includes("policy"));
-  const pct = policy ? Math.round((policy.acknowledgements / Math.max(policy.reach, 1)) * 100) : 0;
-  return (
-    <SectionCard title="Policy acknowledgements" icon={ShieldCheck}>
-      {!policy ? (
-        <EmptyState title="No active policies" />
-      ) : (
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{policy.title}</p>
-          <div className="h-2 rounded-full bg-muted overflow-hidden">
-            <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {policy.acknowledgements}/{policy.reach} acknowledged · {pct}%
-          </p>
-        </div>
       )}
     </SectionCard>
   );

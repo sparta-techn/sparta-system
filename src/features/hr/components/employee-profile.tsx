@@ -16,22 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  attendanceIssues,
-  auditLog,
-  documents,
-  leaveBalances,
-  leaveRequests,
-  type HrEmployee,
-} from "../mock-data";
+import { type HrEmployee } from "../mock-data";
 import { hrQueries } from "../queries";
 import {
   useEmployeeAudit,
@@ -39,7 +24,7 @@ import {
   type EmployeeAuditAction,
 } from "../employees-store";
 import { EmployeeAvatar } from "./employee-avatar";
-import { EmploymentStatusBadge, LeaveStatusBadge, LeaveTypeBadge, RoleBadge } from "./badges";
+import { EmploymentStatusBadge, RoleBadge } from "./badges";
 import { EmptyState } from "./empty-state";
 import { EmployeeActionsMenu } from "./employee-actions-menu";
 
@@ -69,12 +54,6 @@ export function EmployeeProfile({ employee }: { employee: HrEmployee }) {
     () => allEmployees.filter((e) => e.managerId === employee.id),
     [allEmployees, employee.id],
   );
-  const balance = leaveBalances.find((b) => b.employeeId === employee.id);
-  const empLeaves = leaveRequests.filter((r) => r.employeeId === employee.id);
-  const empDocs = documents.filter((d) => d.employeeId === employee.id);
-  const empIssues = attendanceIssues.filter((i) => i.employeeId === employee.id);
-  const empAudit = auditLog.filter((a) => a.target.includes(employee.name));
-
   return (
     <div className="space-y-6">
       <Card>
@@ -178,31 +157,11 @@ export function EmployeeProfile({ employee }: { employee: HrEmployee }) {
         </TabsContent>
 
         <TabsContent value="attendance" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Attendance issues (30d)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {empIssues.length === 0 ? (
-                <EmptyState title="Clean attendance" description="No issues in the last 30 days." />
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {empIssues.map((i) => (
-                    <li
-                      key={i.id}
-                      className="flex items-center justify-between rounded-md border p-2"
-                    >
-                      <span>
-                        {new Date(i.date).toLocaleDateString()} — {i.type.replace(/_/g, " ")}
-                        {i.minutesLate ? ` (${i.minutesLate}m)` : ""}
-                      </span>
-                      <Badge variant="secondary">{i.type}</Badge>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            title="Attendance"
+            description="Per-employee attendance history will appear here once wired to work sessions."
+            icon={Calendar}
+          />
         </TabsContent>
 
         <TabsContent value="sessions" className="mt-4">
@@ -229,104 +188,20 @@ export function EmployeeProfile({ employee }: { employee: HrEmployee }) {
           />
         </TabsContent>
 
-        <TabsContent value="leave" className="mt-4 space-y-4">
-          {balance ? (
-            <div className="grid gap-3 md:grid-cols-4">
-              <BalanceCard label="Annual" used={balance.annual.used} total={balance.annual.total} />
-              <BalanceCard label="Sick" used={balance.sick.used} total={balance.sick.total} />
-              <BalanceCard
-                label="Emergency"
-                used={balance.emergency.used}
-                total={balance.emergency.total}
-              />
-              <BalanceCard
-                label="Parental"
-                used={balance.parental.used}
-                total={balance.parental.total}
-              />
-            </div>
-          ) : null}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {empLeaves.length === 0 ? (
-                <EmptyState title="No leave requests" />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>From</TableHead>
-                      <TableHead>To</TableHead>
-                      <TableHead>Days</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {empLeaves.map((r) => (
-                      <TableRow key={r.id}>
-                        <TableCell>
-                          <LeaveTypeBadge type={r.type} />
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(r.from).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(r.to).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-sm">{r.days}</TableCell>
-                        <TableCell>
-                          <LeaveStatusBadge status={r.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="leave" className="mt-4">
+          <EmptyState
+            title="Leave"
+            description="Leave balances and requests are part of the deferred Leave module."
+            icon={Calendar}
+          />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm">Documents</CardTitle>
-              <Button size="sm" variant="outline">
-                Upload
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {empDocs.length === 0 ? (
-                <EmptyState
-                  title="No documents"
-                  description="Uploaded contracts, NDAs, and certificates will appear here."
-                  icon={FileText}
-                />
-              ) : (
-                <ul className="divide-y">
-                  {empDocs.map((d) => (
-                    <li key={d.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <FileText className="size-4 text-muted-foreground" />
-                        <div className="min-w-0">
-                          <p className="truncate font-medium">{d.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {d.category} · {Math.round(d.sizeKb)} KB ·{" "}
-                            {new Date(d.uploadedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="ghost">
-                        Download
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            title="Documents"
+            description="Employee documents are part of the deferred Documents module."
+            icon={FileText}
+          />
         </TabsContent>
 
         <TabsContent value="activity" className="mt-4">
@@ -338,7 +213,7 @@ export function EmployeeProfile({ employee }: { employee: HrEmployee }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {managementAudit.length === 0 && empAudit.length === 0 ? (
+              {managementAudit.length === 0 ? (
                 <EmptyState title="No activity recorded" />
               ) : (
                 <ul className="space-y-3">
@@ -352,20 +227,6 @@ export function EmployeeProfile({ employee }: { employee: HrEmployee }) {
                           {a.detail ? (
                             <span className="text-muted-foreground"> — {a.detail}</span>
                           ) : null}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(a.at).toLocaleString()}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                  {empAudit.map((a) => (
-                    <li key={a.id} className="flex gap-3 text-sm">
-                      <div className="mt-1 size-2 rounded-full bg-primary shrink-0" aria-hidden />
-                      <div>
-                        <p>
-                          <span className="font-medium">{a.actor}</span> {a.action.toLowerCase()}{" "}
-                          <span className="text-muted-foreground">— {a.details}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(a.at).toLocaleString()}
@@ -446,23 +307,5 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <span className="text-muted-foreground">{label}</span>
       <div className="text-right">{children}</div>
     </div>
-  );
-}
-
-function BalanceCard({ label, used, total }: { label: string; used: number; total: number }) {
-  const pct = total ? Math.round((used / total) * 100) : 0;
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 text-lg font-semibold">
-          {total - used}{" "}
-          <span className="text-sm font-normal text-muted-foreground">/ {total} days left</span>
-        </p>
-        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
