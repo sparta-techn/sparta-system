@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-context";
 import { CheckInWidget } from "@/features/checkin/components/check-in-widget";
 import { CurrentTasks } from "@/features/dashboard/components/current-tasks";
-import { DependenciesDashboardWidget } from "@/features/dependencies/components/dep-widgets";
 import { EodWidget } from "@/features/eod/components/eod-widget";
 import { MiddayReminder } from "@/features/midday/components/midday-reminder";
 import { MiddayWidget } from "@/features/midday/components/midday-widget";
@@ -76,10 +75,7 @@ export function PersonalDashboard() {
         </div>
       </section>
 
-      <section aria-label="Collaboration" className="mb-6 grid gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <DependenciesDashboardWidget />
-        </div>
+      <section aria-label="Collaboration" className="mb-6">
         <TeamSnapshot />
       </section>
 

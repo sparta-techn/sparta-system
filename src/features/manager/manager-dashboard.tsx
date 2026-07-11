@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { AnalyticsPreview } from "@/features/manager/components/analytics-preview";
 import { AttendanceOverview } from "@/features/manager/components/attendance-overview";
 import { BlockersPanel } from "@/features/manager/components/blockers-panel";
 import { EmployeeDrawer } from "@/features/manager/components/employee-drawer";
@@ -70,10 +69,6 @@ export function ManagerDashboard() {
         <TeamCalendar />
         <ManagerQuickActions />
         <div className="xl:col-span-1">{/* spacer / future widget */}</div>
-      </section>
-
-      <section aria-label="Analytics" className="mb-6">
-        <AnalyticsPreview />
       </section>
 
       <EmployeeDrawer

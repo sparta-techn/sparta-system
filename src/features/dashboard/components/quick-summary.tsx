@@ -1,12 +1,9 @@
-import { Bell, CheckCircle2, Clock, Hourglass, ListChecks, Workflow } from "lucide-react";
+import { Bell, CheckCircle2, Clock, Hourglass, ListChecks } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { StatCard } from "@/components/stat-card";
 import { useAuth } from "@/features/auth/auth-context";
 import { todaySessionQuery } from "@/features/attendance/queries";
-import { CURRENT_USER_ID } from "@/features/dependencies/mock-data";
-import { useDependencies } from "@/features/dependencies/store";
-import { isOpen } from "@/features/dependencies/utils";
 import { useUnreadCount } from "@/features/notifications/store";
 import { useTasksState } from "@/features/tasks/store";
 
@@ -20,7 +17,6 @@ function formatHm(totalSeconds: number): string {
 export function QuickSummary() {
   const userId = useAuth().user?.id ?? null;
   const tasks = useTasksState((s) => s.tasks);
-  const deps = useDependencies();
   const unread = useUnreadCount(userId);
   const { data: today } = useQuery(todaySessionQuery(userId ?? ""));
 
@@ -33,14 +29,10 @@ export function QuickSummary() {
     (t) => t.dueDate?.slice(0, 10) === todayStr && t.status !== "done" && t.status !== "cancelled",
   ).length;
 
-  const dependenciesWaiting = deps.filter(
-    (d) => d.requesterId === CURRENT_USER_ID && d.ownerId !== CURRENT_USER_ID && isOpen(d),
-  ).length;
-
   const workingSeconds = today?.session?.working_seconds ?? 0;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <StatCard
         label="Today's tasks"
         value={mine.length}
@@ -49,12 +41,6 @@ export function QuickSummary() {
       />
       <StatCard label="Completed" value={completed} icon={CheckCircle2} />
       <StatCard label="Pending" value={pending} icon={Hourglass} hint={`${dueToday} due today`} />
-      <StatCard
-        label="Dependencies"
-        value={dependenciesWaiting}
-        icon={Workflow}
-        hint="Waiting on others"
-      />
       <StatCard label="Notifications" value={unread} icon={Bell} hint="Unread in your inbox" />
       <StatCard
         label="Hours worked"

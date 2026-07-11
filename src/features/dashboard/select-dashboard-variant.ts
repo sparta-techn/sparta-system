@@ -1,12 +1,12 @@
 import type { AppRole } from "@/features/auth/types";
 
-export type DashboardVariant = "executive" | "manager" | "personal";
+export type DashboardVariant = "owner" | "manager" | "personal";
 
 /**
  * Picks the landing dashboard for a user from their (possibly multiple) roles.
  * Roles are additive, so we check highest-privilege first and fall through:
  *
- *  - Owner / Admin           → executive (company-wide cockpit)
+ *  - Owner / Admin           → owner (in-MVP people/attendance/delivery cockpit)
  *  - HR / Project Manager     → manager (operational team view)
  *  - everyone else            → personal (check-in focused)
  *
@@ -16,7 +16,7 @@ export type DashboardVariant = "executive" | "manager" | "personal";
  * reviews, etc.) are still reachable from the nav.
  */
 export function selectDashboardVariant(roles: AppRole[]): DashboardVariant {
-  if (roles.includes("owner") || roles.includes("admin")) return "executive";
+  if (roles.includes("owner") || roles.includes("admin")) return "owner";
   if (roles.includes("hr") || roles.includes("project_manager")) return "manager";
   return "personal";
 }

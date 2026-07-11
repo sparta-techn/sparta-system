@@ -4,9 +4,9 @@ import type { AppRole } from "@/features/auth/types";
 import { selectDashboardVariant } from "./select-dashboard-variant";
 
 describe("selectDashboardVariant", () => {
-  it("routes owner and admin to the executive dashboard", () => {
-    expect(selectDashboardVariant(["owner"])).toBe("executive");
-    expect(selectDashboardVariant(["admin"])).toBe("executive");
+  it("routes owner and admin to the owner dashboard", () => {
+    expect(selectDashboardVariant(["owner"])).toBe("owner");
+    expect(selectDashboardVariant(["admin"])).toBe("owner");
   });
 
   it("routes HR and project managers to the manager dashboard", () => {
@@ -31,9 +31,9 @@ describe("selectDashboardVariant", () => {
   });
 
   it("gives precedence to the highest-privilege role when several are held", () => {
-    expect(selectDashboardVariant(["employee", "owner"])).toBe("executive");
+    expect(selectDashboardVariant(["employee", "owner"])).toBe("owner");
     expect(selectDashboardVariant(["team_lead", "project_manager"])).toBe("manager");
-    expect(selectDashboardVariant(["hr", "admin"])).toBe("executive");
+    expect(selectDashboardVariant(["hr", "admin"])).toBe("owner");
   });
 
   it("defaults to personal when no roles are present", () => {

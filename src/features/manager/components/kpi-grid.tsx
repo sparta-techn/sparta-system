@@ -1,10 +1,8 @@
 import {
   Activity,
   AlertTriangle,
-  Ban,
   CalendarX,
   ClipboardCheck,
-  ClipboardList,
   Coffee,
   GaugeCircle,
   Sun,
@@ -41,8 +39,6 @@ export function KpiGrid() {
       <StatCard label="Pending check-ins" value={k.pendingCheckins} icon={Sun} />
       <StatCard label="Pending midday" value={k.pendingMidday} icon={GaugeCircle} />
       <StatCard label="Pending EOD" value={k.pendingEod} icon={ClipboardCheck} />
-      <StatCard label="Open dependencies" value={k.openDeps} icon={ClipboardList} />
-      <StatCard label="Blocked" value={k.blockedDeps} icon={Ban} />
     </div>
   );
 }
