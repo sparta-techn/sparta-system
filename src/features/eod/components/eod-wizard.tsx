@@ -55,7 +55,6 @@ import {
 } from "../store";
 import {
   EMPTY_EOD_DRAFT,
-  SUMMARY_MAX_LENGTH,
   type EodDraft,
   type EodSubmission,
   type InProgressItem,
@@ -166,8 +165,6 @@ export function EodWizard({ existing, sessionSummary }: Props) {
   const validation = useMemo(() => {
     const errors: Partial<Record<StepId, string>> = {};
     if (!draft.summary.trim()) errors.summary = "Today's summary is required.";
-    if (draft.summary.length > SUMMARY_MAX_LENGTH)
-      errors.summary = `Keep it under ${SUMMARY_MAX_LENGTH} characters.`;
     const totalPlan =
       draft.tomorrow.priorities.length +
       draft.tomorrow.tasks.length +
@@ -363,7 +360,6 @@ function SummaryStep({
   onChange: (v: string) => void;
   error?: string;
 }) {
-  const remaining = SUMMARY_MAX_LENGTH - value.length;
   return (
     <div className="space-y-2">
       <Label htmlFor="eod-summary">
@@ -373,7 +369,7 @@ function SummaryStep({
         id="eod-summary"
         rows={5}
         value={value}
-        onChange={(e) => onChange(e.target.value.slice(0, SUMMARY_MAX_LENGTH))}
+        onChange={(e) => onChange(e.target.value)}
         placeholder="e.g. Completed authentication module and reviewed PR #42. Login is ready for QA."
         aria-invalid={!!error}
         aria-describedby={error ? "eod-summary-err" : "eod-summary-hint"}
@@ -388,11 +384,6 @@ function SummaryStep({
             Write it for tomorrow's you — what would you want to know?
           </p>
         )}
-        <span
-          className={cn("tabular-nums", remaining < 50 ? "text-warning" : "text-muted-foreground")}
-        >
-          {remaining}
-        </span>
       </div>
     </div>
   );

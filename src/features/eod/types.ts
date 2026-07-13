@@ -12,8 +12,6 @@
 import type { PriorityLevel } from "@/features/checkin/types";
 import type { TaskProgressEntry, TaskProgressState } from "@/features/midday/types";
 
-export const SUMMARY_MAX_LENGTH = 500;
-
 // ─── In-progress work ─────────────────────────────────────────────────────
 
 export interface InProgressItem {

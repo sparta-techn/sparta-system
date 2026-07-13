@@ -203,7 +203,6 @@ export function CheckInWizard({ existing }: Props) {
                   value={draft.moodNote}
                   onChange={(e) => setField("moodNote", e.target.value)}
                   placeholder="Stays visible to your direct manager."
-                  maxLength={500}
                 />
               </div>
             </div>
