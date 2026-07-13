@@ -3,6 +3,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Coffee, Loader2, Pause, Play, Square } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -28,6 +38,26 @@ interface Props {
   /** Compact variant tucks elements tighter for the dashboard. */
   compact?: boolean;
 }
+
+type ConfirmKind = "break" | "finish";
+
+const confirmCopy: Record<
+  ConfirmKind,
+  { title: string; body: string; action: string; destructive: boolean }
+> = {
+  break: {
+    title: "Start a break?",
+    body: "Your worked time pauses until you resume. You can pick back up whenever you're ready.",
+    action: "Start break",
+    destructive: false,
+  },
+  finish: {
+    title: "Finish work for today?",
+    body: "This will end your session and cannot be undone.",
+    action: "Finish work",
+    destructive: true,
+  },
+};
 
 export function TodayStatusCard({ compact = false }: Props) {
   const { user, employmentType } = useAuth();
@@ -61,6 +91,7 @@ export function TodayStatusCard({ compact = false }: Props) {
   const breakOver = breakSecondsTotal > maxBreakSeconds;
 
   const [finishedDetails, setFinishedDetails] = useState<WorkSessionRow | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmKind | null>(null);
 
   const invalidateAll = () => {
     if (!userId) return;
@@ -101,6 +132,12 @@ export function TodayStatusCard({ compact = false }: Props) {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const runConfirm = () => {
+    if (confirm === "break") breakMut.mutate();
+    else if (confirm === "finish") finishMut.mutate();
+    setConfirm(null);
+  };
 
   const busy =
     startMut.isPending ||
@@ -206,7 +243,7 @@ export function TodayStatusCard({ compact = false }: Props) {
               <>
                 <Button
                   variant="outline"
-                  onClick={() => breakMut.mutate()}
+                  onClick={() => setConfirm("break")}
                   disabled={busy}
                   aria-label="Start break"
                 >
@@ -215,7 +252,7 @@ export function TodayStatusCard({ compact = false }: Props) {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => finishMut.mutate()}
+                  onClick={() => setConfirm("finish")}
                   disabled={busy}
                   aria-label="Finish work"
                 >
@@ -233,7 +270,7 @@ export function TodayStatusCard({ compact = false }: Props) {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => finishMut.mutate()}
+                  onClick={() => setConfirm("finish")}
                   disabled={busy}
                   aria-label="Finish work"
                 >
@@ -260,6 +297,32 @@ export function TodayStatusCard({ compact = false }: Props) {
           if (!open) setFinishedDetails(null);
         }}
       />
+
+      <AlertDialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          {confirm ? (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{confirmCopy[confirm].title}</AlertDialogTitle>
+                <AlertDialogDescription>{confirmCopy[confirm].body}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={runConfirm}
+                  className={
+                    confirmCopy[confirm].destructive
+                      ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      : undefined
+                  }
+                >
+                  {confirmCopy[confirm].action}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          ) : null}
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
