@@ -140,6 +140,12 @@ export interface TeamEodEntry {
   department: string;
   role: string;
   submitted: boolean;
+  /**
+   * Genuinely missing their EOD right now (no submitted report AND their working
+   * day is over per employment type — see `countsAsMissingEod`). Part-timers who
+   * haven't finished a session today are not counted.
+   */
+  missingEod: boolean;
   submittedAt?: string;
   completionPct?: number;
   completedCount?: number;

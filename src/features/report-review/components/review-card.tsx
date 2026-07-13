@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ReportReviewDecision } from "@/services/reports";
 
 import { REPORT_KIND_LABEL, type ReviewQueueItem } from "../types";
+import { ReviewDetailDialog } from "./review-detail-dialog";
 
 function formatDate(value?: string | null) {
   if (!value) return "—";
@@ -27,6 +28,7 @@ export function ReviewCard({
 }) {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState<ReportReviewDecision | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const review = item.latestReview;
 
   async function act(decision: ReportReviewDecision) {
@@ -37,59 +39,77 @@ export function ReviewCard({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-foreground">{item.ownerName}</span>
-            <Badge variant="secondary">{REPORT_KIND_LABEL[item.kind]}</Badge>
-            <span className="text-xs text-muted-foreground">{formatDate(item.workDate)}</span>
-          </div>
-          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.summary}</p>
-        </div>
-        {review ? (
-          <Badge variant={review.decision === "approved" ? "default" : "destructive"}>
-            {review.decision === "approved" ? "Approved" : "Rejected"}
-          </Badge>
-        ) : (
-          <Badge variant="outline">Pending</Badge>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <>
+      <Card>
+        <button
+          type="button"
+          onClick={() => setDetailOpen(true)}
+          className="block w-full rounded-t-lg text-left transition-colors hover:bg-muted/40"
+        >
+          <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium text-foreground">{item.ownerName}</span>
+                <Badge variant="secondary">{REPORT_KIND_LABEL[item.kind]}</Badge>
+                <span className="text-xs text-muted-foreground">{formatDate(item.workDate)}</span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.summary}</p>
+            </div>
+            {review ? (
+              <Badge variant={review.decision === "approved" ? "default" : "destructive"}>
+                {review.decision === "approved" ? "Approved" : "Rejected"}
+              </Badge>
+            ) : (
+              <Badge variant="outline">Pending</Badge>
+            )}
+          </CardHeader>
+        </button>
+
+        {/* Review note stays visible for already-reviewed reports (read-only). */}
         {review?.comment ? (
-          <p className="rounded-md bg-muted/50 p-2 text-sm">
-            <span className="font-medium">Review note: </span>
-            {review.comment}
-          </p>
+          <CardContent>
+            <p className="rounded-md bg-muted/50 p-2 text-sm">
+              <span className="font-medium">Review note: </span>
+              {review.comment}
+            </p>
+          </CardContent>
         ) : null}
-        <Textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder={review ? "Add a note to revise this review…" : "Optional review comment…"}
-          rows={2}
-        />
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={() => act("approved")}
-            disabled={submitting !== null}
-            className="gap-1"
-          >
-            <Check className="size-4" />
-            {submitting === "approved" ? "Approving…" : "Approve"}
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => act("rejected")}
-            disabled={submitting !== null}
-            className="gap-1"
-          >
-            <X className="size-4" />
-            {submitting === "rejected" ? "Rejecting…" : "Reject"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+
+        {/* Approve / reject actions are only meaningful while the report is pending. */}
+        {review ? null : (
+          <CardContent className="space-y-3">
+            <Textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Optional review comment…"
+              rows={2}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => act("approved")}
+                disabled={submitting !== null}
+                className="gap-1"
+              >
+                <Check className="size-4" />
+                {submitting === "approved" ? "Approving…" : "Approve"}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => act("rejected")}
+                disabled={submitting !== null}
+                className="gap-1"
+              >
+                <X className="size-4" />
+                {submitting === "rejected" ? "Rejecting…" : "Reject"}
+              </Button>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      <ReviewDetailDialog item={item} open={detailOpen} onOpenChange={setDetailOpen} />
+    </>
   );
 }

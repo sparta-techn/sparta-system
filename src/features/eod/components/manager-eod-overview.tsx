@@ -15,7 +15,9 @@ interface Props {
 export function ManagerEodOverview({ hrMode = false }: Props) {
   const { entries: team, loading, error } = useTeamEodOverview();
   const submitted = team.filter((t) => t.submitted);
-  const missing = team.filter((t) => !t.submitted);
+  // Genuinely missing only — part-timers still mid-day (or who never clocked in)
+  // are excluded via the shared `countsAsMissingEod` rule in the hook.
+  const missing = team.filter((t) => t.missingEod);
   const submissionRate = team.length === 0 ? 0 : Math.round((submitted.length / team.length) * 100);
 
   const avgCompletion =

@@ -48,3 +48,37 @@ export function expectedWorkMinutesFor(
 export function requiresMidday(nameOrSlug: string | null | undefined): boolean {
   return !isPartTime(nameOrSlug);
 }
+
+/**
+ * Grace after a part-timer closes their work session before a missing-EOD alert
+ * is due — long enough to write the report right after clocking out. Mirrors the
+ * server scan (`employees_without_submitted_report`), keep the two in sync.
+ */
+export const EOD_GRACE_MINUTES = 30;
+
+/**
+ * Whether a "hasn't checked in" alert should ever fire for this employment type.
+ * Part-timers are excluded entirely: we have no per-day schedule for them, so a
+ * missing check-in is not actionable. Full-time (and unknown types) keep firing.
+ */
+export function expectsCheckInAlert(nameOrSlug: string | null | undefined): boolean {
+  return !isPartTime(nameOrSlug);
+}
+
+/**
+ * Whether an employee with no submitted EOD report counts as *genuinely* missing
+ * it right now — the shared rule behind both the alert scan and the roll-up
+ * surfaces. Full-time (and unknown types) always count (unchanged behavior).
+ * Part-time counts only once their working day is over: they closed a work
+ * session at least {@link EOD_GRACE_MINUTES} ago. A part-timer who never started
+ * a session (`finishedAt` null/undefined) does not count — didn't work vs forgot.
+ */
+export function countsAsMissingEod(
+  nameOrSlug: string | null | undefined,
+  finishedAt: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!isPartTime(nameOrSlug)) return true;
+  if (!finishedAt) return false;
+  return new Date(finishedAt).getTime() <= now.getTime() - EOD_GRACE_MINUTES * 60_000;
+}

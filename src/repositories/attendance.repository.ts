@@ -51,6 +51,11 @@ export class AttendanceRepository {
     return this.service.getTeamToday();
   }
 
+  /** Everyone's work sessions for a given work date (manager / HR roll-up). */
+  listByDate(workDate: string): Promise<WorkSessionRow[]> {
+    return this.service.listByDate(workDate);
+  }
+
   getCompanySettings(): Promise<CompanySettings> {
     return this.service.getCompanySettings();
   }

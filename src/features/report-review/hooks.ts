@@ -25,7 +25,8 @@ import type {
 } from "@/services/reports";
 import type { Profile } from "@/features/auth/types";
 
-import type { ReportKind, ReviewQueueItem } from "./types";
+import { reportDetailSections, statusDetailSections } from "./detail";
+import type { ReportKind, ReviewHistoryEntry, ReviewQueueItem } from "./types";
 
 function profileName(p: Profile): string {
   return p.full_name || p.display_name || p.email;
@@ -47,13 +48,29 @@ function statusKind(row: StatusUpdateRow): ReportKind {
   return row.kind === "midday" ? "midday" : "morning_checkin";
 }
 
-/** Head (newest) review per subject id from a desc-ordered trail. */
-function latestBySubject(reviews: ReportReviewRow[]): Map<string, ReportReviewRow> {
-  const map = new Map<string, ReportReviewRow>();
+/** Full review trail per subject id, preserving the desc (newest-first) order. */
+function trailBySubject(reviews: ReportReviewRow[]): Map<string, ReportReviewRow[]> {
+  const map = new Map<string, ReportReviewRow[]>();
   for (const r of reviews) {
-    if (!map.has(r.subject_id)) map.set(r.subject_id, r); // first seen = newest
+    const trail = map.get(r.subject_id);
+    if (trail) trail.push(r);
+    else map.set(r.subject_id, [r]);
   }
   return map;
+}
+
+/** Resolve a review trail into display entries with reviewer names filled in. */
+function toHistory(
+  trail: ReportReviewRow[] | undefined,
+  nameById: Map<string, string>,
+): ReviewHistoryEntry[] {
+  return (trail ?? []).map((r) => ({
+    id: r.id,
+    decision: r.decision,
+    comment: r.comment,
+    reviewerName: r.reviewer_id ? (nameById.get(r.reviewer_id) ?? "Unknown") : "Unknown",
+    createdAt: r.created_at,
+  }));
 }
 
 interface QueueState {
@@ -86,32 +103,42 @@ export function useReviewQueue() {
           statuses.map((s) => s.id),
         ),
       ]);
-      const reportLatest = latestBySubject(reportReviews);
-      const statusLatest = latestBySubject(statusReviews);
+      const reportTrails = trailBySubject(reportReviews);
+      const statusTrails = trailBySubject(statusReviews);
 
-      const reportItems: ReviewQueueItem[] = reports.map((r) => ({
-        subjectType: "daily_report",
-        subjectId: r.id,
-        ownerId: r.user_id,
-        ownerName: nameById.get(r.user_id) ?? "Unknown",
-        workDate: r.work_date,
-        submittedAt: r.submitted_at,
-        kind: "eod",
-        summary: reportSummary(r),
-        latestReview: reportLatest.get(r.id) ?? null,
-      }));
+      const reportItems: ReviewQueueItem[] = reports.map((r) => {
+        const trail = reportTrails.get(r.id);
+        return {
+          subjectType: "daily_report",
+          subjectId: r.id,
+          ownerId: r.user_id,
+          ownerName: nameById.get(r.user_id) ?? "Unknown",
+          workDate: r.work_date,
+          submittedAt: r.submitted_at,
+          kind: "eod",
+          summary: reportSummary(r),
+          detail: reportDetailSections(r),
+          latestReview: trail?.[0] ?? null,
+          reviews: toHistory(trail, nameById),
+        };
+      });
 
-      const statusItems: ReviewQueueItem[] = statuses.map((s) => ({
-        subjectType: "status_update",
-        subjectId: s.id,
-        ownerId: s.user_id,
-        ownerName: nameById.get(s.user_id) ?? "Unknown",
-        workDate: s.work_date,
-        submittedAt: s.submitted_at,
-        kind: statusKind(s),
-        summary: statusSummary(s),
-        latestReview: statusLatest.get(s.id) ?? null,
-      }));
+      const statusItems: ReviewQueueItem[] = statuses.map((s) => {
+        const trail = statusTrails.get(s.id);
+        return {
+          subjectType: "status_update",
+          subjectId: s.id,
+          ownerId: s.user_id,
+          ownerName: nameById.get(s.user_id) ?? "Unknown",
+          workDate: s.work_date,
+          submittedAt: s.submitted_at,
+          kind: statusKind(s),
+          summary: statusSummary(s),
+          detail: statusDetailSections(s),
+          latestReview: trail?.[0] ?? null,
+          reviews: toHistory(trail, nameById),
+        };
+      });
 
       const items = [...reportItems, ...statusItems].sort((a, b) => {
         // Pending first, then newest submission first.
@@ -146,11 +173,18 @@ export function useReviewQueue() {
           comment: comment.trim() || undefined,
         });
         // Optimistically attach the new outcome; keep the row in place.
+        const historyEntry: ReviewHistoryEntry = {
+          id: saved.id,
+          decision: saved.decision,
+          comment: saved.comment,
+          reviewerName: "You",
+          createdAt: saved.created_at,
+        };
         setState((s) => ({
           ...s,
           items: s.items.map((it) =>
             it.subjectId === item.subjectId && it.subjectType === item.subjectType
-              ? { ...it, latestReview: saved }
+              ? { ...it, latestReview: saved, reviews: [historyEntry, ...it.reviews] }
               : it,
           ),
         }));

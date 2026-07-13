@@ -19,6 +19,7 @@ import type {
   WorkSessionRow,
 } from "@/features/attendance/types";
 import { BaseService } from "../core/base-service";
+import type { ListParams } from "../core/types";
 
 type WorkSessionInsert = Partial<WorkSessionRow>;
 type WorkSessionUpdate = Partial<WorkSessionRow>;
@@ -82,6 +83,18 @@ export class AttendanceService extends BaseService<
   /** Everyone's sessions for the current work date (team presence grid). */
   getTeamToday(): Promise<TeammateToday[]> {
     return getTeamToday();
+  }
+
+  /**
+   * Everyone's raw work sessions for a given work date (manager / HR roll-up).
+   * RLS scopes the visible rows server-side, same as the report roll-up. Mirrors
+   * `DailyReportsService.listByDate`.
+   */
+  listByDate(
+    workDate: string,
+    params: ListParams<WorkSessionRow> = {},
+  ): Promise<WorkSessionRow[]> {
+    return this.list({ ...params, filters: { ...params.filters, work_date: workDate } });
   }
 
   /** Company-wide attendance configuration. */

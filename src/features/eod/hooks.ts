@@ -12,8 +12,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import { resolveWorkDate } from "@/features/daily-sync";
 import { fetchHrEmployees } from "@/features/hr/api";
+import { countsAsMissingEod } from "@/features/hr/employment-type";
 import type { HrEmployee } from "@/features/hr/mock-data";
 import type { TaskProgressEntry } from "@/features/midday/types";
+import { attendanceRepository } from "@/repositories/attendance.repository";
 import { dailyReportRepository } from "@/repositories/reports";
 
 import type { TeamEodEntry, TomorrowPlan } from "./types";
@@ -51,14 +53,24 @@ export function useTeamEodOverview() {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const workDate = await resolveWorkDate();
-      const [rows, employees] = await Promise.all([
+      const [rows, employees, sessions] = await Promise.all([
         dailyReportRepository.listByDate(workDate),
         fetchHrEmployees(),
+        attendanceRepository.listByDate(workDate),
       ]);
 
       // One submitted report per user (unique on user_id+work_date); drafts excluded.
       const byUser = new Map(rows.filter((r) => r.submitted_at).map((r) => [r.user_id, r]));
 
+      // When each user closed their work session today (null while still open /
+      // never started) — drives the part-time "day over" missing-EOD rule.
+      const finishedAtByUser = new Map(
+        sessions
+          .filter((s) => s.session_status === "finished")
+          .map((s) => [s.user_id, s.finished_at]),
+      );
+
+      const now = new Date();
       const entries: TeamEodEntry[] = employees
         .filter((e) => e.userId && e.status === "active")
         .map((e) => {
@@ -74,6 +86,9 @@ export function useTeamEodOverview() {
             department: e.department,
             role: rosterRole(e),
             submitted: !!row?.submitted_at,
+            missingEod:
+              !row?.submitted_at &&
+              countsAsMissingEod(e.employmentType, finishedAtByUser.get(e.userId!), now),
             submittedAt: row?.submitted_at ?? undefined,
             completionPct: row ? pct : undefined,
             completedCount: row ? count : undefined,
