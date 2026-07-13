@@ -1,5 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fetchHrEmployees } from "@/features/hr/api";
 import type { CompanySettings, TodaySession, WorkSessionBreakRow, WorkSessionRow } from "./types";
+import { synthesizeAbsences, type TeamAttendanceRow } from "./utils/absence-synthesis";
+
+export type { TeamAttendanceRow };
 
 /** Detect a friendly browser label from UA string. */
 function detectBrowser(): string {
@@ -136,6 +140,21 @@ export interface TeammateToday {
   };
 }
 
+/**
+ * Reshape Supabase's flat `work_sessions` + nested `profile` rows into the
+ * consumed `{ session, profile }` shape, dropping rows whose profile join
+ * didn't resolve (defensive; the FK should guarantee one, but a null would
+ * crash consumers).
+ */
+function reshapeTeamRows(data: unknown[] | null): TeammateToday[] {
+  return (data ?? []).flatMap((row) => {
+    const { profile, ...session } = row as WorkSessionRow & {
+      profile: TeammateToday["profile"] | null;
+    };
+    return profile ? [{ session: session as WorkSessionRow, profile }] : [];
+  });
+}
+
 export async function getTeamToday(): Promise<TeammateToday[]> {
   const workDate = await getCurrentWorkDate();
   const { data, error } = await supabase
@@ -146,14 +165,86 @@ export async function getTeamToday(): Promise<TeammateToday[]> {
     .eq("work_date", workDate)
     .order("started_at", { ascending: true });
   if (error) throw error;
-  // Supabase returns each row as the work_session columns at the root with the
-  // joined profile nested under `profile` — not as { session, profile }. Reshape
-  // into the consumed shape and drop rows whose profile join didn't resolve
-  // (defensive; the FK should guarantee one, but a null would crash the grid).
-  return (data ?? []).flatMap((row) => {
-    const { profile, ...session } = row as unknown as WorkSessionRow & {
-      profile: TeammateToday["profile"] | null;
-    };
-    return profile ? [{ session: session as WorkSessionRow, profile }] : [];
+  return reshapeTeamRows(data);
+}
+
+/**
+ * Upper bound on rows returned by a team range query. A team of ~20 across a
+ * month is ~600 rows, comfortably under this; the cap is a guard against a
+ * runaway range silently pulling the whole table. When a result hits the cap,
+ * the caller should assume truncation and narrow the range.
+ */
+export const TEAM_RANGE_MAX_ROWS = 5000;
+
+/** Raw team work sessions in `[from, to]` (no absence synthesis). */
+async function fetchTeamSessions(from: string, to: string): Promise<TeammateToday[]> {
+  const { data, error } = await supabase
+    .from("work_sessions")
+    .select(
+      "*, profile:profiles!work_sessions_user_id_fkey(id, full_name, display_name, avatar_url, job_title)",
+    )
+    .gte("work_date", from)
+    .lte("work_date", to)
+    .order("work_date", { ascending: false })
+    .order("started_at", { ascending: true })
+    .limit(TEAM_RANGE_MAX_ROWS);
+  if (error) throw error;
+  return reshapeTeamRows(data);
+}
+
+/** Full-day company holidays whose date falls within `[from, to]` (`YYYY-MM-DD`). */
+export async function getFullDayHolidays(from: string, to: string): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("holidays")
+    .select("holiday_date, is_full_day")
+    .gte("holiday_date", from)
+    .lte("holiday_date", to);
+  if (error) throw error;
+  return new Set((data ?? []).filter((h) => h.is_full_day).map((h) => h.holiday_date));
+}
+
+/** Newest day first; within a day, alphabetical by teammate name. */
+function compareTeamRows(a: TeamAttendanceRow, b: TeamAttendanceRow): number {
+  if (a.session.work_date !== b.session.work_date) {
+    return a.session.work_date < b.session.work_date ? 1 : -1;
+  }
+  const an = a.profile.display_name ?? a.profile.full_name ?? "";
+  const bn = b.profile.display_name ?? b.profile.full_name ?? "";
+  return an.localeCompare(bn);
+}
+
+/**
+ * All team attendance whose `work_date` falls within `[from, to]` (inclusive,
+ * `YYYY-MM-DD`), newest day first, with roster-based absences synthesized in.
+ *
+ * `work_sessions` only has a row once someone clocks in, so this composes the
+ * real sessions with synthesized "Absent" rows for active, non-part-time
+ * employees who were expected to work (a company working day, on/after their
+ * hire date, before today) but have no session. Synthetic rows carry
+ * `synthetic: true`. See {@link synthesizeAbsences} for the exact rules and
+ * their known limitations (no leave source, no `end_date` gating).
+ */
+export async function getTeamAttendanceRange(
+  from: string,
+  to: string,
+): Promise<TeamAttendanceRow[]> {
+  const [sessions, settings, roster, holidays, today] = await Promise.all([
+    fetchTeamSessions(from, to),
+    getCompanySettings(),
+    fetchHrEmployees(),
+    getFullDayHolidays(from, to),
+    getCurrentWorkDate(),
+  ]);
+
+  const absences = synthesizeAbsences({
+    sessions,
+    roster,
+    from,
+    to,
+    today,
+    weekendDays: settings.weekend_days,
+    holidays,
   });
+
+  return [...sessions, ...absences].sort(compareTeamRows);
 }
