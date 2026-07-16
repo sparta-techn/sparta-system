@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, History } from "lucide-react";
+import { ArrowRight, Clock, History } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
@@ -32,11 +32,18 @@ function AttendancePage() {
         description="Open your work session at the start of the day and close it when you finish. Breaks, hours and lateness are tracked automatically."
         actions={
           isManager ? (
-            <Button asChild variant="outline">
-              <Link to="/app/attendance/team">
-                Team view <ArrowRight />
-              </Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild variant="ghost">
+                <Link to="/app/attendance/overtime">
+                  <Clock /> Overtime
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/app/attendance/team">
+                  Team view <ArrowRight />
+                </Link>
+              </Button>
+            </div>
           ) : null
         }
       />

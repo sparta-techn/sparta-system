@@ -66,6 +66,7 @@ import { Route as AuthenticatedAppEodHistoryRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppDependenciesManagerRouteImport } from './routes/_authenticated/app/dependencies.manager'
 import { Route as AuthenticatedAppDependenciesIdRouteImport } from './routes/_authenticated/app/dependencies.$id'
 import { Route as AuthenticatedAppAttendanceTeamRouteImport } from './routes/_authenticated/app/attendance/team'
+import { Route as AuthenticatedAppAttendanceOvertimeRouteImport } from './routes/_authenticated/app/attendance/overtime'
 import { Route as AuthenticatedAppAnalyticsTeamRouteImport } from './routes/_authenticated/app/analytics.team'
 import { Route as AuthenticatedAppAnalyticsSavedRouteImport } from './routes/_authenticated/app/analytics.saved'
 import { Route as AuthenticatedAppAnalyticsHrRouteImport } from './routes/_authenticated/app/analytics.hr'
@@ -392,6 +393,12 @@ const AuthenticatedAppAttendanceTeamRoute =
     path: '/app/attendance/team',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppAttendanceOvertimeRoute =
+  AuthenticatedAppAttendanceOvertimeRouteImport.update({
+    id: '/app/attendance/overtime',
+    path: '/app/attendance/overtime',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppAnalyticsTeamRoute =
   AuthenticatedAppAnalyticsTeamRouteImport.update({
     id: '/team',
@@ -464,6 +471,7 @@ export interface FileRoutesByFullPath {
   '/app/analytics/hr': typeof AuthenticatedAppAnalyticsHrRoute
   '/app/analytics/saved': typeof AuthenticatedAppAnalyticsSavedRoute
   '/app/analytics/team': typeof AuthenticatedAppAnalyticsTeamRoute
+  '/app/attendance/overtime': typeof AuthenticatedAppAttendanceOvertimeRoute
   '/app/attendance/team': typeof AuthenticatedAppAttendanceTeamRoute
   '/app/dependencies/$id': typeof AuthenticatedAppDependenciesIdRoute
   '/app/dependencies/manager': typeof AuthenticatedAppDependenciesManagerRoute
@@ -523,6 +531,7 @@ export interface FileRoutesByTo {
   '/app/analytics/hr': typeof AuthenticatedAppAnalyticsHrRoute
   '/app/analytics/saved': typeof AuthenticatedAppAnalyticsSavedRoute
   '/app/analytics/team': typeof AuthenticatedAppAnalyticsTeamRoute
+  '/app/attendance/overtime': typeof AuthenticatedAppAttendanceOvertimeRoute
   '/app/attendance/team': typeof AuthenticatedAppAttendanceTeamRoute
   '/app/dependencies/$id': typeof AuthenticatedAppDependenciesIdRoute
   '/app/dependencies/manager': typeof AuthenticatedAppDependenciesManagerRoute
@@ -590,6 +599,7 @@ export interface FileRoutesById {
   '/_authenticated/app/analytics/hr': typeof AuthenticatedAppAnalyticsHrRoute
   '/_authenticated/app/analytics/saved': typeof AuthenticatedAppAnalyticsSavedRoute
   '/_authenticated/app/analytics/team': typeof AuthenticatedAppAnalyticsTeamRoute
+  '/_authenticated/app/attendance/overtime': typeof AuthenticatedAppAttendanceOvertimeRoute
   '/_authenticated/app/attendance/team': typeof AuthenticatedAppAttendanceTeamRoute
   '/_authenticated/app/dependencies/$id': typeof AuthenticatedAppDependenciesIdRoute
   '/_authenticated/app/dependencies/manager': typeof AuthenticatedAppDependenciesManagerRoute
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/app/analytics/hr'
     | '/app/analytics/saved'
     | '/app/analytics/team'
+    | '/app/attendance/overtime'
     | '/app/attendance/team'
     | '/app/dependencies/$id'
     | '/app/dependencies/manager'
@@ -716,6 +727,7 @@ export interface FileRouteTypes {
     | '/app/analytics/hr'
     | '/app/analytics/saved'
     | '/app/analytics/team'
+    | '/app/attendance/overtime'
     | '/app/attendance/team'
     | '/app/dependencies/$id'
     | '/app/dependencies/manager'
@@ -782,6 +794,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/analytics/hr'
     | '/_authenticated/app/analytics/saved'
     | '/_authenticated/app/analytics/team'
+    | '/_authenticated/app/attendance/overtime'
     | '/_authenticated/app/attendance/team'
     | '/_authenticated/app/dependencies/$id'
     | '/_authenticated/app/dependencies/manager'
@@ -1232,6 +1245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAttendanceTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/attendance/overtime': {
+      id: '/_authenticated/app/attendance/overtime'
+      path: '/app/attendance/overtime'
+      fullPath: '/app/attendance/overtime'
+      preLoaderRoute: typeof AuthenticatedAppAttendanceOvertimeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/analytics/team': {
       id: '/_authenticated/app/analytics/team'
       path: '/team'
@@ -1454,6 +1474,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppSprintsRoute: typeof AuthenticatedAppSprintsRouteWithChildren
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRouteWithChildren
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppAttendanceOvertimeRoute: typeof AuthenticatedAppAttendanceOvertimeRoute
   AuthenticatedAppAttendanceTeamRoute: typeof AuthenticatedAppAttendanceTeamRoute
   AuthenticatedAppEodHistoryRoute: typeof AuthenticatedAppEodHistoryRoute
   AuthenticatedAppNotificationsPreferencesRoute: typeof AuthenticatedAppNotificationsPreferencesRoute
@@ -1480,6 +1501,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppSprintsRoute: AuthenticatedAppSprintsRouteWithChildren,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRouteWithChildren,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppAttendanceOvertimeRoute:
+    AuthenticatedAppAttendanceOvertimeRoute,
   AuthenticatedAppAttendanceTeamRoute: AuthenticatedAppAttendanceTeamRoute,
   AuthenticatedAppEodHistoryRoute: AuthenticatedAppEodHistoryRoute,
   AuthenticatedAppNotificationsPreferencesRoute:

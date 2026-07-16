@@ -32,6 +32,7 @@ import { useQuery } from "@tanstack/react-query";
 import { companySettingsQuery, attendanceKeys } from "../queries";
 import { SessionStatusBadge } from "./attendance-status-badge";
 import { FinishSummaryDialog } from "./finish-summary-dialog";
+import { OvertimeActions } from "@/features/overtime/components/overtime-actions";
 import type { WorkSessionRow } from "../types";
 
 interface Props {
@@ -281,9 +282,12 @@ export function TodayStatusCard({ compact = false }: Props) {
             ) : null}
 
             {status === "finished" ? (
-              <Button variant="outline" disabled aria-label="Day finished">
-                Day finished
-              </Button>
+              <div className="space-y-3">
+                <Button variant="outline" disabled aria-label="Day finished">
+                  Day finished
+                </Button>
+                <OvertimeActions />
+              </div>
             ) : null}
           </div>
         </CardContent>
