@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { routeGuard } from "@/features/auth/route-guard";
 import { TeamTodayGrid } from "@/features/attendance/components/team-today-grid";
 import { TeamHistoryTable } from "@/features/attendance/components/team-history-table";
+import { AddExceptionDialog } from "@/features/attendance/components/add-exception-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/attendance/team")({
   // Team-wide attendance is reviewer-only (owner/admin/hr/project_manager/team_lead
@@ -27,11 +28,14 @@ function TeamAttendancePage() {
         title="Team attendance"
         description="Live status today, plus full attendance history you can export to Excel for any date range."
         actions={
-          <Button asChild variant="outline">
-            <Link to="/app/attendance">
-              <ArrowLeft /> My day
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <AddExceptionDialog />
+            <Button asChild variant="outline">
+              <Link to="/app/attendance">
+                <ArrowLeft /> My day
+              </Link>
+            </Button>
+          </div>
         }
       />
       <Tabs defaultValue="today" className="space-y-6">

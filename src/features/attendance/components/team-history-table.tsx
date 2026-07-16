@@ -25,6 +25,9 @@ import { downloadXlsx } from "@/lib/xlsx";
 
 import { TEAM_RANGE_MAX_ROWS } from "../api";
 import { teamAttendanceRangeQuery } from "../queries";
+import { attendanceExceptionsRangeQuery } from "../exceptions-queries";
+import { exceptionKeyFor, exceptionsByUserDate } from "../exceptions-api";
+import { AttendanceExceptionNote } from "./attendance-exception-note";
 import { formatDurationLong } from "../hooks/use-timer";
 import {
   TEAM_ATTENDANCE_SHEET_NAME,
@@ -74,6 +77,8 @@ export function TeamHistoryTable() {
   const to = range?.to ? format(range.to, ISO) : from;
 
   const q = useQuery(teamAttendanceRangeQuery(from, to));
+  const exceptionsQ = useQuery(attendanceExceptionsRangeQuery(from, to));
+  const exMap = useMemo(() => exceptionsByUserDate(exceptionsQ.data ?? []), [exceptionsQ.data]);
   const allRows = useMemo(() => q.data ?? [], [q.data]);
   const rows = useMemo(
     () => (includeAbsent ? allRows : allRows.filter((r) => !r.synthetic)),
@@ -216,7 +221,15 @@ export function TeamHistoryTable() {
                       <TableCell className="font-medium">
                         {profile.display_name ?? profile.full_name ?? "Unnamed"}
                       </TableCell>
-                      <TableCell className="tabular-nums">{session.work_date}</TableCell>
+                      <TableCell className="tabular-nums">
+                        {session.work_date}
+                        <AttendanceExceptionNote
+                          exceptions={exMap.get(
+                            exceptionKeyFor(session.user_id, session.work_date),
+                          )}
+                          editable
+                        />
+                      </TableCell>
                       <TableCell className="tabular-nums">
                         {session.started_at
                           ? new Date(session.started_at).toLocaleTimeString([], {

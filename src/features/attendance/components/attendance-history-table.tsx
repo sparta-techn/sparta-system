@@ -23,6 +23,9 @@ import { EmptyState, ErrorState, ListSkeleton, NoResultsState } from "@/componen
 import { useAuth } from "@/features/auth/auth-context";
 
 import { attendanceHistoryQuery } from "../queries";
+import { attendanceExceptionsRangeQuery } from "../exceptions-queries";
+import { exceptionKeyFor, exceptionsByUserDate } from "../exceptions-api";
+import { AttendanceExceptionNote } from "./attendance-exception-note";
 import { formatDurationLong } from "../hooks/use-timer";
 import { ATTENDANCE_STATUS_META } from "../types";
 import { AttendanceBadge } from "./attendance-status-badge";
@@ -55,7 +58,7 @@ export function AttendanceHistoryTable() {
 
   const q = useQuery(attendanceHistoryQuery(user?.id ?? "", filters));
 
-  const rows = q.data?.rows ?? [];
+  const rows = useMemo(() => q.data?.rows ?? [], [q.data]);
   const totalCount = q.data?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -63,6 +66,20 @@ export function AttendanceHistoryTable() {
   const visible = rows.filter((r) =>
     !filters.search ? true : r.work_date.includes(filters.search),
   );
+
+  // Exceptions for the visible page's date span, keyed by user_id|date.
+  const dateSpan = useMemo(() => {
+    if (rows.length === 0) return { from: "", to: "" };
+    let min = rows[0].work_date;
+    let max = rows[0].work_date;
+    for (const r of rows) {
+      if (r.work_date < min) min = r.work_date;
+      if (r.work_date > max) max = r.work_date;
+    }
+    return { from: min, to: max };
+  }, [rows]);
+  const exceptionsQ = useQuery(attendanceExceptionsRangeQuery(dateSpan.from, dateSpan.to));
+  const exMap = useMemo(() => exceptionsByUserDate(exceptionsQ.data ?? []), [exceptionsQ.data]);
 
   return (
     <div className="space-y-4">
@@ -142,7 +159,12 @@ export function AttendanceHistoryTable() {
             <TableBody>
               {visible.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-medium tabular-nums">{r.work_date}</TableCell>
+                  <TableCell className="font-medium tabular-nums">
+                    {r.work_date}
+                    <AttendanceExceptionNote
+                      exceptions={exMap.get(exceptionKeyFor(r.user_id, r.work_date))}
+                    />
+                  </TableCell>
                   <TableCell className="tabular-nums">
                     {r.started_at
                       ? new Date(r.started_at).toLocaleTimeString([], {
