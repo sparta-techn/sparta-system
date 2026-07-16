@@ -93,6 +93,13 @@ export const PERMISSION_CATALOG: readonly PermissionDefinition[] = [
     category: "settings",
     description: "Manage company identity and ownership",
   },
+  // Payroll
+  { key: "payroll.view", category: "payroll", description: "View employee pay rates and payroll data" },
+  {
+    key: "payroll.manage",
+    category: "payroll",
+    description: "Edit employee pay rates and payroll data",
+  },
 ];
 
 /** Every permission key — convenience for "grant all" (owner-style) roles. */
@@ -125,6 +132,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, Permission[]> = {
     "reports.read",
     "reports.review",
     "analytics.view",
+    "payroll.view",
+    "payroll.manage",
   ],
 
   project_manager: [

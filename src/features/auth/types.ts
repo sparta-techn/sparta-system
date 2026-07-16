@@ -111,7 +111,10 @@ export type Permission =
   // Platform
   | "settings.manage"
   | "integrations.manage"
-  | "company.manage";
+  | "company.manage"
+  // Payroll
+  | "payroll.view"
+  | "payroll.manage";
 
 export interface AuthState {
   user: User | null;
