@@ -2751,6 +2751,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      payroll_report: {
+        Args: { _from: string; _to: string }
+        Returns: Database["public"]["CompositeTypes"]["payroll_line"][]
+        SetofOptions: {
+          from: "*"
+          to: "payroll_line"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       public_registration_enabled: { Args: never; Returns: boolean }
       reject_overtime_session: {
         Args: { _reason: string; _session_id: string }
@@ -3053,6 +3063,31 @@ export type Database = {
         amount: number | null
         currency: string | null
         status: Database["public"]["Enums"]["overtime_status"] | null
+      }
+      payroll_line: {
+        employee_id: string | null
+        employee_name: string | null
+        employment_type: string | null
+        currency: string | null
+        monthly_salary: number | null
+        hourly_rate: number | null
+        working_days: number | null
+        expected_days: number | null
+        present_days: number | null
+        absence_days: number | null
+        expected_hours: number | null
+        worked_hours: number | null
+        paid_exception_count: number | null
+        unpaid_exception_count: number | null
+        paid_exception_hours: number | null
+        unpaid_exception_hours: number | null
+        base_pay: number | null
+        overtime_hours: number | null
+        overtime_pay: number | null
+        overtime_pending_count: number | null
+        overtime_rejected_count: number | null
+        total_pay: number | null
+        has_pay_data: boolean | null
       }
     }
   }

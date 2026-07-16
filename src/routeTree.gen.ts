@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppSprintsRouteImport } from './routes/_authenticated/app/sprints'
 import { Route as AuthenticatedAppReportReviewRouteImport } from './routes/_authenticated/app/report-review'
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app/projects'
+import { Route as AuthenticatedAppPayrollRouteImport } from './routes/_authenticated/app/payroll'
 import { Route as AuthenticatedAppMiddayRouteImport } from './routes/_authenticated/app/midday'
 import { Route as AuthenticatedAppManagerRouteImport } from './routes/_authenticated/app/manager'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app/integrations'
@@ -151,6 +152,11 @@ const AuthenticatedAppProjectsRoute =
     path: '/app/projects',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppPayrollRoute = AuthenticatedAppPayrollRouteImport.update({
+  id: '/app/payroll',
+  path: '/app/payroll',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppMiddayRoute = AuthenticatedAppMiddayRouteImport.update({
   id: '/app/midday',
   path: '/app/midday',
@@ -462,6 +468,7 @@ export interface FileRoutesByFullPath {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/manager': typeof AuthenticatedAppManagerRoute
   '/app/midday': typeof AuthenticatedAppMiddayRoute
+  '/app/payroll': typeof AuthenticatedAppPayrollRoute
   '/app/projects': typeof AuthenticatedAppProjectsRouteWithChildren
   '/app/report-review': typeof AuthenticatedAppReportReviewRoute
   '/app/sprints': typeof AuthenticatedAppSprintsRouteWithChildren
@@ -525,6 +532,7 @@ export interface FileRoutesByTo {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/manager': typeof AuthenticatedAppManagerRoute
   '/app/midday': typeof AuthenticatedAppMiddayRoute
+  '/app/payroll': typeof AuthenticatedAppPayrollRoute
   '/app/report-review': typeof AuthenticatedAppReportReviewRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/analytics/executive': typeof AuthenticatedAppAnalyticsExecutiveRoute
@@ -590,6 +598,7 @@ export interface FileRoutesById {
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/manager': typeof AuthenticatedAppManagerRoute
   '/_authenticated/app/midday': typeof AuthenticatedAppMiddayRoute
+  '/_authenticated/app/payroll': typeof AuthenticatedAppPayrollRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRouteWithChildren
   '/_authenticated/app/report-review': typeof AuthenticatedAppReportReviewRoute
   '/_authenticated/app/sprints': typeof AuthenticatedAppSprintsRouteWithChildren
@@ -658,6 +667,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/manager'
     | '/app/midday'
+    | '/app/payroll'
     | '/app/projects'
     | '/app/report-review'
     | '/app/sprints'
@@ -721,6 +731,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/manager'
     | '/app/midday'
+    | '/app/payroll'
     | '/app/report-review'
     | '/app'
     | '/app/analytics/executive'
@@ -785,6 +796,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/manager'
     | '/_authenticated/app/midday'
+    | '/_authenticated/app/payroll'
     | '/_authenticated/app/projects'
     | '/_authenticated/app/report-review'
     | '/_authenticated/app/sprints'
@@ -949,6 +961,13 @@ declare module '@tanstack/react-router' {
       path: '/app/projects'
       fullPath: '/app/projects'
       preLoaderRoute: typeof AuthenticatedAppProjectsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/payroll': {
+      id: '/_authenticated/app/payroll'
+      path: '/app/payroll'
+      fullPath: '/app/payroll'
+      preLoaderRoute: typeof AuthenticatedAppPayrollRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app/midday': {
@@ -1469,6 +1488,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppManagerRoute: typeof AuthenticatedAppManagerRoute
   AuthenticatedAppMiddayRoute: typeof AuthenticatedAppMiddayRoute
+  AuthenticatedAppPayrollRoute: typeof AuthenticatedAppPayrollRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRouteWithChildren
   AuthenticatedAppReportReviewRoute: typeof AuthenticatedAppReportReviewRoute
   AuthenticatedAppSprintsRoute: typeof AuthenticatedAppSprintsRouteWithChildren
@@ -1496,6 +1516,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppManagerRoute: AuthenticatedAppManagerRoute,
   AuthenticatedAppMiddayRoute: AuthenticatedAppMiddayRoute,
+  AuthenticatedAppPayrollRoute: AuthenticatedAppPayrollRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRouteWithChildren,
   AuthenticatedAppReportReviewRoute: AuthenticatedAppReportReviewRoute,
   AuthenticatedAppSprintsRoute: AuthenticatedAppSprintsRouteWithChildren,

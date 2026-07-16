@@ -47,3 +47,23 @@ export function downloadXlsx<T>(
   XLSX.utils.book_append_sheet(workbook, buildSheet(rows, columns), sheetName.slice(0, 31));
   XLSX.writeFile(workbook, filename);
 }
+
+/** One tab of a multi-sheet workbook: its own rows + columns. */
+export interface XlsxSheet<T> {
+  name: string;
+  rows: readonly T[];
+  columns: readonly XlsxColumn<T>[];
+}
+
+/**
+ * Download a single `.xlsx` file with multiple tabs, each with its own row type
+ * and columns. Sheet names are clamped to Excel's 31-char limit. Browser only.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function downloadXlsxWorkbook(filename: string, sheets: readonly XlsxSheet<any>[]): void {
+  const workbook = XLSX.utils.book_new();
+  for (const s of sheets) {
+    XLSX.utils.book_append_sheet(workbook, buildSheet(s.rows, s.columns), s.name.slice(0, 31));
+  }
+  XLSX.writeFile(workbook, filename);
+}

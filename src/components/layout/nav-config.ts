@@ -12,6 +12,7 @@ import {
   Home,
   LayoutDashboard,
   Megaphone,
+  Receipt,
   Settings,
   ShieldCheck,
   ShieldHalf,
@@ -126,6 +127,7 @@ export const TEAM_NAV: NavItem[] = [
   },
   { id: "hr", title: "HR workspace", url: "/app/hr", icon: HeartHandshake, roles: HR_ACCESS },
   { id: "directory", title: "Directory", url: "/app/hr/employees", icon: Users, roles: REVIEWERS },
+  { id: "payroll", title: "Payroll", url: "/app/payroll", icon: Receipt, roles: HR_ACCESS },
   {
     id: "analytics",
     title: "Analytics",

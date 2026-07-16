@@ -57,6 +57,7 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
   { id: "midday", label: "Midday", inMvp: true, kind: "nav", path: "/app/midday" },
   { id: "eod", label: "End-of-day", inMvp: true, kind: "nav", path: "/app/eod" },
   { id: "attendance", label: "Attendance", inMvp: true, kind: "nav", path: "/app/attendance" },
+  { id: "payroll", label: "Payroll", inMvp: true, kind: "nav", path: "/app/payroll" },
   {
     id: "workflow",
     label: "Workflow",
