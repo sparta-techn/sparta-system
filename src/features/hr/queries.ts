@@ -6,6 +6,8 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import {
+  fetchDefaultCurrency,
+  fetchEmployeeCompensation,
   fetchHrDepartments,
   fetchHrEmployees,
   fetchHrEmploymentTypes,
@@ -18,6 +20,8 @@ export const hrKeys = {
   departments: () => [...hrKeys.all, "departments"] as const,
   teams: () => [...hrKeys.all, "teams"] as const,
   employmentTypes: () => [...hrKeys.all, "employment-types"] as const,
+  compensation: (employeeId: string) => [...hrKeys.all, "compensation", employeeId] as const,
+  defaultCurrency: () => [...hrKeys.all, "default-currency"] as const,
 };
 
 export const hrQueries = {
@@ -43,6 +47,18 @@ export const hrQueries = {
     queryOptions({
       queryKey: hrKeys.employmentTypes(),
       queryFn: fetchHrEmploymentTypes,
+      staleTime: 10 * 60_000,
+    }),
+  compensation: (employeeId: string) =>
+    queryOptions({
+      queryKey: hrKeys.compensation(employeeId),
+      queryFn: () => fetchEmployeeCompensation(employeeId),
+      staleTime: 60_000,
+    }),
+  defaultCurrency: () =>
+    queryOptions({
+      queryKey: hrKeys.defaultCurrency(),
+      queryFn: fetchDefaultCurrency,
       staleTime: 10 * 60_000,
     }),
 };

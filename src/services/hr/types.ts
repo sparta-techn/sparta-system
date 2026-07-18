@@ -129,3 +129,31 @@ export type EmployeeInsert = Pick<Employee, "user_id"> &
 export type EmployeeUpdate = Partial<Omit<EmployeeInsert, "user_id">> & {
   updated_by?: string | null;
 };
+
+// ── Compensation ─────────────────────────────────────────────────────────────
+
+/**
+ * `employee_compensation` — pay rates for one employee (1:1 with `employees`).
+ * Deliberately a separate, tightly-gated table rather than columns on
+ * `employees` (which is directory-readable by all): reads/writes are limited to
+ * `payroll.view` / `payroll.manage` holders by RLS. Full-time pay is driven by
+ * `monthly_salary`, part-time by `hourly_rate` (see the payroll calc).
+ */
+export interface EmployeeCompensation {
+  id: string;
+  employee_id: string;
+  hourly_rate: number | null;
+  monthly_salary: number | null;
+  currency: string;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type EmployeeCompensationInsert = Pick<EmployeeCompensation, "employee_id"> &
+  Partial<Pick<EmployeeCompensation, "hourly_rate" | "monthly_salary" | "currency">>;
+
+export type EmployeeCompensationUpdate = Partial<
+  Pick<EmployeeCompensation, "hourly_rate" | "monthly_salary" | "currency">
+> & { updated_by?: string | null };

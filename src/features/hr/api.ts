@@ -14,7 +14,8 @@
  * reads.
  */
 import { db } from "@/services/core";
-import { departmentRepository, teamRepository } from "@/repositories/hr";
+import { compensationRepository, departmentRepository, teamRepository } from "@/repositories/hr";
+import type { EmployeeCompensation } from "@/services/hr";
 import {
   ROLE_RANK,
   type AppRole,
@@ -215,6 +216,30 @@ export async function fetchHrEmploymentTypes(): Promise<HrEmploymentType[]> {
     .order("name", { ascending: true });
   if (error) throw error;
   return (data ?? []) as HrEmploymentType[];
+}
+
+/**
+ * The pay row for one employee, or `null` when none is set. Gated to
+ * `payroll.view` by RLS; used to prefill the pay fields in the employee editor.
+ */
+export function fetchEmployeeCompensation(
+  employeeId: string,
+): Promise<EmployeeCompensation | null> {
+  return compensationRepository.getForEmployee(employeeId);
+}
+
+/**
+ * The org-wide default pay currency (`company_settings.default_currency`, EGP by
+ * default). Seeds the currency field when an employee has no pay row yet.
+ */
+export async function fetchDefaultCurrency(): Promise<string> {
+  const { data, error } = await db
+    .from("company_settings")
+    .select("default_currency")
+    .eq("id", true)
+    .single();
+  if (error) throw error;
+  return ((data as { default_currency?: string } | null)?.default_currency ?? "EGP").toUpperCase();
 }
 
 /** Active teams, mapped to the UI `HrTeam` shape (with member counts). */

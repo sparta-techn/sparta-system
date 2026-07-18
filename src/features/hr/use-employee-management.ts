@@ -20,11 +20,13 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { employeeRepository as profileRepository } from "@/repositories";
 import {
+  compensationRepository,
   departmentRepository,
   employeeRepository as hrEmployeeRepository,
   teamRepository,
 } from "@/repositories/hr";
 import type { EmployeeStatus } from "@/services/hr";
+import { payrollKeys } from "@/features/payroll/queries";
 
 import { hrKeys } from "./queries";
 import { recordEmployeeAudit } from "./employees-store";
@@ -41,6 +43,14 @@ export interface EmployeeEditInput {
   workMode: HrEmployee["workMode"];
   /** Employment type row id (`employment_types.id`); omitted leaves it unchanged. */
   employmentTypeId?: string;
+  /**
+   * Pay rates (`employee_compensation`). Present only when the editor holds
+   * `payroll.manage`; when so, the whole trio is sent together and a rate of
+   * `null` clears that field. Absent → the pay row is left untouched.
+   */
+  hourlyRate?: number | null;
+  monthlySalary?: number | null;
+  currency?: string;
 }
 
 /** Canonical UUID — the shape of a real Supabase employee id. */
@@ -97,6 +107,24 @@ export function useEmployeeManagement() {
     // Employment type is a direct row id from the form's selector.
     if (input.employmentTypeId) patch.employment_type_id = input.employmentTypeId;
     await hrEmployeeRepository.update(employee.id, patch);
+
+    // employee_compensation — only when the editor manages pay (RLS is the
+    // authoritative backstop). Sent as a trio; `null` clears a rate. This is
+    // what turns the payroll "no rate" flag into real figures.
+    const managesPay =
+      input.hourlyRate !== undefined ||
+      input.monthlySalary !== undefined ||
+      input.currency !== undefined;
+    if (managesPay) {
+      await compensationRepository.setForEmployee(employee.id, {
+        hourly_rate: input.hourlyRate ?? null,
+        monthly_salary: input.monthlySalary ?? null,
+        ...(input.currency ? { currency: input.currency } : {}),
+      });
+      await qc.invalidateQueries({ queryKey: hrKeys.compensation(employee.id) });
+      // The payroll report reads this row server-side — refresh its cache.
+      await qc.invalidateQueries({ queryKey: payrollKeys.all });
+    }
 
     recordEmployeeAudit(employee.id, "edited");
     await invalidate();
