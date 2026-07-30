@@ -101,6 +101,46 @@ export function overtimeSeconds(
   return Math.max(0, workedSeconds - policy.expectedWorkMinutes * 60);
 }
 
+/** A break interval as absolute timestamps; `endedAt` null while a break is open. */
+export interface BreakInterval {
+  startedAt: Date;
+  endedAt: Date | null;
+}
+
+/**
+ * The exact instant at which cumulative WORKING time (breaks excluded) since
+ * `startedAt` first reaches `targetSeconds`, or `null` if it hasn't by `now`.
+ *
+ * Mirrors the server `overtime_threshold_ts` break-walk and is the single client
+ * source for the auto-overtime transition: it decides when to poke the server
+ * and drives the "You're now in overtime" moment. Independent of WHEN it runs
+ * (a late evaluation still returns the real crossing instant) and correct across
+ * midnight — it works purely in absolute timestamps, never wall-clock dates, so
+ * an overnight shift is attributed by its real `startedAt`, not by "today".
+ * Returns `null` while the employee is mid-break and still under target (working
+ * time is frozen during a break).
+ */
+export function overtimeThresholdAt(
+  startedAt: Date,
+  breaks: BreakInterval[],
+  targetSeconds: number,
+  now: Date = new Date(),
+): Date | null {
+  let remaining = targetSeconds;
+  let cursor = startedAt.getTime();
+  const ordered = [...breaks].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
+  for (const b of ordered) {
+    const seg = (b.startedAt.getTime() - cursor) / 1000; // working seconds before this break
+    if (seg >= remaining) return new Date(cursor + remaining * 1000);
+    remaining -= seg;
+    if (b.endedAt === null) return null; // currently on break, target not yet reached
+    cursor = b.endedAt.getTime();
+  }
+  const seg = (now.getTime() - cursor) / 1000;
+  if (seg >= remaining) return new Date(cursor + remaining * 1000);
+  return null;
+}
+
 /** Remaining break budget in seconds (0 once the 1-hour cap is reached). */
 export function remainingBreakSeconds(
   totalBreakSeconds: number,

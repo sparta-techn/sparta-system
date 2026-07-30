@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Coffee, Loader2, Pause, Play, Square } from "lucide-react";
+import { Clock, Coffee, Loader2, Pause, Play, Square } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -20,7 +20,13 @@ import { useAuth } from "@/features/auth/auth-context";
 import { expectedWorkMinutesFor } from "@/features/hr/employment-type";
 import { cn } from "@/lib/utils";
 
-import { endBreak, finishWork, startBreak, startWork } from "../api";
+import {
+  endBreak,
+  finishCurrentSession,
+  startBreak,
+  startWork,
+  transitionOvertimeIfDue,
+} from "../api";
 import { useTodaySession } from "../hooks/use-today-session";
 import {
   formatDurationHMS,
@@ -30,6 +36,7 @@ import {
 } from "../hooks/use-timer";
 import { useQuery } from "@tanstack/react-query";
 import { companySettingsQuery, attendanceKeys } from "../queries";
+import { myTodayOvertimeQuery, overtimeKeys } from "@/features/overtime/queries";
 import { SessionStatusBadge } from "./attendance-status-badge";
 import { FinishSummaryDialog } from "./finish-summary-dialog";
 import { OvertimeActions } from "@/features/overtime/components/overtime-actions";
@@ -71,12 +78,20 @@ export function TodayStatusCard({ compact = false }: Props) {
   const session = todayQ.data?.session ?? null;
   const breaks = todayQ.data?.breaks ?? [];
 
+  // The overtime the regular session auto-transitioned into (open-aware, so it
+  // survives past midnight for an overnight shift).
+  const otQ = useQuery({ ...myTodayOvertimeQuery(userId ?? ""), enabled: !!userId });
+  const otSession = otQ.data ?? null;
+  const overtimeRunning =
+    !!otSession && !!otSession.start_time && !otSession.end_time && otSession.status !== "rejected";
+
   const now = useNow("second");
   const openBreak = breaks.find((b) => !b.ended_at);
 
   // Live working seconds: total since start, minus completed breaks, minus current open break.
   const completedBreakSeconds = breaks.reduce((acc, b) => acc + (b.duration_seconds ?? 0), 0);
   const openBreakElapsed = useLiveElapsedSeconds(openBreak?.started_at ?? null, !!openBreak);
+  const overtimeElapsed = useLiveElapsedSeconds(otSession?.start_time ?? null, overtimeRunning);
   const totalSinceStart = session?.started_at
     ? Math.max(0, Math.floor((now.getTime() - new Date(session.started_at).getTime()) / 1000))
     : 0;
@@ -98,6 +113,7 @@ export function TodayStatusCard({ compact = false }: Props) {
     if (!userId) return;
     void qc.invalidateQueries({ queryKey: attendanceKeys.today(userId) });
     void qc.invalidateQueries({ queryKey: attendanceKeys.history(userId, {} as never) });
+    void qc.invalidateQueries({ queryKey: overtimeKeys.today(userId) });
   };
 
   const startMut = useMutation({
@@ -125,10 +141,14 @@ export function TodayStatusCard({ compact = false }: Props) {
     onError: (e: Error) => toast.error(e.message),
   });
   const finishMut = useMutation({
-    mutationFn: finishWork,
-    onSuccess: (row) => {
-      toast.success("Work finished — see you tomorrow.");
-      setFinishedDetails(row);
+    mutationFn: finishCurrentSession,
+    onSuccess: (res) => {
+      if (res.kind === "overtime") {
+        toast.success("Overtime logged — awaiting manager approval.");
+      } else {
+        toast.success("Work finished — see you tomorrow.");
+        if (res.session) setFinishedDetails(res.session as WorkSessionRow);
+      }
       invalidateAll();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -148,6 +168,41 @@ export function TodayStatusCard({ compact = false }: Props) {
     todayQ.isPending;
 
   const status = session?.session_status ?? "not_started";
+
+  // Auto-transition into overtime: schedule a server poke for when live worked
+  // time is projected to reach the target, so the split fires without a click.
+  // Idempotent server-side; the every-minute server sweep is the authoritative
+  // backstop if this tab is asleep at the threshold (setTimeout is unreliable
+  // when a tab is backgrounded — exactly the overnight case).
+  useEffect(() => {
+    if (!userId || !session?.started_at) return;
+    if (session.session_status !== "working") return; // on_break freezes progress
+    const workedNow = Math.max(
+      0,
+      (Date.now() - new Date(session.started_at).getTime()) / 1000 - completedBreakSeconds,
+    );
+    const remainingMs = Math.max(0, (expectedSeconds - workedNow) * 1000);
+    const poke = () => {
+      transitionOvertimeIfDue()
+        .then(() => {
+          void qc.invalidateQueries({ queryKey: attendanceKeys.today(userId) });
+          void qc.invalidateQueries({ queryKey: overtimeKeys.today(userId) });
+        })
+        .catch(() => {
+          /* the every-minute server sweep will still perform the transition */
+        });
+    };
+    const id = window.setTimeout(poke, remainingMs + 750);
+    return () => window.clearTimeout(id);
+  }, [
+    userId,
+    session?.id,
+    session?.started_at,
+    session?.session_status,
+    completedBreakSeconds,
+    expectedSeconds,
+    qc,
+  ]);
 
   const headerTime = now.toLocaleTimeString([], {
     hour: "2-digit",
@@ -226,6 +281,27 @@ export function TodayStatusCard({ compact = false }: Props) {
                 You've exceeded the {settingsQ.data?.max_break_minutes ?? 60} min break allowance.
               </p>
             ) : null}
+
+            {overtimeRunning ? (
+              <div
+                className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2"
+                role="status"
+              >
+                <Clock className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
+                <div className="min-w-0">
+                  <p className="flex flex-wrap items-center gap-x-2 text-sm font-medium text-foreground">
+                    You're now in overtime
+                    <span className="font-display tabular-nums text-warning">
+                      {formatDurationHMS(overtimeElapsed)}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    You hit your target — no need to do anything. This time is logged as overtime
+                    and stays pending until a manager approves it.
+                  </p>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div
@@ -234,7 +310,7 @@ export function TodayStatusCard({ compact = false }: Props) {
               compact ? "" : "md:flex-col md:items-stretch md:min-w-48",
             )}
           >
-            {!session ? (
+            {!session && !overtimeRunning ? (
               <Button onClick={() => startMut.mutate()} disabled={busy} aria-label="Start work">
                 {startMut.isPending ? <Loader2 className="animate-spin" /> : <Play />} Start work
               </Button>
@@ -281,7 +357,19 @@ export function TodayStatusCard({ compact = false }: Props) {
               </>
             ) : null}
 
-            {status === "finished" ? (
+            {overtimeRunning ? (
+              <Button
+                variant="secondary"
+                onClick={() => setConfirm("finish")}
+                disabled={busy}
+                aria-label="Finish work"
+              >
+                {finishMut.isPending ? <Loader2 className="animate-spin" /> : <Square />}
+                Finish work
+              </Button>
+            ) : null}
+
+            {status === "finished" && !overtimeRunning ? (
               <div className="space-y-3">
                 <Button variant="outline" disabled aria-label="Day finished">
                   Day finished

@@ -70,6 +70,23 @@ export async function getCurrentEmployeeId(): Promise<string | null> {
 export async function getMyTodayOvertime(): Promise<OvertimeSession | null> {
   const [employeeId, workDate] = await Promise.all([getCurrentEmployeeId(), getCurrentWorkDate()]);
   if (!employeeId) return null;
+
+  // Prefer an OPEN overtime session regardless of its work_date. An overnight
+  // shift auto-transitions into overtime that keeps running past midnight on the
+  // start day's work_date; scoping to today would hide the running session (and
+  // its "You're now in overtime" banner) the moment the clock rolls over.
+  const { data: openRows, error: openErr } = await supabase
+    .from("overtime_sessions")
+    .select("*")
+    .eq("employee_id", employeeId)
+    .not("start_time", "is", null)
+    .is("end_time", null)
+    .neq("status", "rejected")
+    .order("start_time", { ascending: false })
+    .limit(1);
+  if (openErr) throw openErr;
+  if (openRows?.[0]) return openRows[0];
+
   const { data, error } = await supabase
     .from("overtime_sessions")
     .select("*")

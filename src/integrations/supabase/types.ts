@@ -2634,6 +2634,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      finish_current_session: { Args: never; Returns: Json }
       finish_overtime_session: {
         Args: never
         Returns: {
@@ -2717,6 +2718,7 @@ export type Database = {
         Returns: boolean
       }
       job_attendance_reminders: { Args: never; Returns: undefined }
+      job_auto_overtime_transition: { Args: never; Returns: undefined }
       job_missing_report_reminders: { Args: never; Returns: undefined }
       notification_reviewer_ids: { Args: never; Returns: string[] }
       overtime_full_time_hourly_rate: {
@@ -2750,6 +2752,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      overtime_threshold_ts: {
+        Args: {
+          _session: Database["public"]["Tables"]["work_sessions"]["Row"]
+          _target_secs: number
+        }
+        Returns: string
       }
       payroll_report: {
         Args: { _from: string; _to: string }
@@ -2892,6 +2901,33 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "work_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      transition_overtime_if_due: {
+        Args: { _uid?: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          end_time: string | null
+          id: string
+          notes: string | null
+          rejection_reason: string | null
+          requested_by: string | null
+          start_time: string | null
+          started_by_employee: boolean
+          status: Database["public"]["Enums"]["overtime_status"]
+          updated_at: string
+          updated_by: string | null
+          work_date: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "overtime_sessions"
           isOneToOne: true
           isSetofReturn: false
         }
