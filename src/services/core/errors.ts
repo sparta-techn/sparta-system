@@ -46,3 +46,32 @@ export function toServiceError(error: unknown, fallback = "Request failed"): Ser
 export function notFound(entity: string, id: string): ServiceError {
   return new ServiceError(`${entity} "${id}" was not found`, "not_found");
 }
+
+/**
+ * Thrown when a delete matched **zero rows**.
+ *
+ * PostgREST does not treat this as an error: when RLS filters the target row
+ * out of the delete's scope (or the row is simply already gone) it returns
+ * `200` with an empty array and no `error`. Without an explicit check, the
+ * caller cannot distinguish "deleted" from "silently refused" — the delete
+ * looks successful while nothing happened.
+ *
+ * Callers that legitimately tolerate an already-absent row should pass
+ * `{ allowNoRows: true }` to `BaseService.remove` rather than catching this.
+ */
+export class DeleteAffectedNoRowsError extends ServiceError {
+  /** Entity name of the service that attempted the delete. */
+  readonly entity: string;
+  /** Id that matched no rows. */
+  readonly id: string;
+
+  constructor(entity: string, id: string) {
+    super(
+      `Couldn't delete ${entity} "${id}" — it no longer exists, or you don't have permission to delete it.`,
+      "delete_affected_no_rows",
+    );
+    this.name = "DeleteAffectedNoRowsError";
+    this.entity = entity;
+    this.id = id;
+  }
+}

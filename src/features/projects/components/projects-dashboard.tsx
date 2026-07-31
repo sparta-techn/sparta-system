@@ -9,6 +9,23 @@ import { mergeRollup, useProjectTaskRollups } from "../use-project-task-rollups"
 import { ProjectHealthBadge, ProjectStatusBadge } from "./badges";
 import type { ProjectHealth, ProjectStatus } from "../types";
 
+/**
+ * Health buckets rendered by the "Health mix" widget, in display order.
+ *
+ * `completed` is deliberately excluded even though `project_health` carries it:
+ * completion is a *status*, and counting it as a health bucket conflates "is
+ * this project in trouble?" with "is this project finished?". Legacy rows still
+ * storing `health = 'completed'` simply fall into no bucket. The enum value is
+ * left in place — dropping it is a separate migration.
+ */
+const HEALTH_MIX = [
+  "healthy",
+  "at_risk",
+  "blocked",
+  "delayed",
+] as const satisfies readonly ProjectHealth[];
+type HealthMixKey = (typeof HEALTH_MIX)[number];
+
 // Human labels + display order for the live (non-archived) statuses. Ordering
 // puts in-flight work first so the health list surfaces active/planning ahead of
 // finished work.
@@ -57,12 +74,12 @@ export function ProjectsDashboard() {
     const avgProgress = live.length
       ? Math.round(live.reduce((acc, p) => acc + p.progress, 0) / live.length)
       : 0;
-    const healthBreakdown = live.reduce<Record<ProjectHealth, number>>(
+    const healthBreakdown = live.reduce<Record<HealthMixKey, number>>(
       (acc, p) => {
-        acc[p.health] = (acc[p.health] ?? 0) + 1;
+        if (p.health in acc) acc[p.health as HealthMixKey] += 1;
         return acc;
       },
-      { healthy: 0, at_risk: 0, blocked: 0, delayed: 0, completed: 0 },
+      { healthy: 0, at_risk: 0, blocked: 0, delayed: 0 },
     );
     return { live, byStatus, atRisk, totalOpen, totalOverdue, avgProgress, healthBreakdown };
   }, [projects]);
@@ -157,7 +174,7 @@ export function ProjectsDashboard() {
             <CardTitle className="text-base">Health mix</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {(Object.keys(stats.healthBreakdown) as ProjectHealth[]).map((h) => {
+            {HEALTH_MIX.map((h) => {
               const count = stats.healthBreakdown[h];
               const pct = stats.live.length ? (count / stats.live.length) * 100 : 0;
               return (

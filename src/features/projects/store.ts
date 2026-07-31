@@ -542,6 +542,31 @@ export function archiveProject(id: string) {
   }
 }
 
+/**
+ * Permanently delete a project (Owner-gated at the call site; enforced again by
+ * the `projects_delete` RLS policy).
+ *
+ * Deliberately **not** optimistic: the row is only dropped from the cache after
+ * Supabase confirms the delete affected a row. A zero-row delete surfaces as
+ * {@link DeleteAffectedNoRowsError} from the service layer rather than a silent
+ * success, so the caller can tell "refused" from "deleted".
+ */
+export async function deleteProject(id: string): Promise<void> {
+  const current = getProject(id);
+  await projectRepository.remove(id);
+  state = { ...state, projects: state.projects.filter((p) => p.id !== id) };
+  emit();
+  if (current) {
+    recordAudit({
+      action: "project_deleted",
+      target: current.name,
+      targetType: "project",
+      oldValue: current.status,
+      newValue: "deleted",
+    });
+  }
+}
+
 export function duplicateProject(id: string): Promise<Project> | null {
   const src = getProject(id);
   if (!src) return null;

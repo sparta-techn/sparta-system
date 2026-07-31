@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
 import { db } from "./client";
-import { notFound, toServiceError } from "./errors";
+import { DeleteAffectedNoRowsError, notFound, toServiceError } from "./errors";
 import type { Identifiable, ListParams, PageParams, Paginated } from "./types";
 import { validate } from "@/lib/security/validate";
 
@@ -205,11 +205,25 @@ export abstract class BaseService<
     }
   }
 
-  /** Hard-delete a row by id. */
-  async remove(id: string): Promise<void> {
+  /**
+   * Hard-delete a row by id.
+   *
+   * Chains `.select()` so the deleted rows come back and a **zero-row delete is
+   * detectable**. PostgREST reports an RLS-filtered delete as `200` + `[]` with
+   * no error, so without this the call resolves successfully while the row is
+   * still there — a silent no-op indistinguishable from success.
+   *
+   * Throws {@link DeleteAffectedNoRowsError} when nothing was deleted. Pass
+   * `{ allowNoRows: true }` for genuinely idempotent deletes where the row may
+   * already be gone and that is not a failure.
+   */
+  async remove(id: string, opts: { allowNoRows?: boolean } = {}): Promise<void> {
     try {
-      const { error } = await this.client.from(this.table).delete().eq("id", id);
+      const { data, error } = await this.client.from(this.table).delete().eq("id", id).select("id");
       if (error) throw error;
+      if (!opts.allowNoRows && (data?.length ?? 0) === 0) {
+        throw new DeleteAffectedNoRowsError(this.entity, id);
+      }
     } catch (error) {
       throw toServiceError(error, `Failed to delete ${this.entity}`);
     }

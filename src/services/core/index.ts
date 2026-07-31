@@ -1,5 +1,5 @@
 export { BaseService } from "./base-service";
-export { ServiceError, toServiceError, notFound } from "./errors";
+export { ServiceError, toServiceError, notFound, DeleteAffectedNoRowsError } from "./errors";
 export { db, supabase } from "./client";
 export type {
   Identifiable,

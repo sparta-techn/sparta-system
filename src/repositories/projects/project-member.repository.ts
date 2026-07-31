@@ -75,7 +75,10 @@ export class ProjectMemberRepository {
   async remove(projectId: string, userId: string): Promise<void> {
     const membership = await this.members.getMembership(projectId, userId);
     if (!membership) return;
-    await this.members.remove(membership.id);
+    // Idempotent by design: the lookup above already treats an absent membership
+    // as success, and member reconciliation replays removals in a loop, so a row
+    // that vanished between the lookup and the delete must not abort the batch.
+    await this.members.remove(membership.id, { allowNoRows: true });
     await this.activity.log({
       project_id: projectId,
       type: "member_removed",
