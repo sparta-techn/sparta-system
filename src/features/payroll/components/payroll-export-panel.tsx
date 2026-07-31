@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download } from "lucide-react";
+import { CheckCircle2, Download, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +16,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/states";
 
 import { downloadPayrollWorkbook } from "../export";
-import { asOfDate, currentMonth, monthBounds, payrollReportQuery } from "../queries";
+import {
+  asOfDate,
+  currentMonth,
+  monthBounds,
+  payrollReportQuery,
+  payslipDeliveriesQuery,
+} from "../queries";
 import { formatMoney } from "../summary";
+import type { PayrollLine } from "../types";
+import { MarkPaidDialog } from "./mark-paid-dialog";
 
 export function PayrollExportPanel() {
   const [month, setMonth] = useState<string>(currentMonth());
@@ -28,6 +37,13 @@ export function PayrollExportPanel() {
   const asOf = asOfDate(to);
 
   const q = useQuery(payrollReportQuery(from, to));
+  // Who has already been marked paid this period — never used to send anything,
+  // only to show it and to force a resend to be explicit.
+  const deliveriesQuery = useQuery(payslipDeliveriesQuery(from, to));
+  const deliveries = deliveriesQuery.data;
+
+  const [payslipFor, setPayslipFor] = useState<PayrollLine | null>(null);
+
   const lines = q.data ?? [];
   const grandTotal = lines.reduce((sum, l) => sum + Number(l.total_pay ?? 0), 0);
   const currency = lines[0]?.currency ?? "EGP";
@@ -121,6 +137,7 @@ export function PayrollExportPanel() {
                     <TableHead className="text-right">OT h</TableHead>
                     <TableHead className="text-right">OT pay</TableHead>
                     <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Payslip</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -157,6 +174,13 @@ export function PayrollExportPanel() {
                       <TableCell className="text-right font-semibold tabular-nums">
                         {formatMoney(l.total_pay, l.currency)}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <PayslipCell
+                          line={l}
+                          paidAt={deliveries?.get(l.employee_id ?? "")?.paidAt}
+                          onOpen={() => setPayslipFor(l)}
+                        />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -165,6 +189,68 @@ export function PayrollExportPanel() {
           </>
         )}
       </CardContent>
+
+      <MarkPaidDialog
+        line={payslipFor}
+        periodLabel={label}
+        from={from}
+        to={to}
+        delivery={payslipFor?.employee_id ? deliveries?.get(payslipFor.employee_id) : undefined}
+        open={payslipFor !== null}
+        onOpenChange={(open) => !open && setPayslipFor(null)}
+      />
     </Card>
+  );
+}
+
+interface PayslipCellProps {
+  line: PayrollLine;
+  /** ISO timestamp of the last send for this period, if any. */
+  paidAt?: string;
+  onOpen: () => void;
+}
+
+/**
+ * Per-employee payslip action. One explicit click per employee — there is no
+ * "send all", and the .xlsx export never triggers this.
+ */
+function PayslipCell({ line, paidAt, onOpen }: PayslipCellProps) {
+  // Nothing to confirm as paid: no rate configured, or a zero total.
+  const blocked = !line.has_pay_data || Number(line.total_pay ?? 0) <= 0;
+
+  if (blocked) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-xs text-muted-foreground">—</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {line.has_pay_data
+            ? "Total is zero — nothing to mark as paid."
+            : "No pay rate configured for this employee."}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (paidAt) {
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <Badge variant="outline" className="gap-1 text-success">
+          <CheckCircle2 className="size-3" />
+          Paid {new Date(paidAt).toLocaleDateString([], { day: "numeric", month: "short" })}
+        </Badge>
+        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={onOpen}>
+          Resend
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Button variant="outline" size="sm" className="h-7 gap-1.5 px-2 text-xs" onClick={onOpen}>
+      <Mail className="size-3" />
+      Mark paid &amp; send
+    </Button>
   );
 }

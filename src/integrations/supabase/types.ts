@@ -1605,6 +1605,80 @@ export type Database = {
           },
         ]
       }
+      payslip_deliveries: {
+        Row: {
+          absence_days: number
+          attempt: number
+          base_pay: number
+          created_at: string
+          currency: string
+          employee_id: string
+          id: string
+          overtime_hours: number
+          overtime_pay: number
+          paid_at: string
+          paid_exception_count: number
+          period_from: string
+          period_to: string
+          provider: string
+          provider_message_id: string | null
+          recipient_email: string
+          sent_by: string | null
+          total_pay: number
+          unpaid_exception_count: number
+        }
+        Insert: {
+          absence_days?: number
+          attempt?: number
+          base_pay?: number
+          created_at?: string
+          currency?: string
+          employee_id: string
+          id?: string
+          overtime_hours?: number
+          overtime_pay?: number
+          paid_at?: string
+          paid_exception_count?: number
+          period_from: string
+          period_to: string
+          provider?: string
+          provider_message_id?: string | null
+          recipient_email: string
+          sent_by?: string | null
+          total_pay?: number
+          unpaid_exception_count?: number
+        }
+        Update: {
+          absence_days?: number
+          attempt?: number
+          base_pay?: number
+          created_at?: string
+          currency?: string
+          employee_id?: string
+          id?: string
+          overtime_hours?: number
+          overtime_pay?: number
+          paid_at?: string
+          paid_exception_count?: number
+          period_from?: string
+          period_to?: string
+          provider?: string
+          provider_message_id?: string | null
+          recipient_email?: string
+          sent_by?: string | null
+          total_pay?: number
+          unpaid_exception_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslip_deliveries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           category: string | null

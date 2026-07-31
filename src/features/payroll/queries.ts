@@ -1,10 +1,13 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { getPayrollReport } from "./api";
+import { listPayslipDeliveriesFn } from "./payslip.functions";
 
 export const payrollKeys = {
   all: ["payroll"] as const,
   report: (from: string, to: string) => [...payrollKeys.all, "report", from, to] as const,
+  deliveries: (from: string, to: string) =>
+    [...payrollKeys.all, "payslip-deliveries", from, to] as const,
 };
 
 /** `YYYY-MM-DD` for a local date. */
@@ -40,6 +43,21 @@ export const payrollReportQuery = (from: string, to: string) =>
   queryOptions({
     queryKey: payrollKeys.report(from, to),
     queryFn: () => getPayrollReport(from, to),
+    enabled: !!from && !!to,
+    staleTime: 30_000,
+  });
+
+/**
+ * Who has already been marked paid for the period, keyed by employee id. Drives
+ * the "Paid on ..." state so a second send has to be a conscious choice.
+ */
+export const payslipDeliveriesQuery = (from: string, to: string) =>
+  queryOptions({
+    queryKey: payrollKeys.deliveries(from, to),
+    queryFn: async () => {
+      const rows = await listPayslipDeliveriesFn({ data: { from, to } });
+      return new Map(rows.map((r) => [r.employeeId, r]));
+    },
     enabled: !!from && !!to,
     staleTime: 30_000,
   });

@@ -48,6 +48,15 @@ the server (see `src/integrations/supabase/client.ts`, `src/lib/logging/config.t
 | `ENFORCE_CSP`               | no          | `true`/`false` — emit Content-Security-Policy headers (recommend `true` in prod).            | `server.ts`                                           |
 | `LOG_LEVEL`                 | no          | `debug`\|`info`\|`warn`\|`error` (default: debug dev / info prod).                           | logging config                                        |
 | `RELEASE` / `COMMIT_SHA`    | no          | Release identifiers for logs/error reports (set by CI).                                      | logging config                                        |
+| `RESEND_API_KEY`            | no 🔒       | Resend API key for outbound app email (payslips). Absent ⇒ payslip sends fail with a clear message; nothing else breaks. | `integrations/email/resend.server.ts`                 |
+| `PAYROLL_EMAIL_FROM`        | no          | Verified sender, `Name <a@b.com>` or bare address. Default `SpartaFlow HR <hr@spartaflow.com>`. | `integrations/email/resend.server.ts`                 |
+
+> **Email: two separate channels.** Supabase Auth's SMTP settings send only
+> GoTrue's own invite / signup / recovery templates — it cannot send arbitrary
+> mail. Application email (the payslip) goes through the **Resend API directly**
+> via `RESEND_API_KEY`. Both can point at the same Resend account and the same
+> verified domain; Resend authorizes per DOMAIN, so any address on an already
+> verified domain works without extra setup.
 
 ### Client-side (build time, `VITE_`)
 
@@ -141,6 +150,7 @@ const env = assertEnv("server", process.env); // throws a formatted error if inv
 | `SUPABASE_PUBLISHABLE_KEY` / `VITE_SUPABASE_PUBLISHABLE_KEY` | No (low-sensitivity) | Publishable/anon key; access is bounded by RLS. Keep tidy but it ships to the browser by design. |
 | `SUPABASE_URL` / `VITE_SUPABASE_URL` / project id            | No                   | Public endpoint identifiers.                                                                     |
 | `SLACK_WEBHOOK_URL`, `VPS_SSH_KEY`, `GHCR_TOKEN`             | **Yes**              | CI/CD credentials (GitHub secrets only — see [`docs/CICD.md`](./CICD.md)).                       |
+| `RESEND_API_KEY`                                             | **Yes**              | Can send mail as the company's verified domain. Server-only — `VITE_RESEND_API_KEY` is rejected by env validation. |
 
 ### 5.2 Where secrets live (never in Git)
 

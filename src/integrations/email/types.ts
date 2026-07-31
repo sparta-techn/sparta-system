@@ -34,11 +34,29 @@ export interface EmailSendResponse {
 /** Verified sender identity behind the credential (connect/probe). */
 export interface EmailSenderIdentity {
   fromAddress: string;
+  /** The sender's domain — what the provider actually authorizes. */
+  domain: string;
   verified: boolean;
+  /**
+   * Whether the provider knows this domain at all. `false` means it was never
+   * added — a different, more actionable failure than "added but still pending".
+   */
+  known: boolean;
+  /** Provider's raw status (Resend: `pending` | `verified` | `failed` | …). */
+  status?: string;
 }
 
 export interface EmailClientConfig {
-  /** SMTP host or API base, depending on transport. */
+  /** SMTP host or API base, depending on transport. Defaults to the Resend API. */
   endpoint?: string;
+  /**
+   * Static API credential. Server-side callers pass the resolved secret here
+   * (see `resend.server.ts`) — this module never reads `process.env` itself, so
+   * importing it can never pull a secret into the browser bundle.
+   */
+  apiKey?: string;
+  /** Per-account credential lookup, preferred over {@link apiKey} when present. */
   resolveCredential?: (accountId: string) => Promise<string>;
+  /** Verified sender every message goes out as (e.g. `SpartaFlow <hr@spartaflow.com>`). */
+  from?: EmailAddress;
 }

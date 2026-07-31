@@ -2,9 +2,16 @@
  * EmailIntegration — the Email provider adapter.
  *
  * Extends {@link BaseIntegration} and *additionally* implements
- * {@link NotifierPort} for outbound email notifications. Transport-neutral (SMTP
- * or an email API) behind the client seam. STATUS: placeholder — no mail is sent;
- * `available` stays false until the transport is wired.
+ * {@link NotifierPort} for outbound email notifications, behind the client seam.
+ *
+ * STATUS: the TRANSPORT is live — {@link EmailClient} sends through Resend's API
+ * — but this *account-based* adapter is still a placeholder: `authenticate` and
+ * `performSync` are unimplemented, so `available` stays false and the
+ * integrations page does not offer a Connect button that would fail.
+ *
+ * The payslip sender does not go through this adapter. It builds a configured
+ * client straight from the org's server credential (`resend.server.ts`), which
+ * is why it can send today while org-level "connect your own mailbox" cannot.
  */
 
 import type {

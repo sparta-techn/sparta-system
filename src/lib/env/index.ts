@@ -41,6 +41,11 @@ export const serverEnvSchema = z.object({
   LOG_LEVEL: logLevel.optional(),
   RELEASE: z.string().optional(),
   COMMIT_SHA: z.string().optional(),
+  // Outbound email (Resend API — NOT Supabase Auth's SMTP, which only sends
+  // invite/signup/recovery). Optional: absent simply means payslip emails can't
+  // be sent, and the server function says so instead of failing obscurely.
+  RESEND_API_KEY: z.string().optional(),
+  PAYROLL_EMAIL_FROM: z.string().optional(),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -58,7 +63,7 @@ export interface EnvValidationResult {
 }
 
 /** Keys that must NEVER appear with a VITE_ prefix (would leak to the client). */
-const FORBIDDEN_VITE_KEYS = ["VITE_SUPABASE_SERVICE_ROLE_KEY"] as const;
+const FORBIDDEN_VITE_KEYS = ["VITE_SUPABASE_SERVICE_ROLE_KEY", "VITE_RESEND_API_KEY"] as const;
 
 function formatIssues(error: z.ZodError): string[] {
   return error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`);
