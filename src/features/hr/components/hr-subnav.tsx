@@ -2,11 +2,22 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { isPathInMvp } from "@/config/mvp-scope";
 import { FuturePlanBadge } from "@/components/future-plan";
+import { useAuth } from "@/features/auth/auth-context";
+import type { AppRole } from "@/features/auth/types";
 
-const NAV = [
+interface HrNavItem {
+  label: string;
+  to: string;
+  /** When set, the tab is only shown to holders of ANY of these roles —
+   * mirror of the route's own `routeGuard({ roles })`. */
+  roles?: readonly AppRole[];
+}
+
+const NAV: readonly HrNavItem[] = [
   { label: "Overview", to: "/app/hr" },
   { label: "Employees", to: "/app/hr/employees" },
   { label: "Invitations", to: "/app/hr/invitations" },
+  { label: "Rewards", to: "/app/hr/rewards", roles: ["owner", "admin"] },
   { label: "Leave", to: "/app/hr/leave" },
   { label: "Organization", to: "/app/hr/organization" },
   { label: "Onboarding", to: "/app/hr/onboarding" },
@@ -18,9 +29,10 @@ const NAV = [
 
 export function HrSubnav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { hasAnyRole } = useAuth();
   return (
     <nav className="mb-4 -mx-1 flex gap-1 overflow-x-auto border-b" aria-label="HR sections">
-      {NAV.map((item) => {
+      {NAV.filter((item) => !item.roles || hasAnyRole([...item.roles])).map((item) => {
         // Deferred tab (out of MVP): render disabled with a "Future Plan" badge
         // instead of a link — mirrors the sidebar treatment. Direct URL access is
         // separately caught by <RouteGuardGate> via isPathInMvp.

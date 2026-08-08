@@ -171,6 +171,14 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     path: "/app/tasks/time",
     note: "Time tracking — out of MVP. More specific than /app/tasks so it overrides it.",
   },
+  {
+    id: "hr-rewards",
+    label: "Rewards",
+    inMvp: true,
+    kind: "route",
+    path: "/app/hr/rewards",
+    note: "One-off monetary rewards with bilingual email notification — owner/admin only.",
+  },
   // HR workspace tabs deferred past the MVP. More specific than /app/hr (in MVP),
   // so each overrides it — the route gate renders the Future Plan placeholder and
   // the HR subnav shows the badge. Underlying feature code is retained.

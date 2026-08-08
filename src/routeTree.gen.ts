@@ -55,6 +55,7 @@ import { Route as AuthenticatedAppProjectsClientsRouteImport } from './routes/_a
 import { Route as AuthenticatedAppProjectsAllRouteImport } from './routes/_authenticated/app/projects.all'
 import { Route as AuthenticatedAppProjectsIdRouteImport } from './routes/_authenticated/app/projects.$id'
 import { Route as AuthenticatedAppNotificationsPreferencesRouteImport } from './routes/_authenticated/app/notifications.preferences'
+import { Route as AuthenticatedAppHrRewardsRouteImport } from './routes/_authenticated/app/hr.rewards'
 import { Route as AuthenticatedAppHrOrganizationRouteImport } from './routes/_authenticated/app/hr.organization'
 import { Route as AuthenticatedAppHrOnboardingRouteImport } from './routes/_authenticated/app/hr.onboarding'
 import { Route as AuthenticatedAppHrOffboardingRouteImport } from './routes/_authenticated/app/hr.offboarding'
@@ -329,6 +330,12 @@ const AuthenticatedAppNotificationsPreferencesRoute =
     path: '/app/notifications/preferences',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppHrRewardsRoute =
+  AuthenticatedAppHrRewardsRouteImport.update({
+    id: '/rewards',
+    path: '/rewards',
+    getParentRoute: () => AuthenticatedAppHrRoute,
+  } as any)
 const AuthenticatedAppHrOrganizationRoute =
   AuthenticatedAppHrOrganizationRouteImport.update({
     id: '/organization',
@@ -491,6 +498,7 @@ export interface FileRoutesByFullPath {
   '/app/hr/offboarding': typeof AuthenticatedAppHrOffboardingRoute
   '/app/hr/onboarding': typeof AuthenticatedAppHrOnboardingRoute
   '/app/hr/organization': typeof AuthenticatedAppHrOrganizationRoute
+  '/app/hr/rewards': typeof AuthenticatedAppHrRewardsRoute
   '/app/notifications/preferences': typeof AuthenticatedAppNotificationsPreferencesRoute
   '/app/projects/$id': typeof AuthenticatedAppProjectsIdRoute
   '/app/projects/all': typeof AuthenticatedAppProjectsAllRoute
@@ -552,6 +560,7 @@ export interface FileRoutesByTo {
   '/app/hr/offboarding': typeof AuthenticatedAppHrOffboardingRoute
   '/app/hr/onboarding': typeof AuthenticatedAppHrOnboardingRoute
   '/app/hr/organization': typeof AuthenticatedAppHrOrganizationRoute
+  '/app/hr/rewards': typeof AuthenticatedAppHrRewardsRoute
   '/app/notifications/preferences': typeof AuthenticatedAppNotificationsPreferencesRoute
   '/app/projects/$id': typeof AuthenticatedAppProjectsIdRoute
   '/app/projects/all': typeof AuthenticatedAppProjectsAllRoute
@@ -621,6 +630,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr/offboarding': typeof AuthenticatedAppHrOffboardingRoute
   '/_authenticated/app/hr/onboarding': typeof AuthenticatedAppHrOnboardingRoute
   '/_authenticated/app/hr/organization': typeof AuthenticatedAppHrOrganizationRoute
+  '/_authenticated/app/hr/rewards': typeof AuthenticatedAppHrRewardsRoute
   '/_authenticated/app/notifications/preferences': typeof AuthenticatedAppNotificationsPreferencesRoute
   '/_authenticated/app/projects/$id': typeof AuthenticatedAppProjectsIdRoute
   '/_authenticated/app/projects/all': typeof AuthenticatedAppProjectsAllRoute
@@ -690,6 +700,7 @@ export interface FileRouteTypes {
     | '/app/hr/offboarding'
     | '/app/hr/onboarding'
     | '/app/hr/organization'
+    | '/app/hr/rewards'
     | '/app/notifications/preferences'
     | '/app/projects/$id'
     | '/app/projects/all'
@@ -751,6 +762,7 @@ export interface FileRouteTypes {
     | '/app/hr/offboarding'
     | '/app/hr/onboarding'
     | '/app/hr/organization'
+    | '/app/hr/rewards'
     | '/app/notifications/preferences'
     | '/app/projects/$id'
     | '/app/projects/all'
@@ -819,6 +831,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr/offboarding'
     | '/_authenticated/app/hr/onboarding'
     | '/_authenticated/app/hr/organization'
+    | '/_authenticated/app/hr/rewards'
     | '/_authenticated/app/notifications/preferences'
     | '/_authenticated/app/projects/$id'
     | '/_authenticated/app/projects/all'
@@ -1180,6 +1193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppNotificationsPreferencesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/hr/rewards': {
+      id: '/_authenticated/app/hr/rewards'
+      path: '/rewards'
+      fullPath: '/app/hr/rewards'
+      preLoaderRoute: typeof AuthenticatedAppHrRewardsRouteImport
+      parentRoute: typeof AuthenticatedAppHrRoute
+    }
     '/_authenticated/app/hr/organization': {
       id: '/_authenticated/app/hr/organization'
       path: '/organization'
@@ -1375,6 +1395,7 @@ interface AuthenticatedAppHrRouteChildren {
   AuthenticatedAppHrOffboardingRoute: typeof AuthenticatedAppHrOffboardingRoute
   AuthenticatedAppHrOnboardingRoute: typeof AuthenticatedAppHrOnboardingRoute
   AuthenticatedAppHrOrganizationRoute: typeof AuthenticatedAppHrOrganizationRoute
+  AuthenticatedAppHrRewardsRoute: typeof AuthenticatedAppHrRewardsRoute
   AuthenticatedAppHrIndexRoute: typeof AuthenticatedAppHrIndexRoute
   AuthenticatedAppHrEmployeesIdRoute: typeof AuthenticatedAppHrEmployeesIdRoute
   AuthenticatedAppHrEmployeesIndexRoute: typeof AuthenticatedAppHrEmployeesIndexRoute
@@ -1389,6 +1410,7 @@ const AuthenticatedAppHrRouteChildren: AuthenticatedAppHrRouteChildren = {
   AuthenticatedAppHrOffboardingRoute: AuthenticatedAppHrOffboardingRoute,
   AuthenticatedAppHrOnboardingRoute: AuthenticatedAppHrOnboardingRoute,
   AuthenticatedAppHrOrganizationRoute: AuthenticatedAppHrOrganizationRoute,
+  AuthenticatedAppHrRewardsRoute: AuthenticatedAppHrRewardsRoute,
   AuthenticatedAppHrIndexRoute: AuthenticatedAppHrIndexRoute,
   AuthenticatedAppHrEmployeesIdRoute: AuthenticatedAppHrEmployeesIdRoute,
   AuthenticatedAppHrEmployeesIndexRoute: AuthenticatedAppHrEmployeesIndexRoute,

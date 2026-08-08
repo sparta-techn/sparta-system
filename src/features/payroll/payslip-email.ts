@@ -35,6 +35,9 @@ const C = {
 
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,Helvetica,Arial,sans-serif";
 
+/** Shared with other transactional emails (e.g. rewards) so they match the app shell. */
+export { C as EMAIL_COLORS, FONT as EMAIL_FONT };
+
 export interface PayslipCompany {
   name: string;
   logoUrl?: string | null;

@@ -157,3 +157,31 @@ export type EmployeeCompensationInsert = Pick<EmployeeCompensation, "employee_id
 export type EmployeeCompensationUpdate = Partial<
   Pick<EmployeeCompensation, "hourly_rate" | "monthly_salary" | "currency">
 > & { updated_by?: string | null };
+
+// ── Rewards ──────────────────────────────────────────────────────────────────
+
+/**
+ * `rewards` — one-off monetary rewards sent to employees with a congratulatory
+ * email (`supabase/migrations/20260808120000_rewards.sql`). Owner/admin only by
+ * RLS. `status` records the email outcome: a `failed` row always carries
+ * `error_message` (DB-enforced), a `sent` row always carries `sent_at`.
+ */
+export type RewardStatus = "pending" | "sent" | "failed";
+
+export interface Reward {
+  id: string;
+  employee_id: string;
+  amount: number;
+  currency: string;
+  reason: string | null;
+  status: RewardStatus;
+  error_message: string | null;
+  sent_by: string | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export type RewardInsert = Pick<Reward, "employee_id" | "amount"> &
+  Partial<Pick<Reward, "currency" | "reason">>;
+
+export type RewardUpdate = Partial<Pick<Reward, "status" | "error_message" | "sent_at">>;

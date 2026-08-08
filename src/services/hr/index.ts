@@ -17,6 +17,7 @@ export { TeamsService, teamsService } from "./teams.service";
 export { PositionsService, positionsService } from "./positions.service";
 export { EmployeesService, employeesService } from "./employees.service";
 export { CompensationService, compensationService } from "./compensation.service";
+export { RewardsService, rewardsService } from "./rewards.service";
 
 export type {
   Department,
@@ -35,4 +36,8 @@ export type {
   EmployeeCompensation,
   EmployeeCompensationInsert,
   EmployeeCompensationUpdate,
+  Reward,
+  RewardInsert,
+  RewardUpdate,
+  RewardStatus,
 } from "./types";

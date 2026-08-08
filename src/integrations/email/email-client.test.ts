@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EmailClient } from "./email-client";
 import { IntegrationError } from "../services/errors";
 
-const FROM = { address: "hr@spartaflow.com", name: "SpartaFlow HR" };
+const FROM = { address: "hr@spartaflow.com", name: "Sparta Flow HR" };
 const ENDPOINT = "https://resend.test";
 
 /** Stub `fetch` with a queue of responses, recording every call. */
@@ -43,7 +43,7 @@ describe("EmailClient.send", () => {
     expect(calls[0].url).toBe(`${ENDPOINT}/emails`);
 
     const body = JSON.parse(calls[0].init.body as string);
-    expect(body.from).toBe("SpartaFlow HR <hr@spartaflow.com>");
+    expect(body.from).toBe("Sparta Flow HR <hr@spartaflow.com>");
     expect(body.to).toEqual(["employee@example.com"]);
     expect(body.reply_to).toBe("sparta@spartaflow.com");
     const headers = calls[0].init.headers as Record<string, string>;
@@ -118,7 +118,7 @@ describe("ensureSenderVerified (pre-flight)", () => {
   async function loadPreflight() {
     vi.resetModules();
     process.env.RESEND_API_KEY = "re_test";
-    process.env.PAYROLL_EMAIL_FROM = "SpartaFlow HR <hr@spartaflow.com>";
+    process.env.PAYROLL_EMAIL_FROM = "Sparta Flow HR <hr@spartaflow.com>";
     const mod = await import("./resend.server");
     mod.resetSenderVerification();
     return mod;

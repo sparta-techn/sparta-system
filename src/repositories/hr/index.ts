@@ -22,3 +22,4 @@ export { TeamRepository, teamRepository } from "./team.repository";
 export { PositionRepository, positionRepository } from "./position.repository";
 export { EmployeeRepository, employeeRepository } from "./employee.repository";
 export { CompensationRepository, compensationRepository } from "./compensation.repository";
+export { RewardRepository, rewardRepository } from "./reward.repository";

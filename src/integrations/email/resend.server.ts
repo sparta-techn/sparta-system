@@ -18,7 +18,7 @@ import type { EmailAddress } from "./types";
  * the invite emails, so `hr@` on it needs no extra verification — Resend
  * authorizes per DOMAIN, not per address. Override with PAYROLL_EMAIL_FROM.
  */
-const DEFAULT_FROM: EmailAddress = { address: "hr@spartaflow.com", name: "SpartaFlow HR" };
+const DEFAULT_FROM: EmailAddress = { address: "hr@spartaflow.com", name: "Sparta Flow HR" };
 
 /**
  * Parse `Name <a@b.com>` or a bare `a@b.com` from the environment.

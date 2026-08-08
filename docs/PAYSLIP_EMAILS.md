@@ -132,7 +132,7 @@ only through `await import(...)` from a server handler. `EmailClient` itself
 takes the key via config and never touches `process.env`, so it stays safe to
 import from isomorphic code. Verified by grepping the built client bundle.
 
-Sender defaults to `SpartaFlow HR <hr@spartaflow.com>`; override with
+Sender defaults to `Sparta Flow HR <hr@spartaflow.com>`; override with
 `PAYROLL_EMAIL_FROM`. Resend authorizes per **domain**, so any address on the
 already-verified `spartaflow.com` needs no extra setup.
 

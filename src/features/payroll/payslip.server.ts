@@ -115,8 +115,11 @@ async function recipientEmailFor(employeeId: string): Promise<string> {
   return email;
 }
 
-/** Org branding for the email shell. Falls back to a usable default. */
-async function loadCompany(): Promise<PayslipCompany> {
+/**
+ * Org branding for the email shell. Falls back to a usable default.
+ * Exported for other transactional-email senders (e.g. rewards).
+ */
+export async function loadCompany(): Promise<PayslipCompany> {
   const { data } = await admin()
     .from("companies")
     .select("name, logo_url, support_email")

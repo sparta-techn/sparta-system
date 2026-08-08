@@ -49,7 +49,7 @@ the server (see `src/integrations/supabase/client.ts`, `src/lib/logging/config.t
 | `LOG_LEVEL`                 | no          | `debug`\|`info`\|`warn`\|`error` (default: debug dev / info prod).                           | logging config                                        |
 | `RELEASE` / `COMMIT_SHA`    | no          | Release identifiers for logs/error reports (set by CI).                                      | logging config                                        |
 | `RESEND_API_KEY`            | no 🔒       | Resend API key for outbound app email (payslips). Absent ⇒ payslip sends fail with a clear message; nothing else breaks. | `integrations/email/resend.server.ts`                 |
-| `PAYROLL_EMAIL_FROM`        | no          | Verified sender, `Name <a@b.com>` or bare address. Default `SpartaFlow HR <hr@spartaflow.com>`. | `integrations/email/resend.server.ts`                 |
+| `PAYROLL_EMAIL_FROM`        | no          | Verified sender, `Name <a@b.com>` or bare address. Default `Sparta Flow HR <hr@spartaflow.com>`. | `integrations/email/resend.server.ts`                 |
 
 > **Email: two separate channels.** Supabase Auth's SMTP settings send only
 > GoTrue's own invite / signup / recovery templates — it cannot send arbitrary
