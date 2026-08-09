@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Download, Mail } from "lucide-react";
+import { CheckCircle2, Download, Mail, PencilLine } from "lucide-react";
 import { toast } from "sonner";
+
+import { useAuth } from "@/features/auth/auth-context";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,16 +22,20 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/states";
 
 import { downloadPayrollWorkbook } from "../export";
+import type { CorrectionState } from "../payslip.functions";
 import {
   asOfDate,
   currentMonth,
   monthBounds,
   payrollReportQuery,
+  payslipCorrectionsQuery,
   payslipDeliveriesQuery,
 } from "../queries";
 import { formatMoney } from "../summary";
 import type { PayrollLine } from "../types";
+import { CorrectPayslipDialog } from "./correct-payslip-dialog";
 import { MarkPaidDialog } from "./mark-paid-dialog";
+import { PayslipEditHistory } from "./payslip-edit-history";
 
 export function PayrollExportPanel() {
   const [month, setMonth] = useState<string>(currentMonth());
@@ -41,11 +47,24 @@ export function PayrollExportPanel() {
   // only to show it and to force a resend to be explicit.
   const deliveriesQuery = useQuery(payslipDeliveriesQuery(from, to));
   const deliveries = deliveriesQuery.data;
+  // Corrections logged against sent payslips. Readable by the whole payroll set;
+  // only Owner/Admin may create one, matching the RLS split.
+  const correctionsQuery = useQuery(payslipCorrectionsQuery(from, to));
+  const corrections = correctionsQuery.data;
+
+  const { hasAnyRole } = useAuth();
+  const canCorrect = hasAnyRole(["owner", "admin"]);
 
   const [payslipFor, setPayslipFor] = useState<PayrollLine | null>(null);
+  const [correctFor, setCorrectFor] = useState<PayrollLine | null>(null);
 
   const lines = q.data ?? [];
-  const grandTotal = lines.reduce((sum, l) => sum + Number(l.total_pay ?? 0), 0);
+  // Pending corrections change what an employee is actually owed, so the total
+  // on screen has to reflect them rather than the superseded computed figure.
+  const grandTotal = lines.reduce((sum, l) => {
+    const effective = corrections?.get(l.employee_id ?? "")?.effective;
+    return sum + Number(effective?.totalPay ?? l.total_pay ?? 0);
+  }, 0);
   const currency = lines[0]?.currency ?? "EGP";
   const missing = lines.filter((l) => !l.has_pay_data).length;
 
@@ -141,48 +160,74 @@ export function PayrollExportPanel() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {lines.map((l) => (
-                    <TableRow key={l.employee_id}>
-                      <TableCell className="font-medium">
-                        {l.employee_name}
-                        {!l.has_pay_data ? (
-                          <Badge variant="outline" className="ml-2 text-warning">
-                            no rate
-                          </Badge>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{l.employment_type}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {l.employment_type === "part-time"
-                          ? "—"
-                          : `${l.present_days} / ${l.expected_days}`}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{l.worked_hours}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {l.paid_exception_count}/{l.unpaid_exception_count}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {l.employment_type === "part-time" ? "—" : (l.absence_days ?? 0)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatMoney(l.base_pay, l.currency)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{l.overtime_hours}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatMoney(l.overtime_pay, l.currency)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums">
-                        {formatMoney(l.total_pay, l.currency)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <PayslipCell
-                          line={l}
-                          paidAt={deliveries?.get(l.employee_id ?? "")?.paidAt}
-                          onOpen={() => setPayslipFor(l)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {lines.map((l) => {
+                    const state = corrections?.get(l.employee_id ?? "");
+                    // Where a correction is logged but not yet re-sent, the
+                    // corrected figure is the truth — show it, not the
+                    // superseded one the employee was originally emailed.
+                    const eff = state?.effective ?? null;
+                    const corrected = eff !== null;
+
+                    return (
+                      <TableRow key={l.employee_id}>
+                        <TableCell className="font-medium">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {l.employee_name}
+                            {!l.has_pay_data ? (
+                              <Badge variant="outline" className="text-warning">
+                                no rate
+                              </Badge>
+                            ) : null}
+                            {corrected ? (
+                              <Badge variant="outline" className="text-warning">
+                                corrected
+                              </Badge>
+                            ) : null}
+                          </div>
+                          {state ? (
+                            <div className="mt-1.5">
+                              <PayslipEditHistory state={state} currency={l.currency} />
+                            </div>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{l.employment_type}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {l.employment_type === "part-time"
+                            ? "—"
+                            : `${l.present_days} / ${l.expected_days}`}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{l.worked_hours}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {l.paid_exception_count}/{l.unpaid_exception_count}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {l.employment_type === "part-time" ? "—" : (l.absence_days ?? 0)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatMoney(eff?.basePay ?? l.base_pay, l.currency)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {eff?.overtimeHours ?? l.overtime_hours}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatMoney(eff?.overtimePay ?? l.overtime_pay, l.currency)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">
+                          {formatMoney(eff?.totalPay ?? l.total_pay, l.currency)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <PayslipCell
+                            line={l}
+                            paidAt={deliveries?.get(l.employee_id ?? "")?.paidAt}
+                            pendingCorrections={state?.pendingCount ?? 0}
+                            canCorrect={canCorrect}
+                            onOpen={() => setPayslipFor(l)}
+                            onCorrect={() => setCorrectFor(l)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -196,8 +241,19 @@ export function PayrollExportPanel() {
         from={from}
         to={to}
         delivery={payslipFor?.employee_id ? deliveries?.get(payslipFor.employee_id) : undefined}
+        correction={payslipFor?.employee_id ? corrections?.get(payslipFor.employee_id) : undefined}
         open={payslipFor !== null}
         onOpenChange={(open) => !open && setPayslipFor(null)}
+      />
+
+      <CorrectPayslipDialog
+        line={correctFor}
+        state={correctFor?.employee_id ? corrections?.get(correctFor.employee_id) : undefined}
+        periodLabel={label}
+        from={from}
+        to={to}
+        open={correctFor !== null}
+        onOpenChange={(open) => !open && setCorrectFor(null)}
       />
     </Card>
   );
@@ -207,14 +263,26 @@ interface PayslipCellProps {
   line: PayrollLine;
   /** ISO timestamp of the last send for this period, if any. */
   paidAt?: string;
+  /** Corrections logged but not yet carried to the employee by a resend. */
+  pendingCorrections: number;
+  /** Only Owner/Admin may restate what someone was paid. */
+  canCorrect: boolean;
   onOpen: () => void;
+  onCorrect: () => void;
 }
 
 /**
  * Per-employee payslip action. One explicit click per employee — there is no
  * "send all", and the .xlsx export never triggers this.
  */
-function PayslipCell({ line, paidAt, onOpen }: PayslipCellProps) {
+function PayslipCell({
+  line,
+  paidAt,
+  pendingCorrections,
+  canCorrect,
+  onOpen,
+  onCorrect,
+}: PayslipCellProps) {
   // Nothing to confirm as paid: no rate configured, or a zero total.
   const blocked = !line.has_pay_data || Number(line.total_pay ?? 0) <= 0;
 
@@ -234,14 +302,26 @@ function PayslipCell({ line, paidAt, onOpen }: PayslipCellProps) {
   }
 
   if (paidAt) {
+    const hasPending = pendingCorrections > 0;
     return (
-      <div className="flex items-center justify-end gap-1.5">
+      <div className="flex flex-wrap items-center justify-end gap-1.5">
         <Badge variant="outline" className="gap-1 text-success">
           <CheckCircle2 className="size-3" />
           Paid {new Date(paidAt).toLocaleDateString([], { day: "numeric", month: "short" })}
         </Badge>
-        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={onOpen}>
-          Resend
+        {canCorrect ? (
+          <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={onCorrect}>
+            <PencilLine className="size-3" />
+            Correct
+          </Button>
+        ) : null}
+        <Button
+          variant={hasPending ? "outline" : "ghost"}
+          size="sm"
+          className="h-7 px-2 text-xs"
+          onClick={onOpen}
+        >
+          {hasPending ? "Resend corrected" : "Resend"}
         </Button>
       </div>
     );

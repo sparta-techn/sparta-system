@@ -1,13 +1,15 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { getPayrollReport } from "./api";
-import { listPayslipDeliveriesFn } from "./payslip.functions";
+import { listPayslipCorrectionsFn, listPayslipDeliveriesFn } from "./payslip.functions";
 
 export const payrollKeys = {
   all: ["payroll"] as const,
   report: (from: string, to: string) => [...payrollKeys.all, "report", from, to] as const,
   deliveries: (from: string, to: string) =>
     [...payrollKeys.all, "payslip-deliveries", from, to] as const,
+  corrections: (from: string, to: string) =>
+    [...payrollKeys.all, "payslip-corrections", from, to] as const,
 };
 
 /** `YYYY-MM-DD` for a local date. */
@@ -56,6 +58,23 @@ export const payslipDeliveriesQuery = (from: string, to: string) =>
     queryKey: payrollKeys.deliveries(from, to),
     queryFn: async () => {
       const rows = await listPayslipDeliveriesFn({ data: { from, to } });
+      return new Map(rows.map((r) => [r.employeeId, r]));
+    },
+    enabled: !!from && !!to,
+    staleTime: 30_000,
+  });
+
+/**
+ * Correction history for the period, keyed by employee, with the figures
+ * currently in effect where a correction has not yet been re-sent. Those
+ * figures are computed server-side by the same code the send path uses, so what
+ * the table shows is what the employee would be emailed.
+ */
+export const payslipCorrectionsQuery = (from: string, to: string) =>
+  queryOptions({
+    queryKey: payrollKeys.corrections(from, to),
+    queryFn: async () => {
+      const rows = await listPayslipCorrectionsFn({ data: { from, to } });
       return new Map(rows.map((r) => [r.employeeId, r]));
     },
     enabled: !!from && !!to,

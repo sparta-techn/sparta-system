@@ -20,19 +20,18 @@
  * assertion that real money moved. Import ONLY from a server handler via
  * `await import(...)` — it must never reach the browser bundle.
  */
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { ServiceError, toServiceError } from "@/services/core/errors";
 import { auditLog } from "@/lib/logging";
 
+import {
+  applyCorrections,
+  correctedLine,
+  markCorrectionsApplied,
+  pendingCorrections,
+} from "./corrections.server";
 import { renderPayslipEmail, type PayslipCompany } from "./payslip-email";
 import type { PayrollLine } from "./types";
-
-/** Relaxed handle for tables not present in the generated `Database` types. */
-function admin(): SupabaseClient {
-  return supabaseAdmin as unknown as SupabaseClient;
-}
 
 export interface SendPayslipInput {
   employeeId: string;
@@ -55,6 +54,8 @@ export interface SendPayslipResult {
   messageId: string;
   totalPay: number;
   currency: string;
+  /** How many logged corrections this send carried to the employee. */
+  correctionsApplied: number;
 }
 
 /** A previous send for the same employee+period, if any. */
@@ -86,7 +87,7 @@ async function payrollLineFor(employeeId: string, from: string, to: string): Pro
 
 /** The employee's email address, via their profile. */
 async function recipientEmailFor(employeeId: string): Promise<string> {
-  const { data: employee, error: employeeError } = await admin()
+  const { data: employee, error: employeeError } = await supabaseAdmin
     .from("employees")
     .select("user_id")
     .eq("id", employeeId)
@@ -98,7 +99,7 @@ async function recipientEmailFor(employeeId: string): Promise<string> {
     throw new ServiceError("This employee has no linked user account.", "invalid_request");
   }
 
-  const { data: profile, error: profileError } = await admin()
+  const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
     .select("email")
     .eq("id", userId)
@@ -120,7 +121,7 @@ async function recipientEmailFor(employeeId: string): Promise<string> {
  * Exported for other transactional-email senders (e.g. rewards).
  */
 export async function loadCompany(): Promise<PayslipCompany> {
-  const { data } = await admin()
+  const { data } = await supabaseAdmin
     .from("companies")
     .select("name, logo_url, support_email")
     .eq("is_active", true)
@@ -144,7 +145,7 @@ export async function latestDelivery(
   from: string,
   to: string,
 ): Promise<ExistingDelivery | null> {
-  const { data, error } = await admin()
+  const { data, error } = await supabaseAdmin
     .from("payslip_deliveries")
     .select("paid_at, attempt, recipient_email, total_pay")
     .eq("employee_id", employeeId)
@@ -180,15 +181,23 @@ export async function latestDelivery(
 export async function sendPayslip(input: SendPayslipInput): Promise<SendPayslipResult> {
   const { employeeId, from, to, periodLabel, sentByUserId } = input;
 
-  const line = await payrollLineFor(employeeId, from, to);
+  const computed = await payrollLineFor(employeeId, from, to);
 
   // Refuse to tell someone they were paid a number the system couldn't compute.
-  if (!line.has_pay_data) {
+  if (!computed.has_pay_data) {
     throw new ServiceError(
-      `${line.employee_name ?? "This employee"} has no pay rate configured, so their payslip figures would be zero. Set their pay rate first.`,
+      `${computed.employee_name ?? "This employee"} has no pay rate configured, so their payslip figures would be zero. Set their pay rate first.`,
       "invalid_request",
     );
   }
+
+  // Corrections logged since the last send are applied HERE, on top of a fresh
+  // payroll_report line — the same path the original payslip took. Nothing about
+  // the earlier delivery row is touched; this send simply carries better numbers.
+  const pending = await pendingCorrections(employeeId, from, to);
+  const figures = await applyCorrections(computed, pending, from);
+  const line = pending.length > 0 ? correctedLine(computed, figures) : computed;
+
   if (Number(line.total_pay ?? 0) <= 0) {
     throw new ServiceError(
       `${line.employee_name ?? "This employee"}'s total for ${periodLabel} is zero — nothing to confirm as paid.`,
@@ -244,7 +253,7 @@ export async function sendPayslip(input: SendPayslipInput): Promise<SendPayslipR
     idempotencyKey: `payslip:${employeeId}:${from}:${to}:${attempt}`,
   });
 
-  const { data: delivery, error: insertError } = await admin()
+  const { data: delivery, error: insertError } = await supabaseAdmin
     .from("payslip_deliveries")
     .insert({
       employee_id: employeeId,
@@ -280,6 +289,13 @@ export async function sendPayslip(input: SendPayslipInput): Promise<SendPayslipR
 
   const deliveryId = (delivery as { id: string }).id;
 
+  // Tie each correction to the send that actually delivered it, so a later send
+  // does not apply the same correction a second time.
+  await markCorrectionsApplied(
+    pending.map((c) => c.id),
+    deliveryId,
+  );
+
   auditLog.record(
     {
       action: "payroll.payslip_sent",
@@ -296,11 +312,15 @@ export async function sendPayslip(input: SendPayslipInput): Promise<SendPayslipR
         totalPay: Number(line.total_pay ?? 0),
         currency: line.currency,
         messageId: sent.messageId,
+        correctionsApplied: pending.length,
+        correctedFields: figures.correctedFields,
       },
       reason:
-        attempt === 1
-          ? `Marked ${line.employee_name} paid for ${periodLabel} and sent their payslip`
-          : `Resent ${line.employee_name}'s ${periodLabel} payslip (attempt ${attempt})`,
+        pending.length > 0
+          ? `Sent ${line.employee_name}'s corrected ${periodLabel} payslip (attempt ${attempt}), applying ${pending.length} correction(s) to ${figures.correctedFields.join(" and ")}`
+          : attempt === 1
+            ? `Marked ${line.employee_name} paid for ${periodLabel} and sent their payslip`
+            : `Resent ${line.employee_name}'s ${periodLabel} payslip (attempt ${attempt})`,
     },
     { userId: sentByUserId },
   );
@@ -313,5 +333,6 @@ export async function sendPayslip(input: SendPayslipInput): Promise<SendPayslipR
     messageId: sent.messageId,
     totalPay: Number(line.total_pay ?? 0),
     currency: line.currency ?? "EGP",
+    correctionsApplied: pending.length,
   };
 }

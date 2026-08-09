@@ -190,3 +190,68 @@ the server function against real `user_roles` grants (the real gate), and RLS on
 | Table action         | `src/features/payroll/components/payroll-export-panel.tsx` |
 | Transport            | `src/integrations/email/email-client.ts`                |
 | Credential (server)  | `src/integrations/email/resend.server.ts`               |
+
+---
+
+## 10. Corrections to a sent payslip
+
+Figures on an already-sent payslip can be corrected. Nothing about the original
+send is edited: `payslip_deliveries` remains immutable and service-role-written,
+exactly as section 1 describes.
+
+A correction is recorded as its own fact in `payslip_edit_log` and is **applied
+by re-sending**, which appends a new delivery row at the next `attempt` carrying
+the corrected figures. The delivery history therefore stays a truthful record of
+every payslip actually sent — the wrong one and the corrected one both survive,
+in order. `delivery_id` names the send that was wrong; `applied_delivery_id`
+names the send that fixed it, and is `NULL` for as long as the employee still
+holds the wrong figure.
+
+Logging a correction deliberately sends **no** email. Telling the employee is a
+separate, explicit "Resend corrected payslip" click, so fixing a typo for the
+record need not mean a second email.
+
+### What can be corrected
+
+| Figure           | How                                                              |
+| ---------------- | ---------------------------------------------------------------- |
+| Base pay         | Direct override, in money.                                        |
+| Overtime **hours** | Override in hours; the pay is re-derived from them.             |
+| Overtime pay     | **Not correctable** — see below.                                  |
+
+The payslip prints overtime as "N hours approved — X". Overriding the money
+alone would mail an employee two numbers that don't reconcile, so overtime is
+corrected in hours and priced by `overtime_pay_for_hours()`, which uses the same
+rate and arithmetic as the payroll report. Base pay is never shown as
+hours × rate, so it carries no equivalent risk and stays a direct override.
+
+To price corrected hours without a second copy of the rate rule, the
+part-time/full-time branch was extracted out of `_overtime_pay_line` into
+`_overtime_rate_for()`, which both the per-session path and the correction path
+now call. That extraction is a pure refactor — no existing pay figure changes.
+
+A correction is always recorded against the figure **currently in effect** (the
+computed line plus any corrections not yet re-sent), never the original, so
+correcting the same figure twice reads as a chain. `old_value` is derived
+server-side and never accepted from the client.
+
+### Access
+
+Read is `payroll.view` (Owner / Admin / HR) — the same gate as
+`payslip_deliveries`, so HR is never shown a payslip whose history is silently
+hidden. Creating a correction is Owner / Admin only, enforced at RLS
+(`payslip_edit_log_admin_insert`), in `authorize(..., CORRECTION_ROLES)`, and in
+the UI, which hides the "Correct" action. `authenticated` has no UPDATE or
+DELETE grant: `applied_delivery_id` is stamped by the server under service_role,
+so a correction's history can never be rewritten from a browser.
+
+### Files
+
+| Concern                | File                                                          |
+| ---------------------- | ------------------------------------------------------------- |
+| Schema + RLS + pricing | `supabase/migrations/20260809120000_payslip_corrections.sql`  |
+| Overlay arithmetic     | `src/features/payroll/corrections.ts`                         |
+| Overlay tests          | `src/features/payroll/corrections.test.ts`                    |
+| Correction orchestrator| `src/features/payroll/corrections.server.ts`                  |
+| Correction form        | `src/features/payroll/components/correct-payslip-dialog.tsx`  |
+| History view           | `src/features/payroll/components/payslip-edit-history.tsx`    |

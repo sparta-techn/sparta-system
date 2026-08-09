@@ -18,6 +18,7 @@ const NAV: readonly HrNavItem[] = [
   { label: "Employees", to: "/app/hr/employees" },
   { label: "Invitations", to: "/app/hr/invitations" },
   { label: "Rewards", to: "/app/hr/rewards", roles: ["owner", "admin"] },
+  { label: "Team emails", to: "/app/hr/team-emails", roles: ["owner", "admin"] },
   { label: "Leave", to: "/app/hr/leave" },
   { label: "Organization", to: "/app/hr/organization" },
   { label: "Onboarding", to: "/app/hr/onboarding" },

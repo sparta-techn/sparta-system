@@ -12,7 +12,7 @@
  */
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Loader2, Mail } from "lucide-react";
+import { AlertTriangle, Loader2, Mail, PencilLine } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,11 @@ import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "@/lib/errors";
 
 import { payrollKeys } from "../queries";
-import { sendPayslipFn, type PayslipDeliveryRecord } from "../payslip.functions";
+import {
+  sendPayslipFn,
+  type CorrectionState,
+  type PayslipDeliveryRecord,
+} from "../payslip.functions";
 import { formatMoney } from "../summary";
 import type { PayrollLine } from "../types";
 
@@ -40,6 +44,8 @@ interface MarkPaidDialogProps {
   to: string;
   /** Previous send for this employee+period, if any. */
   delivery?: PayslipDeliveryRecord;
+  /** Corrections logged against this employee's payslip, if any. */
+  correction?: CorrectionState;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -52,6 +58,7 @@ export function MarkPaidDialog({
   from,
   to,
   delivery,
+  correction,
   open,
   onOpenChange,
 }: MarkPaidDialogProps) {
@@ -82,11 +89,14 @@ export function MarkPaidDialog({
       }),
     onSuccess: (result) => {
       toast.success(
-        result.attempt > 1
-          ? `Payslip resent to ${result.recipientEmail}.`
-          : `${line?.employee_name} marked paid — payslip sent to ${result.recipientEmail}.`,
+        result.correctionsApplied > 0
+          ? `Corrected payslip sent to ${result.recipientEmail}.`
+          : result.attempt > 1
+            ? `Payslip resent to ${result.recipientEmail}.`
+            : `${line?.employee_name} marked paid — payslip sent to ${result.recipientEmail}.`,
       );
       void queryClient.invalidateQueries({ queryKey: payrollKeys.deliveries(from, to) });
+      void queryClient.invalidateQueries({ queryKey: payrollKeys.corrections(from, to) });
       onOpenChange(false);
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -95,7 +105,18 @@ export function MarkPaidDialog({
   if (!line) return null;
 
   const money = (v: number | null | undefined) => formatMoney(v, line.currency);
-  const hasOvertime = n(line.overtime_hours) > 0 || n(line.overtime_pay) > 0;
+
+  // Pending corrections are applied by THIS send. Show the figures that will
+  // actually be emailed — computed server-side by the same code that sends —
+  // rather than the superseded ones the payroll report still calculates.
+  const eff = correction?.effective ?? null;
+  const pendingCount = correction?.pendingCount ?? 0;
+  const basePay = eff?.basePay ?? n(line.base_pay);
+  const overtimeHours = eff?.overtimeHours ?? n(line.overtime_hours);
+  const overtimePay = eff?.overtimePay ?? n(line.overtime_pay);
+  const totalPay = eff?.totalPay ?? n(line.total_pay);
+
+  const hasOvertime = overtimeHours > 0 || overtimePay > 0;
   const unpaidNotes: string[] = [];
   if (n(line.absence_days) > 0) unpaidNotes.push(`${n(line.absence_days)} unpaid absence day(s)`);
   if (n(line.unpaid_exception_count) > 0) {
@@ -130,23 +151,35 @@ export function MarkPaidDialog({
           </div>
         ) : null}
 
-        {/* The exact figures the email will carry — same payroll line as the table. */}
+        {pendingCount > 0 ? (
+          <div className="flex gap-2.5 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+            <PencilLine className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              This send applies{" "}
+              <strong className="font-medium text-foreground">
+                {pendingCount} logged correction{pendingCount === 1 ? "" : "s"}
+              </strong>
+              . The figures below are the corrected ones, and they are what the employee will be
+              emailed.
+            </p>
+          </div>
+        ) : null}
+
+        {/* The exact figures the email will carry — corrected where corrections apply. */}
         <dl className="space-y-2 rounded-lg border border-border bg-muted/40 p-3 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Base pay</dt>
-            <dd className="tabular-nums">{money(line.base_pay)}</dd>
+            <dd className="tabular-nums">{money(basePay)}</dd>
           </div>
           {hasOvertime ? (
             <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">
-                Overtime ({n(line.overtime_hours)}h approved)
-              </dt>
-              <dd className="tabular-nums">{money(line.overtime_pay)}</dd>
+              <dt className="text-muted-foreground">Overtime ({overtimeHours}h approved)</dt>
+              <dd className="tabular-nums">{money(overtimePay)}</dd>
             </div>
           ) : null}
           <div className="flex justify-between gap-4 border-t border-border pt-2 font-semibold">
             <dt>Total</dt>
-            <dd className="tabular-nums">{money(line.total_pay)}</dd>
+            <dd className="tabular-nums">{money(totalPay)}</dd>
           </div>
           {unpaidNotes.length > 0 ? (
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -167,7 +200,7 @@ export function MarkPaidDialog({
               htmlFor="payslip-transfer-confirmed"
               className="text-sm font-normal leading-snug text-foreground"
             >
-              I have confirmed the bank transfer of {money(line.total_pay)} to {line.employee_name}{" "}
+              I have confirmed the bank transfer of {money(totalPay)} to {line.employee_name}{" "}
               actually went through.
             </Label>
           </div>
@@ -200,7 +233,11 @@ export function MarkPaidDialog({
           </Button>
           <Button onClick={() => mutation.mutate()} disabled={!canSend}>
             {mutation.isPending ? <Loader2 className="animate-spin" /> : <Mail />}
-            {alreadyPaid ? "Resend payslip" : "Mark paid & send"}
+            {pendingCount > 0
+              ? "Send corrected payslip"
+              : alreadyPaid
+                ? "Resend payslip"
+                : "Mark paid & send"}
           </Button>
         </DialogFooter>
       </DialogContent>

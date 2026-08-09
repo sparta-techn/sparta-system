@@ -19,10 +19,19 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { toServiceError } from "@/services/core/errors";
 import type { AppRole } from "@/features/auth/types";
 
+import type { CorrectableField, CorrectionState } from "./corrections.server";
 import type { ExistingDelivery, SendPayslipResult } from "./payslip.server";
 
 /** DB roles permitted to confirm a payment and email a payslip. */
 const ALLOWED_ROLES: readonly AppRole[] = ["owner", "admin", "hr"];
+
+/**
+ * DB roles permitted to RESTATE what someone was paid. Deliberately tighter
+ * than {@link ALLOWED_ROLES} and matched to the RLS insert policy on
+ * `payslip_edit_log`: HR can read correction history, but only an owner or
+ * admin can create a correction.
+ */
+const CORRECTION_ROLES: readonly AppRole[] = ["owner", "admin"];
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -36,6 +45,16 @@ export interface SendPayslipRequest {
   confirmResend?: boolean;
 }
 
+export interface LogCorrectionRequest {
+  employeeId: string;
+  from: string;
+  to: string;
+  field: CorrectableField;
+  /** Money for `base_pay`, HOURS for `overtime_hours`. */
+  newValue: number;
+  reason: string;
+}
+
 export interface PayslipDeliveryRecord {
   employeeId: string;
   paidAt: string;
@@ -44,8 +63,12 @@ export interface PayslipDeliveryRecord {
   totalPay: number;
 }
 
-/** Throw unless the caller actually holds Owner / Admin / HR. */
-async function authorize(actorId: string, action: string): Promise<void> {
+/** Throw unless the caller actually holds one of `allowed` (default Owner / Admin / HR). */
+async function authorize(
+  actorId: string,
+  action: string,
+  allowed: readonly AppRole[] = ALLOWED_ROLES,
+): Promise<void> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const admin = supabaseAdmin as unknown as SupabaseClient;
 
@@ -53,7 +76,7 @@ async function authorize(actorId: string, action: string): Promise<void> {
   if (error) throw toServiceError(error, "Failed to check your permissions.");
 
   const roles = ((data ?? []) as Array<{ role: AppRole }>).map((r) => r.role);
-  if (!roles.some((r) => ALLOWED_ROLES.includes(r))) {
+  if (!roles.some((r) => allowed.includes(r))) {
     throw new Error(`You do not have permission to ${action}.`);
   }
 }
@@ -133,4 +156,62 @@ export const listPayslipDeliveriesFn = createServerFn({ method: "POST" })
     return [...latest.values()];
   });
 
+/**
+ * Record a correction to an already-sent payslip.
+ *
+ * Logs the change only — it deliberately does NOT email anything. Telling the
+ * employee about the correction is a separate, explicit "resend" click, so
+ * whoever fixes a typo chooses whether it is worth a second email.
+ *
+ * `oldValue` is never accepted from the client: the server derives the figure
+ * currently in effect so the log cannot be seeded with a fictitious starting
+ * point.
+ */
+export const logPayslipCorrectionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: LogCorrectionRequest): LogCorrectionRequest => {
+    const employeeId = String(data?.employeeId ?? "").trim();
+    if (!UUID_RE.test(employeeId)) throw new Error("A valid employee is required.");
+
+    const { from, to } = validatePeriod(data?.from, data?.to);
+
+    const field = String(data?.field ?? "");
+    if (field !== "base_pay" && field !== "overtime_hours") {
+      throw new Error("Only base pay and overtime hours can be corrected.");
+    }
+
+    const newValue = Number(data?.newValue);
+    if (!Number.isFinite(newValue) || newValue < 0) {
+      throw new Error("A valid, non-negative amount is required.");
+    }
+
+    const reason = String(data?.reason ?? "").trim();
+    if (!reason) throw new Error("A reason is required for every correction.");
+    if (reason.length > 500) throw new Error("Keep the reason under 500 characters.");
+
+    return { employeeId, from, to, field, newValue, reason };
+  })
+  .handler(async ({ data, context }) => {
+    await authorize(context.userId, "correct payslips", CORRECTION_ROLES);
+    const { logCorrection } = await import("./corrections.server");
+    return logCorrection({ ...data, editedByUserId: context.userId });
+  });
+
+/**
+ * Correction history for the period, plus the figures currently in effect for
+ * anyone with corrections that have not yet been re-sent.
+ *
+ * Readable by the whole payroll set (Owner / Admin / HR) — matching the RLS
+ * read policy — so HR is never shown a payslip whose history is silently hidden.
+ */
+export const listPayslipCorrectionsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: { from: string; to: string }) => validatePeriod(data?.from, data?.to))
+  .handler(async ({ data, context }): Promise<CorrectionState[]> => {
+    await authorize(context.userId, "view payroll");
+    const { correctionStates } = await import("./corrections.server");
+    return correctionStates(data.from, data.to);
+  });
+
 export type { ExistingDelivery, SendPayslipResult };
+export type { CorrectableField, CorrectionState, PayslipCorrection } from "./corrections.server";
