@@ -8,6 +8,11 @@
  * is the only type with a reduced day and a trimmed daily-report set:
  *
  *  - Attendance target: part-time works a 4h day instead of the company default.
+ *  - Break policy: a full-time day is the company default measured *including*
+ *    the break allowance (8h on the clock = 7h worked + 1h break), so break time
+ *    up to `company_settings.max_break_minutes` counts toward the target.
+ *    Part-time is the opposite: 4h of actual work, breaks neither counted nor
+ *    capped — see {@link creditedBreakSeconds}.
  *  - Daily reports: part-time skips the Midday pulse entirely (check-in and
  *    end-of-day stay required, same as full-time).
  *
@@ -42,6 +47,49 @@ export function expectedWorkMinutesFor(
   companyDefaultMinutes: number,
 ): number {
   return isPartTime(nameOrSlug) ? PART_TIME_WORK_MINUTES : companyDefaultMinutes;
+}
+
+/**
+ * Whether the company break allowance (`max_break_minutes`) applies to this
+ * employment type — i.e. whether breaks are capped *and* count toward the day.
+ * Full-time (and unknown types) yes; part-time no: their 4h is pure working
+ * time, so a break neither shortens the day nor trips a limit warning.
+ */
+export function hasBreakAllowance(nameOrSlug: string | null | undefined): boolean {
+  return !isPartTime(nameOrSlug);
+}
+
+/**
+ * Break seconds that count toward the day target. Full-time days are measured
+ * on the clock: the break allowance is *inside* the target (8h day = 7h worked
+ * + 1h break), so break time counts up to `maxBreakSeconds` and anything beyond
+ * the allowance does not. Part-time credits nothing — breaks are unlimited and
+ * simply extend their day until 4h of real work is done.
+ */
+export function creditedBreakSeconds(
+  nameOrSlug: string | null | undefined,
+  breakSeconds: number,
+  maxBreakSeconds: number,
+): number {
+  if (!hasBreakAllowance(nameOrSlug)) return 0;
+  return Math.min(Math.max(0, breakSeconds), Math.max(0, maxBreakSeconds));
+}
+
+/**
+ * Seconds counted toward the day target: worked time plus whatever break is
+ * credited by {@link creditedBreakSeconds}. This — not raw worked time — is what
+ * the progress bar, the half-day check and the overtime threshold compare
+ * against {@link expectedWorkMinutesFor}. Mirrors `finish_work_session`.
+ */
+export function dayProgressSeconds(
+  nameOrSlug: string | null | undefined,
+  workedSeconds: number,
+  breakSeconds: number,
+  maxBreakSeconds: number,
+): number {
+  return (
+    Math.max(0, workedSeconds) + creditedBreakSeconds(nameOrSlug, breakSeconds, maxBreakSeconds)
+  );
 }
 
 /** Whether this employment type is expected to file a Midday status pulse. */

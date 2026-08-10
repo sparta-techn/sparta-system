@@ -10,8 +10,11 @@
  *  - Working hours start at 09:00.
  *  - Check-in is allowed until 10:00 (60-min grace) without penalty.
  *  - Check-in after 10:00 is Late. No check-in on a working day is Absent.
- *  - Expected working duration is 8 hours (overtime accrues beyond it).
- *  - Breaks may total at most 1 hour.
+ *  - Expected day is 8 hours (overtime accrues beyond it).
+ *  - Breaks may total at most 1 hour, and that hour counts toward the 8h day —
+ *    a full day on the clock is 7h worked + 1h break. Employment types that get
+ *    no break allowance (part-time) pass `breakCreditSeconds = 0` and are
+ *    measured on pure working time instead; see `@/features/hr/employment-type`.
  */
 import type { AttendanceStatus } from "@/features/attendance/types";
 
@@ -93,12 +96,27 @@ export function computeWorkedSeconds(startedAt: Date, endedAt: Date, breakSecond
   return Math.max(0, gross - Math.max(0, breakSeconds));
 }
 
-/** Seconds worked beyond the expected 8-hour day (0 if under). */
-export function overtimeSeconds(
+/**
+ * Seconds counted toward the day: worked time plus break time up to
+ * `breakCreditSeconds` (the allowance that sits *inside* the target). Pass 0 to
+ * measure pure working time. This is the quantity every day-length rule below
+ * compares against {@link AttendancePolicy.expectedWorkMinutes}.
+ */
+export function dayProgressSeconds(
   workedSeconds: number,
+  breakSeconds: number,
+  breakCreditSeconds: number,
+): number {
+  const credited = Math.min(Math.max(0, breakSeconds), Math.max(0, breakCreditSeconds));
+  return Math.max(0, workedSeconds) + credited;
+}
+
+/** Seconds beyond the expected 8-hour day (0 if under); takes day progress. */
+export function overtimeSeconds(
+  progressSeconds: number,
   policy: AttendancePolicy = DEFAULT_ATTENDANCE_POLICY,
 ): number {
-  return Math.max(0, workedSeconds - policy.expectedWorkMinutes * 60);
+  return Math.max(0, progressSeconds - policy.expectedWorkMinutes * 60);
 }
 
 /** A break interval as absolute timestamps; `endedAt` null while a break is open. */
@@ -108,8 +126,14 @@ export interface BreakInterval {
 }
 
 /**
- * The exact instant at which cumulative WORKING time (breaks excluded) since
- * `startedAt` first reaches `targetSeconds`, or `null` if it hasn't by `now`.
+ * The exact instant at which cumulative DAY PROGRESS since `startedAt` first
+ * reaches `targetSeconds`, or `null` if it hasn't by `now`.
+ *
+ * Progress runs at real time while working, and also while on break for as long
+ * as `breakCreditSeconds` of allowance is left (a full-time 8h day is 7h worked
+ * + 1h break, so that hour must tick). Once the allowance is spent, break time
+ * freezes progress. Pass `breakCreditSeconds = 0` (the default, and what
+ * part-time uses) to measure pure working time.
  *
  * Mirrors the server `overtime_threshold_ts` break-walk and is the single client
  * source for the auto-overtime transition: it decides when to poke the server
@@ -117,23 +141,35 @@ export interface BreakInterval {
  * (a late evaluation still returns the real crossing instant) and correct across
  * midnight — it works purely in absolute timestamps, never wall-clock dates, so
  * an overnight shift is attributed by its real `startedAt`, not by "today".
- * Returns `null` while the employee is mid-break and still under target (working
- * time is frozen during a break).
+ * Returns `null` while the employee is mid-break with the allowance exhausted
+ * and the target not yet reached.
  */
 export function overtimeThresholdAt(
   startedAt: Date,
   breaks: BreakInterval[],
   targetSeconds: number,
   now: Date = new Date(),
+  breakCreditSeconds = 0,
 ): Date | null {
   let remaining = targetSeconds;
+  let credit = Math.max(0, breakCreditSeconds);
   let cursor = startedAt.getTime();
   const ordered = [...breaks].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
   for (const b of ordered) {
-    const seg = (b.startedAt.getTime() - cursor) / 1000; // working seconds before this break
-    if (seg >= remaining) return new Date(cursor + remaining * 1000);
-    remaining -= seg;
-    if (b.endedAt === null) return null; // currently on break, target not yet reached
+    const worked = (b.startedAt.getTime() - cursor) / 1000; // working seconds before this break
+    if (worked >= remaining) return new Date(cursor + remaining * 1000);
+    remaining -= worked;
+
+    // The break itself advances progress only while allowance is left.
+    const breakEnd = b.endedAt ?? now;
+    const credited = Math.min(
+      Math.max(0, (breakEnd.getTime() - b.startedAt.getTime()) / 1000),
+      credit,
+    );
+    if (credited >= remaining) return new Date(b.startedAt.getTime() + remaining * 1000);
+    remaining -= credited;
+    credit -= credited;
+    if (b.endedAt === null) return null; // still on break, target not reached
     cursor = b.endedAt.getTime();
   }
   const seg = (now.getTime() - cursor) / 1000;
@@ -159,15 +195,16 @@ export function breakLimitExceeded(
 
 /**
  * Final attendance status once a day is checked out: keeps Late, downgrades to
- * `half_day` when worked time is under half the expected day, else `on_time`.
- * Mirrors `finish_work_session`.
+ * `half_day` when day progress is under half the expected day, else `on_time`.
+ * Takes {@link dayProgressSeconds}, not raw worked time. Mirrors
+ * `finish_work_session`.
  */
 export function classifyCompletedDay(
-  workedSeconds: number,
+  progressSeconds: number,
   lateMins: number,
   policy: AttendancePolicy = DEFAULT_ATTENDANCE_POLICY,
 ): AttendanceStatus {
   if (lateMins > policy.graceMinutes) return "late";
-  if (workedSeconds < (policy.expectedWorkMinutes * 60) / 2) return "half_day";
+  if (progressSeconds < (policy.expectedWorkMinutes * 60) / 2) return "half_day";
   return "on_time";
 }

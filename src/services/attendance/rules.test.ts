@@ -5,6 +5,7 @@ import {
   breakLimitExceeded,
   classifyCompletedDay,
   computeWorkedSeconds,
+  dayProgressSeconds,
   DEFAULT_ATTENDANCE_POLICY,
   isLate,
   lateMinutes,
@@ -81,6 +82,36 @@ describe("working duration is 8 hours", () => {
     expect(classifyCompletedDay(8 * HOUR, 0)).toBe("on_time");
     expect(classifyCompletedDay(8 * HOUR, 90)).toBe("late"); // late beats full day
     expect(classifyCompletedDay(3 * HOUR, 0)).toBe("half_day"); // under half of 8h
+  });
+});
+
+describe("the break allowance counts toward the day (full-time)", () => {
+  const CREDIT = HOUR; // policy default: 60 min counted
+
+  it("makes 7h worked + 1h break a full 8h day", () => {
+    const progress = dayProgressSeconds(7 * HOUR, HOUR, CREDIT);
+    expect(progress).toBe(8 * HOUR);
+    expect(overtimeSeconds(progress)).toBe(0);
+    expect(classifyCompletedDay(progress, 0)).toBe("on_time");
+  });
+
+  it("credits only up to the allowance — a 2h break does not shorten the day", () => {
+    // 6h worked + 2h break: only 1h of that break counts → 7h of day, still short.
+    expect(dayProgressSeconds(6 * HOUR, 2 * HOUR, CREDIT)).toBe(7 * HOUR);
+  });
+
+  it("does not require the break to be taken — 8h straight is still a full day", () => {
+    expect(dayProgressSeconds(8 * HOUR, 0, CREDIT)).toBe(8 * HOUR);
+  });
+
+  it("accrues overtime past the 8h clock day, not past 8h of work", () => {
+    // 7h30 worked + 1h break = 8h30 on the clock → 30m overtime.
+    expect(overtimeSeconds(dayProgressSeconds(7.5 * HOUR, HOUR, CREDIT))).toBe(1800);
+  });
+
+  it("credits nothing when the type has no allowance (part-time)", () => {
+    // Part-time passes 0: their 4h target is pure work, breaks just extend the day.
+    expect(dayProgressSeconds(3 * HOUR, 2 * HOUR, 0)).toBe(3 * HOUR);
   });
 });
 

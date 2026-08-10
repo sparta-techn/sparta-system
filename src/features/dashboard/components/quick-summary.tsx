@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/stat-card";
 import { useAuth } from "@/features/auth/auth-context";
 import { companySettingsQuery, todaySessionQuery } from "@/features/attendance/queries";
-import { expectedWorkMinutesFor } from "@/features/hr/employment-type";
+import { creditedBreakSeconds, expectedWorkMinutesFor } from "@/features/hr/employment-type";
 import { useUnreadCount } from "@/features/notifications/store";
 import { useTasksState } from "@/features/tasks/store";
 
@@ -37,6 +37,15 @@ export function QuickSummary() {
     employmentType,
     settings?.expected_work_minutes ?? 480,
   );
+  // A full-time target includes the break allowance, so the day counted against
+  // it is worked time + the credited break (part-time credits nothing).
+  const progressSeconds =
+    workingSeconds +
+    creditedBreakSeconds(
+      employmentType,
+      today?.session?.break_seconds ?? 0,
+      (settings?.max_break_minutes ?? 60) * 60,
+    );
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -53,7 +62,7 @@ export function QuickSummary() {
         label="Hours worked"
         value={formatHm(workingSeconds)}
         icon={Clock}
-        hint={`of ${formatHm(targetMinutes * 60)} target`}
+        hint={`${formatHm(progressSeconds)} of ${formatHm(targetMinutes * 60)} day`}
       />
     </div>
   );

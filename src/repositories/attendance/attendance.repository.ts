@@ -17,6 +17,7 @@ import {
 import {
   attendanceStatusForCheckIn,
   classifyCompletedDay,
+  dayProgressSeconds,
   DEFAULT_ATTENDANCE_POLICY,
   lateMinutes,
   overtimeSeconds,
@@ -198,13 +199,18 @@ export class AttendanceRepository {
     const attendance = await this.records.getByIdOrThrow(session.attendance_id);
     const totalWorked = attendance.worked_seconds + workedSeconds;
     const totalBreak = attendance.break_seconds + breakSeconds;
+    // The 8-hour day is measured on the clock: the break allowance counts toward
+    // it (7h worked + 1h break = a full day), anything past the allowance does
+    // not. This layer has no employment type, so it applies the company rule;
+    // the live RPC path (`finish_work_session`) credits 0 for part-time.
+    const progress = dayProgressSeconds(totalWorked, totalBreak, policy.maxBreakMinutes * 60);
     const updated = await this.records.update(attendance.id, {
       last_check_out_at: at,
       worked_seconds: totalWorked,
       break_seconds: totalBreak,
-      // 8-hour day → overtime beyond it; final status keeps Late / flags half-day.
-      overtime_seconds: overtimeSeconds(totalWorked, policy),
-      status: classifyCompletedDay(totalWorked, attendance.late_minutes, policy),
+      // Overtime beyond the day; final status keeps Late / flags half-day.
+      overtime_seconds: overtimeSeconds(progress, policy),
+      status: classifyCompletedDay(progress, attendance.late_minutes, policy),
     });
 
     await this.events.log({

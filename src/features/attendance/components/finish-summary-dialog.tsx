@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { dayProgressSeconds } from "@/services/attendance/rules";
 import { formatDurationLong } from "../hooks/use-timer";
 import { AttendanceBadge } from "./attendance-status-badge";
 import type { WorkSessionRow } from "../types";
@@ -16,13 +17,24 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   session: WorkSessionRow | null;
   expectedSeconds: number;
+  /** Break seconds that count toward the target (0 when the type has no allowance). */
+  breakCreditSeconds: number;
 }
 
-export function FinishSummaryDialog({ open, onOpenChange, session, expectedSeconds }: Props) {
+export function FinishSummaryDialog({
+  open,
+  onOpenChange,
+  session,
+  expectedSeconds,
+  breakCreditSeconds,
+}: Props) {
   if (!session) return null;
   const worked = session.working_seconds;
   const target = expectedSeconds;
-  const pct = Math.min(100, Math.round((worked / target) * 100));
+  // The bar tracks the same quantity the server measured the day against:
+  // worked time plus the counted part of the break allowance.
+  const progress = dayProgressSeconds(worked, session.break_seconds, breakCreditSeconds);
+  const pct = Math.min(100, Math.round((progress / target) * 100));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,7 +49,7 @@ export function FinishSummaryDialog({ open, onOpenChange, session, expectedSecon
           </Row>
           <Row label="Worked">
             <strong className="tabular-nums">{formatDurationLong(worked)}</strong>{" "}
-            <span className="text-muted-foreground">({pct}%)</span>
+            <span className="text-muted-foreground">({pct}% of day)</span>
           </Row>
           <Row label="Break">
             <strong className="tabular-nums">{formatDurationLong(session.break_seconds)}</strong>

@@ -95,6 +95,75 @@ describe("Fix 2 — overtime split instant (overtimeThresholdAt)", () => {
   });
 });
 
+describe("Fix 2 — full-time splits on the CLOCK day (break allowance counted)", () => {
+  // A full-time day is 8h on the clock: 7h worked + the 1h allowance. So the
+  // split instant is 8h after start as long as breaks stay within the allowance.
+  const CREDIT = HOUR;
+
+  it("a 1h break does not push the split — 09:00 start still splits at 17:00", () => {
+    const t = overtimeThresholdAt(
+      iso("2026-07-15T09:00:00Z"),
+      [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T13:00:00Z") }],
+      FULL_TIME_TARGET,
+      iso("2026-07-15T19:00:00Z"),
+      CREDIT,
+    );
+    expect(t?.toISOString()).toBe("2026-07-15T17:00:00.000Z"); // 7h worked + 1h break
+  });
+
+  it("pushes the split only by break time PAST the allowance", () => {
+    // 90-min break: 60 counted, 30 not → the day ends 30 min later than 17:00.
+    const t = overtimeThresholdAt(
+      iso("2026-07-15T09:00:00Z"),
+      [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T13:30:00Z") }],
+      FULL_TIME_TARGET,
+      iso("2026-07-15T19:00:00Z"),
+      CREDIT,
+    );
+    expect(t?.toISOString()).toBe("2026-07-15T17:30:00.000Z");
+  });
+
+  it("can cross the target while still ON a break the allowance covers", () => {
+    // 7h30 worked, then a break opened at 16:30. The remaining 30 min of the day
+    // is covered by the untouched allowance, so the day completes at 17:00 even
+    // though the employee never came back — the server closes the break there.
+    const t = overtimeThresholdAt(
+      iso("2026-07-15T09:00:00Z"),
+      [{ startedAt: iso("2026-07-15T16:30:00Z"), endedAt: null }],
+      FULL_TIME_TARGET,
+      iso("2026-07-15T18:00:00Z"),
+      CREDIT,
+    );
+    expect(t?.toISOString()).toBe("2026-07-15T17:00:00.000Z");
+  });
+
+  it("freezes once the allowance is spent mid-break", () => {
+    // 3h worked, then a break from 12:00 still open at 14:00: only the first hour
+    // counts, so progress is stuck at 4h — nowhere near the 8h day.
+    expect(
+      overtimeThresholdAt(
+        iso("2026-07-15T09:00:00Z"),
+        [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: null }],
+        FULL_TIME_TARGET,
+        iso("2026-07-15T14:00:00Z"),
+        CREDIT,
+      ),
+    ).toBeNull();
+  });
+
+  it("part-time is unaffected — no credit, so a break always pushes the split", () => {
+    // Same 1h break, part-time: 4h of real work is still required, ending at 14:00.
+    const t = overtimeThresholdAt(
+      iso("2026-07-15T09:00:00Z"),
+      [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T13:00:00Z") }],
+      PART_TIME_TARGET,
+      iso("2026-07-15T19:00:00Z"),
+      0,
+    );
+    expect(t?.toISOString()).toBe("2026-07-15T14:00:00.000Z");
+  });
+});
+
 describe("COMBINED — part-time overnight shift auto-transitioning across midnight", () => {
   // The exact scenario in the request: part-time employee starts at 11:00 PM,
   // auto-transitions to overtime at 3:00 AM (4h later, crossing midnight), keeps

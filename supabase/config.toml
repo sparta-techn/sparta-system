@@ -1,1 +1,8 @@
 project_id = "mgbtonsatvffknsjdxfe"
+
+# Local analytics (Logflare + its vector sidecar) is off: vector bind-mounts the
+# Docker socket, which fails under Colima (`~/.colima/default/docker.sock` cannot
+# be mounted into the VM) and takes the whole `supabase start` down with it.
+# Local-dev only — has no effect on the hosted project.
+[analytics]
+enabled = false

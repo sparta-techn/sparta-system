@@ -17,7 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/features/auth/auth-context";
-import { expectedWorkMinutesFor } from "@/features/hr/employment-type";
+import {
+  creditedBreakSeconds,
+  expectedWorkMinutesFor,
+  hasBreakAllowance,
+} from "@/features/hr/employment-type";
 import { cn } from "@/lib/utils";
 
 import {
@@ -98,13 +102,18 @@ export function TodayStatusCard({ compact = false }: Props) {
   const workedSeconds = Math.max(0, totalSinceStart - completedBreakSeconds - openBreakElapsed);
   const breakSecondsTotal = completedBreakSeconds + openBreakElapsed;
 
-  // Target working hours branch on employment type: part-time targets a 4h day;
-  // everyone else keeps the company-wide default (not a hardcoded 8h).
+  // Target and break policy branch on employment type:
+  //  - Full-time: the company day (8h) is measured on the clock — the break
+  //    allowance counts toward it, so a full day is 7h worked + 1h break.
+  //  - Part-time: 4h of actual work, with breaks neither counted nor capped.
   const companyDefaultMinutes = settingsQ.data?.expected_work_minutes ?? 480;
   const expectedSeconds = expectedWorkMinutesFor(employmentType, companyDefaultMinutes) * 60;
-  const remainingSeconds = Math.max(0, expectedSeconds - workedSeconds);
   const maxBreakSeconds = (settingsQ.data?.max_break_minutes ?? 60) * 60;
-  const breakOver = breakSecondsTotal > maxBreakSeconds;
+  const breakLimited = hasBreakAllowance(employmentType);
+  const creditedBreak = creditedBreakSeconds(employmentType, breakSecondsTotal, maxBreakSeconds);
+  const progressSeconds = workedSeconds + creditedBreak;
+  const remainingSeconds = Math.max(0, expectedSeconds - progressSeconds);
+  const breakOver = breakLimited && breakSecondsTotal > maxBreakSeconds;
 
   const [finishedDetails, setFinishedDetails] = useState<WorkSessionRow | null>(null);
   const [confirm, setConfirm] = useState<ConfirmKind | null>(null);
@@ -169,19 +178,38 @@ export function TodayStatusCard({ compact = false }: Props) {
 
   const status = session?.session_status ?? "not_started";
 
-  // Auto-transition into overtime: schedule a server poke for when live worked
-  // time is projected to reach the target, so the split fires without a click.
-  // Idempotent server-side; the every-minute server sweep is the authoritative
-  // backstop if this tab is asleep at the threshold (setTimeout is unreliable
-  // when a tab is backgrounded — exactly the overnight case).
+  // Auto-transition into overtime: schedule a server poke for when live day
+  // progress is projected to reach the target, so the split fires without a
+  // click. Idempotent server-side; the every-minute server sweep is the
+  // authoritative backstop if this tab is asleep at the threshold (setTimeout is
+  // unreliable when a tab is backgrounded — exactly the overnight case).
+  const openBreakStartedAt = openBreak?.started_at ?? null;
   useEffect(() => {
     if (!userId || !session?.started_at) return;
-    if (session.session_status !== "working") return; // on_break freezes progress
+    const onBreak = session.session_status === "on_break";
+    if (session.session_status !== "working" && !onBreak) return;
+
+    const breakNow =
+      completedBreakSeconds +
+      (onBreak && openBreakStartedAt
+        ? Math.max(0, (Date.now() - new Date(openBreakStartedAt).getTime()) / 1000)
+        : 0);
     const workedNow = Math.max(
       0,
-      (Date.now() - new Date(session.started_at).getTime()) / 1000 - completedBreakSeconds,
+      (Date.now() - new Date(session.started_at).getTime()) / 1000 - breakNow,
     );
-    const remainingMs = Math.max(0, (expectedSeconds - workedNow) * 1000);
+    const creditNow = breakLimited ? Math.min(breakNow, maxBreakSeconds) : 0;
+    const remainingToTarget = Math.max(0, expectedSeconds - workedNow - creditNow);
+
+    // On break, progress only keeps ticking while break allowance is left; once
+    // it's spent the clock freezes, so there is nothing to schedule until they
+    // resume (which re-runs this effect).
+    if (onBreak) {
+      const creditLeft = breakLimited ? Math.max(0, maxBreakSeconds - breakNow) : 0;
+      if (remainingToTarget > creditLeft) return;
+    }
+
+    const remainingMs = remainingToTarget * 1000;
     const poke = () => {
       transitionOvertimeIfDue()
         .then(() => {
@@ -200,7 +228,10 @@ export function TodayStatusCard({ compact = false }: Props) {
     session?.started_at,
     session?.session_status,
     completedBreakSeconds,
+    openBreakStartedAt,
     expectedSeconds,
+    breakLimited,
+    maxBreakSeconds,
     qc,
   ]);
 
@@ -265,20 +296,26 @@ export function TodayStatusCard({ compact = false }: Props) {
 
             <div>
               <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Progress toward {formatDurationLong(expectedSeconds)}</span>
+                <span>
+                  Progress toward {formatDurationLong(expectedSeconds)}
+                  {breakLimited
+                    ? ` (includes up to ${settingsQ.data?.max_break_minutes ?? 60} min break)`
+                    : " of work"}
+                </span>
                 <span className="tabular-nums">
-                  {Math.min(100, Math.round((workedSeconds / expectedSeconds) * 100))}%
+                  {Math.min(100, Math.round((progressSeconds / expectedSeconds) * 100))}%
                 </span>
               </div>
               <Progress
-                value={Math.min(100, (workedSeconds / expectedSeconds) * 100)}
+                value={Math.min(100, (progressSeconds / expectedSeconds) * 100)}
                 className="h-1.5"
               />
             </div>
 
             {breakOver ? (
               <p className="text-xs text-warning" role="alert">
-                You've exceeded the {settingsQ.data?.max_break_minutes ?? 60} min break allowance.
+                You've exceeded the {settingsQ.data?.max_break_minutes ?? 60} min break allowance —
+                time past it no longer counts toward your day.
               </p>
             ) : null}
 
@@ -385,6 +422,7 @@ export function TodayStatusCard({ compact = false }: Props) {
         open={!!finishedDetails}
         session={finishedDetails}
         expectedSeconds={expectedSeconds}
+        breakCreditSeconds={breakLimited ? maxBreakSeconds : 0}
         onOpenChange={(open) => {
           if (!open) setFinishedDetails(null);
         }}
