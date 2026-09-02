@@ -14,30 +14,14 @@ import { resolveWorkDate } from "@/features/daily-sync";
 import { fetchHrEmployees } from "@/features/hr/api";
 import { countsAsMissingEod } from "@/features/hr/employment-type";
 import type { HrEmployee } from "@/features/hr/mock-data";
-import type { TaskProgressEntry } from "@/features/midday/types";
 import { attendanceRepository } from "@/repositories/attendance.repository";
 import { dailyReportRepository } from "@/repositories/reports";
 
+import { taskCompletion } from "./progress";
 import type { TeamEodEntry, TomorrowPlan } from "./types";
 
 function rosterRole(e: HrEmployee): string {
   return e.jobTitle && e.jobTitle !== "—" ? e.jobTitle : e.role;
-}
-
-/** Completed count + weighted completion % (partial counts half) over the plan. */
-function completion(entries: TaskProgressEntry[]): { count: number; pct: number } {
-  if (entries.length === 0) return { count: 0, pct: 0 };
-  let weight = 0;
-  let done = 0;
-  for (const t of entries) {
-    if (t.state === "completed") {
-      weight += 1;
-      done += 1;
-    } else if (t.state === "partial") {
-      weight += 0.5;
-    }
-  }
-  return { count: done, pct: Math.round((weight / entries.length) * 100) };
 }
 
 interface OverviewState {
@@ -75,7 +59,7 @@ export function useTeamEodOverview() {
         .filter((e) => e.userId && e.status === "active")
         .map((e) => {
           const row = byUser.get(e.userId!);
-          const { count, pct } = completion(row?.completed ?? []);
+          const { count, pct } = taskCompletion(row?.completed ?? []);
           const openDeps = (row?.open_dependencies ?? []).filter((d) => !d.resolvedNow);
           const need = row?.need_from_others?.[0];
           const tomorrow = row?.tomorrow_plan as TomorrowPlan | undefined;

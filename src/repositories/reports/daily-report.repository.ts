@@ -3,6 +3,7 @@ import {
   DailyReportsService,
   dailyReportsService,
   type DailyReportInsert,
+  type DailyReportRangeOptions,
   type DailyReportRow,
   type DailyReportUpdate,
 } from "@/services/reports";
@@ -50,6 +51,19 @@ export class DailyReportRepository {
   /** All reports for a work date (manager / HR roll-up). */
   listByDate(workDate: string, params: ListParams<DailyReportRow> = {}): Promise<DailyReportRow[]> {
     return this.service.listByDate(workDate, params);
+  }
+
+  /**
+   * Reports for a work-date range (inclusive), most recent first — the export /
+   * period roll-up read. Narrow with `{ userId }` for one employee and
+   * `{ status: "submitted" }` to leave drafts out.
+   */
+  listInRange(
+    from: string,
+    to: string,
+    options: DailyReportRangeOptions = {},
+  ): Promise<DailyReportRow[]> {
+    return this.service.listInRange(from, to, options);
   }
 
   /** Submitted reports across the team (manager review queue). */

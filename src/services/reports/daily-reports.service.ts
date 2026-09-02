@@ -2,7 +2,20 @@ import { BaseService } from "../core/base-service";
 import { toServiceError } from "../core/errors";
 import type { ListParams } from "../core/types";
 import { resolveSubmissionMode } from "./rules";
-import type { DailyReportInsert, DailyReportRow, DailyReportUpdate } from "./types";
+import type {
+  DailyReportInsert,
+  DailyReportRow,
+  DailyReportStatus,
+  DailyReportUpdate,
+} from "./types";
+
+/** Narrowing options for {@link DailyReportsService.listInRange}. */
+export interface DailyReportRangeOptions {
+  /** Restrict to one employee's reports (omit for everyone the caller may see). */
+  userId?: string;
+  /** Restrict to a lifecycle status — `"submitted"` excludes drafts. */
+  status?: DailyReportStatus;
+}
 
 /**
  * DailyReportsService — end-of-day reports (`public.daily_reports`).
@@ -75,6 +88,34 @@ export class DailyReportsService extends BaseService<
   /** All reports for a work date (manager / HR roll-up). */
   listByDate(workDate: string, params: ListParams<DailyReportRow> = {}): Promise<DailyReportRow[]> {
     return this.list({ ...params, filters: { ...params.filters, work_date: workDate } });
+  }
+
+  /**
+   * Reports whose `work_date` falls within `[from, to]` (inclusive,
+   * `YYYY-MM-DD`), most recent first — the read behind the reports export and
+   * period roll-ups. Optionally narrowed to one employee and/or a status; RLS
+   * still scopes which rows the caller may see.
+   */
+  async listInRange(
+    from: string,
+    to: string,
+    options: DailyReportRangeOptions = {},
+  ): Promise<DailyReportRow[]> {
+    try {
+      let query = this.client
+        .from(this.table)
+        .select("*")
+        .gte("work_date", from)
+        .lte("work_date", to);
+      if (options.userId) query = query.eq("user_id", options.userId);
+      if (options.status) query = query.eq("status", options.status);
+
+      const { data, error } = await query.order("work_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as DailyReportRow[];
+    } catch (error) {
+      throw toServiceError(error, `Failed to list ${this.entity}`);
+    }
   }
 
   /**

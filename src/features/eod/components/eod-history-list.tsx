@@ -21,6 +21,7 @@ import {
 
 import { useEodHistory } from "../store";
 import type { EodSubmission } from "../types";
+import { ExportReportsCard } from "./export-reports-card";
 
 type RangeKey = "all" | "7d" | "30d" | "90d";
 
@@ -65,6 +66,8 @@ export function EodHistoryList() {
 
   return (
     <div className="space-y-4">
+      <ExportReportsCard scope="own" />
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
