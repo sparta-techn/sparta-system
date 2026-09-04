@@ -5,11 +5,11 @@ import {
   breakLimitExceeded,
   classifyCompletedDay,
   computeWorkedSeconds,
-  dayProgressSeconds,
   DEFAULT_ATTENDANCE_POLICY,
   isLate,
   lateMinutes,
   lateThresholdMinutes,
+  netWorkTargetSeconds,
   overtimeSeconds,
   remainingBreakSeconds,
 } from "./rules";
@@ -78,40 +78,44 @@ describe("working duration is 8 hours", () => {
     expect(overtimeSeconds(8 * HOUR + 1800)).toBe(1800); // +30m overtime
   });
 
-  it("classifies the completed day", () => {
-    expect(classifyCompletedDay(8 * HOUR, 0)).toBe("on_time");
-    expect(classifyCompletedDay(8 * HOUR, 90)).toBe("late"); // late beats full day
-    expect(classifyCompletedDay(3 * HOUR, 0)).toBe("half_day"); // under half of 8h
+  it("classifies the completed day on net working time", () => {
+    // Half of the 7h that has to be WORKED is 3h30, not half the 8h paid day.
+    expect(classifyCompletedDay(7 * HOUR, 0)).toBe("on_time");
+    expect(classifyCompletedDay(7 * HOUR, 90)).toBe("late"); // late beats full day
+    expect(classifyCompletedDay(4 * HOUR, 0)).toBe("on_time"); // over 3h30 worked
+    expect(classifyCompletedDay(3 * HOUR, 0)).toBe("half_day"); // under 3h30 worked
   });
 });
 
-describe("the break allowance counts toward the day (full-time)", () => {
-  const CREDIT = HOUR; // policy default: 60 min counted
-
-  it("makes 7h worked + 1h break a full 8h day", () => {
-    const progress = dayProgressSeconds(7 * HOUR, HOUR, CREDIT);
-    expect(progress).toBe(8 * HOUR);
-    expect(overtimeSeconds(progress)).toBe(0);
-    expect(classifyCompletedDay(progress, 0)).toBe("on_time");
+describe("the day is worked in net time; the break hour is paid, not worked", () => {
+  it("puts the working target an hour under the scheduled day", () => {
+    expect(netWorkTargetSeconds()).toBe(7 * HOUR);
+    expect(DEFAULT_ATTENDANCE_POLICY.expectedWorkMinutes * 60).toBe(8 * HOUR);
   });
 
-  it("credits only up to the allowance — a 2h break does not shorten the day", () => {
-    // 6h worked + 2h break: only 1h of that break counts → 7h of day, still short.
-    expect(dayProgressSeconds(6 * HOUR, 2 * HOUR, CREDIT)).toBe(7 * HOUR);
+  it("derives the target from company settings, not a hardcoded 7h", () => {
+    expect(netWorkTargetSeconds({ ...DEFAULT_ATTENDANCE_POLICY, expectedWorkMinutes: 540 })).toBe(
+      8 * HOUR,
+    ); // 9h day − 1h allowance
+    expect(netWorkTargetSeconds({ ...DEFAULT_ATTENDANCE_POLICY, maxBreakMinutes: 30 })).toBe(
+      7.5 * HOUR,
+    );
   });
 
-  it("does not require the break to be taken — 8h straight is still a full day", () => {
-    expect(dayProgressSeconds(8 * HOUR, 0, CREDIT)).toBe(8 * HOUR);
+  it("reaches the target on 7h of work whether or not a break is taken", () => {
+    // Took the full hour: 8h on the clock, 7h of it worked.
+    expect(computeWorkedSeconds(at(9), at(17), HOUR)).toBe(netWorkTargetSeconds());
+    // Skipped the break entirely: the same 7h of work, reached an hour earlier.
+    expect(computeWorkedSeconds(at(9), at(16), 0)).toBe(netWorkTargetSeconds());
+    // Took two hours: still 7h worked, the day just ends later on the clock.
+    expect(computeWorkedSeconds(at(9), at(18), 2 * HOUR)).toBe(netWorkTargetSeconds());
   });
 
-  it("accrues overtime past the 8h clock day, not past 8h of work", () => {
-    // 7h30 worked + 1h break = 8h30 on the clock → 30m overtime.
-    expect(overtimeSeconds(dayProgressSeconds(7.5 * HOUR, HOUR, CREDIT))).toBe(1800);
-  });
-
-  it("credits nothing when the type has no allowance (part-time)", () => {
-    // Part-time passes 0: their 4h target is pure work, breaks just extend the day.
-    expect(dayProgressSeconds(3 * HOUR, 2 * HOUR, 0)).toBe(3 * HOUR);
+  it("leaves the retired overtime helper measuring the old clock day", () => {
+    // Nothing live computes this any more; historical rows are reproduced from
+    // day progress (worked + credited break), which is why 8h is still the line.
+    expect(overtimeSeconds(8 * HOUR)).toBe(0);
+    expect(overtimeSeconds(8 * HOUR + 1800)).toBe(1800);
   });
 });
 

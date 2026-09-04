@@ -1,26 +1,39 @@
 import { describe, expect, it } from "vitest";
 
 import { computeWorkedSeconds, dayTargetThresholdAt } from "./rules";
+import { netWorkTargetMinutes, paidBreakCreditMinutes } from "@/features/hr/employment-type";
 
 /**
- * Parity tests for the overnight boundary fix and for AUTO-FINISH, mirroring the
- * server functions `finish_work_session` / `session_target_threshold_ts` /
- * `auto_finish_session_if_due` in migration 20260904120000. These run without a
- * database (the SQL is the authoritative copy; this pins the arithmetic, exactly
- * like pay.test.ts).
+ * Parity tests for AUTO-FINISH and the overnight boundary, mirroring the server
+ * functions `finish_work_session` / `session_net_work_threshold_ts` /
+ * `auto_finish_session_if_due` / `payroll_report` in migration 20260904130000.
+ * These run without a database (the SQL is the authoritative copy; this pins the
+ * arithmetic, exactly like pay.test.ts).
  *
  * The threshold computed here is what the server writes as the session's
- * check-out time, so these cases also pin *when a day is closed*. Note it is DAY
- * PROGRESS, not raw wall-clock: for full-time the break allowance sits inside
- * the target (so an 8h day with a break at or under 1h closes exactly 8h after
- * check-in), while part-time has no credit and a break always pushes the close
- * out.
+ * `finished_at`, so these cases also pin *when a day is closed*. It is NET
+ * WORKING TIME — time in the `working` state, break time excluded — so the same
+ * amount of work is required whether the employee takes their break, splits it,
+ * or skips it. A break only moves the wall-clock instant at which that work is
+ * finished.
  */
 
 const HOUR = 3600;
-const PART_TIME_TARGET = 240 * 60; // 4h in seconds
-const FULL_TIME_TARGET = 480 * 60; // 8h in seconds
+const DAY_MINUTES = 480; // company_settings.expected_work_minutes
+const MAX_BREAK_MINUTES = 60; // company_settings.max_break_minutes
+
+/** 7h of work for full-time, 4h for part-time — what has to be on the clock. */
+const FULL_TIME_TARGET = netWorkTargetMinutes("Full-time", DAY_MINUTES, MAX_BREAK_MINUTES) * 60;
+const PART_TIME_TARGET = netWorkTargetMinutes("Part-time", DAY_MINUTES, MAX_BREAK_MINUTES) * 60;
+
 const iso = (s: string) => new Date(s);
+
+describe("the targets themselves", () => {
+  it("is 7h worked for full-time and 4h worked for part-time", () => {
+    expect(FULL_TIME_TARGET).toBe(7 * HOUR);
+    expect(PART_TIME_TARGET).toBe(4 * HOUR);
+  });
+});
 
 describe("duration math is date-agnostic across midnight", () => {
   it("a 23:00 → 03:00 overnight span is 4h worked, not a conflict", () => {
@@ -41,14 +54,14 @@ describe("duration math is date-agnostic across midnight", () => {
 });
 
 describe("auto-finish instant (dayTargetThresholdAt)", () => {
-  it("full-time crosses 8h from a same-day start", () => {
+  it("closes a full-timer at the 7th worked hour — 09:00 start, no break", () => {
     const t = dayTargetThresholdAt(
       iso("2026-07-15T09:00:00Z"),
       [],
       FULL_TIME_TARGET,
       iso("2026-07-15T18:00:00Z"),
     );
-    expect(t?.toISOString()).toBe("2026-07-15T17:00:00.000Z");
+    expect(t?.toISOString()).toBe("2026-07-15T16:00:00.000Z");
   });
 
   it("returns null before the target is reached", () => {
@@ -63,7 +76,7 @@ describe("auto-finish instant (dayTargetThresholdAt)", () => {
     ).toBeNull();
   });
 
-  it("pushes the split by the exact time spent on break", () => {
+  it("pushes the close by the exact time spent on break", () => {
     // Start 23:00, 30-min break 01:00–01:30, part-time 4h target.
     // Working time reaches 4h at 03:30 (23:00 + 4h + 30m break).
     const t = dayTargetThresholdAt(
@@ -75,8 +88,9 @@ describe("auto-finish instant (dayTargetThresholdAt)", () => {
     expect(t?.toISOString()).toBe("2026-07-16T03:30:00.000Z");
   });
 
-  it("returns null while mid-break and still under target", () => {
-    // Start 23:00, on break since 01:00 (3h worked). Frozen under the 4h target.
+  it("returns null while mid-break — working time is frozen", () => {
+    // Start 23:00, on break since 01:00 (3h worked). Frozen under the 4h target,
+    // however long the break runs.
     expect(
       dayTargetThresholdAt(
         iso("2026-07-15T23:00:00Z"),
@@ -87,7 +101,7 @@ describe("auto-finish instant (dayTargetThresholdAt)", () => {
     ).toBeNull();
   });
 
-  it("a late sweep still back-dates the split to the real instant", () => {
+  it("a late sweep still back-dates the close to the real instant", () => {
     // Crossing happened at 03:00; the cron sweep only runs at 03:47. The instant
     // must be 03:00, not 03:47 — the server back-dates from real timestamps.
     const t = dayTargetThresholdAt(
@@ -100,79 +114,125 @@ describe("auto-finish instant (dayTargetThresholdAt)", () => {
   });
 });
 
-describe("full-time closes on the CLOCK day (break allowance counted)", () => {
-  // A full-time day is 8h on the clock: 7h worked + the 1h allowance. So the
-  // split instant is 8h after start as long as breaks stay within the allowance.
-  const CREDIT = HOUR;
+describe("the break never changes how much work the day needs", () => {
+  const start = iso("2026-07-15T09:00:00Z");
+  const evening = iso("2026-07-15T23:00:00Z");
 
-  it("a 1h break does not push the split — 09:00 start still splits at 17:00", () => {
+  it("skipping the break entirely still finishes the day — at 16:00", () => {
+    // No break is required to complete: 7h of continuous work is a full day.
+    const t = dayTargetThresholdAt(start, [], FULL_TIME_TARGET, evening);
+    expect(t?.toISOString()).toBe("2026-07-15T16:00:00.000Z");
+    expect(computeWorkedSeconds(start, t!, 0)).toBe(FULL_TIME_TARGET);
+  });
+
+  it("taking the full hour finishes the same day's work at 17:00", () => {
     const t = dayTargetThresholdAt(
-      iso("2026-07-15T09:00:00Z"),
+      start,
       [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T13:00:00Z") }],
       FULL_TIME_TARGET,
-      iso("2026-07-15T19:00:00Z"),
-      CREDIT,
+      evening,
     );
-    expect(t?.toISOString()).toBe("2026-07-15T17:00:00.000Z"); // 7h worked + 1h break
+    expect(t?.toISOString()).toBe("2026-07-15T17:00:00.000Z");
+    expect(computeWorkedSeconds(start, t!, HOUR)).toBe(FULL_TIME_TARGET);
   });
 
-  it("pushes the split only by break time PAST the allowance", () => {
-    // 90-min break: 60 counted, 30 not → the day ends 30 min later than 17:00.
+  it("a 3h break past the allowance still needs exactly 7h of work", () => {
+    // The break is over the allowance, so it costs pay — but it does not change
+    // the target. 7h worked is reached at 19:00.
     const t = dayTargetThresholdAt(
-      iso("2026-07-15T09:00:00Z"),
-      [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T13:30:00Z") }],
+      start,
+      [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T15:00:00Z") }],
       FULL_TIME_TARGET,
-      iso("2026-07-15T19:00:00Z"),
-      CREDIT,
+      evening,
     );
-    expect(t?.toISOString()).toBe("2026-07-15T17:30:00.000Z");
+    expect(t?.toISOString()).toBe("2026-07-15T19:00:00.000Z");
+    expect(computeWorkedSeconds(start, t!, 3 * HOUR)).toBe(FULL_TIME_TARGET);
   });
 
-  it("can cross the target while still ON a break the allowance covers", () => {
-    // 7h30 worked, then a break opened at 16:30. The remaining 30 min of the day
-    // is covered by the untouched allowance, so the day completes at 17:00 even
-    // though the employee never came back — the server closes the break there.
+  it("splitting the break across the day changes nothing but the clock", () => {
+    // Four 15-minute breaks = 1h total, so the same 17:00 close as one long one.
     const t = dayTargetThresholdAt(
-      iso("2026-07-15T09:00:00Z"),
-      [{ startedAt: iso("2026-07-15T16:30:00Z"), endedAt: null }],
+      start,
+      [
+        { startedAt: iso("2026-07-15T10:00:00Z"), endedAt: iso("2026-07-15T10:15:00Z") },
+        { startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T12:15:00Z") },
+        { startedAt: iso("2026-07-15T14:00:00Z"), endedAt: iso("2026-07-15T14:15:00Z") },
+        { startedAt: iso("2026-07-15T16:00:00Z"), endedAt: iso("2026-07-15T16:15:00Z") },
+      ],
       FULL_TIME_TARGET,
-      iso("2026-07-15T18:00:00Z"),
-      CREDIT,
+      evening,
     );
     expect(t?.toISOString()).toBe("2026-07-15T17:00:00.000Z");
   });
 
-  it("freezes once the allowance is spent mid-break", () => {
-    // 3h worked, then a break from 12:00 still open at 14:00: only the first hour
-    // counts, so progress is stuck at 4h — nowhere near the 8h day.
+  it("never closes a day while the employee is still on break", () => {
+    // 6h30 worked, break opened at 15:30 and still running at 23:00. Unlike the
+    // old break-credit rule — which could complete the day mid-break — working
+    // time is frozen, so the last 30 min must actually be worked.
     expect(
       dayTargetThresholdAt(
-        iso("2026-07-15T09:00:00Z"),
-        [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: null }],
+        start,
+        [{ startedAt: iso("2026-07-15T15:30:00Z"), endedAt: null }],
         FULL_TIME_TARGET,
-        iso("2026-07-15T14:00:00Z"),
-        CREDIT,
+        evening,
       ),
     ).toBeNull();
   });
 
-  it("part-time is unaffected — no credit, so a break always pushes the split", () => {
-    // Same 1h break, part-time: 4h of real work is still required, ending at 14:00.
+  it("part-time follows the identical rule at 4h", () => {
     const t = dayTargetThresholdAt(
-      iso("2026-07-15T09:00:00Z"),
-      [{ startedAt: iso("2026-07-15T12:00:00Z"), endedAt: iso("2026-07-15T13:00:00Z") }],
+      start,
+      [{ startedAt: iso("2026-07-15T10:00:00Z"), endedAt: iso("2026-07-15T11:00:00Z") }],
       PART_TIME_TARGET,
-      iso("2026-07-15T19:00:00Z"),
+      evening,
+    );
+    expect(t?.toISOString()).toBe("2026-07-15T14:00:00.000Z"); // 4h worked + 1h break
+  });
+});
+
+describe("payroll credits the scheduled day for an auto-finished day", () => {
+  // Mirrors the per-day `work_agg` term in payroll_report:
+  //   day hours = SUM(working_seconds) + (break credit if auto-finished & not PT)
+  const credit = (type: string) =>
+    paidBreakCreditMinutes(type, DAY_MINUTES, MAX_BREAK_MINUTES) * 60;
+  const payrollDaySeconds = (type: string, workedSeconds: number, autoFinished: boolean) =>
+    workedSeconds + (autoFinished ? credit(type) : 0);
+
+  it("pays a full-time auto-finished day as the full 8h scheduled day", () => {
+    expect(payrollDaySeconds("Full-time", FULL_TIME_TARGET, true)).toBe(8 * HOUR);
+    expect(payrollDaySeconds("Full-time", FULL_TIME_TARGET, true)).toBe(DAY_MINUTES * 60);
+  });
+
+  it("pays the break hour even when the break was skipped", () => {
+    // Identical session shape either way — the session records 7h worked, and
+    // the credit is unconditional on a completed day.
+    const workedHavingSkipped = computeWorkedSeconds(
+      iso("2026-07-15T09:00:00Z"),
+      iso("2026-07-15T16:00:00Z"),
       0,
     );
-    expect(t?.toISOString()).toBe("2026-07-15T14:00:00.000Z");
+    expect(payrollDaySeconds("Full-time", workedHavingSkipped, true)).toBe(8 * HOUR);
+  });
+
+  it("leaves part-time at their tracked 4h — no uplift", () => {
+    expect(credit("Part-time")).toBe(0);
+    expect(payrollDaySeconds("Part-time", PART_TIME_TARGET, true)).toBe(4 * HOUR);
+  });
+
+  it("does not credit a day the employee finished manually", () => {
+    // Left at 15:00 having worked 6h: they are paid the 6h, not a full day.
+    expect(payrollDaySeconds("Full-time", 6 * HOUR, false)).toBe(6 * HOUR);
+  });
+
+  it("adds a post-auto-finish top-up session on top of the scheduled day", () => {
+    // 7h auto-finished + a 1h second session = 8h paid day + 1h logged extra.
+    expect(payrollDaySeconds("Full-time", FULL_TIME_TARGET + HOUR, true)).toBe(9 * HOUR);
   });
 });
 
 describe("COMBINED — part-time overnight shift auto-finished across midnight", () => {
-  // A part-time employee starts at 11:00 PM and hits their 4h target at 3:00 AM,
-  // crossing midnight. The session is CLOSED at 3:00 AM by the sweep — they no
-  // longer roll into overtime.
+  // A part-time employee starts at 11:00 PM and hits their 4h working target at
+  // 3:00 AM, crossing midnight. The session is CLOSED at 3:00 AM by the sweep.
   const startedAt = iso("2026-07-15T23:00:00Z"); // 11:00 PM, work_date = 2026-07-15
   // The sweep runs on a 10-minute cadence, so it may not observe the crossing
   // until well after it happened. That must not move the recorded check-out.
@@ -221,7 +281,7 @@ describe("COMBINED — part-time overnight shift auto-finished across midnight",
     const topUpEnd = iso("2026-07-16T05:00:00Z");
     expect(computeWorkedSeconds(topUpStart, topUpEnd, 0)).toBe(HOUR);
     // The day's total is the sum of both rows — what work_agg in payroll_report
-    // computes — with no premium applied to the second one.
+    // computes — with no premium and, for part-time, no break credit either.
     expect(computeWorkedSeconds(startedAt, threshold!, 0) + HOUR).toBe(5 * HOUR);
   });
 });

@@ -3114,7 +3114,14 @@ export type Database = {
       };
       session_day_target: {
         Args: { _uid: string };
-        Returns: { break_credit_secs: number; target_minutes: number };
+        Returns: { net_target_minutes: number; paid_day_minutes: number };
+      };
+      session_net_work_threshold_ts: {
+        Args: {
+          _session: Database["public"]["Tables"]["work_sessions"]["Row"];
+          _target_secs: number;
+        };
+        Returns: string;
       };
       session_target_threshold_ts: {
         Args: {

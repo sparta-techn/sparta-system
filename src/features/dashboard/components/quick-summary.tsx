@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/stat-card";
 import { useAuth } from "@/features/auth/auth-context";
 import { companySettingsQuery, todaySessionQuery } from "@/features/attendance/queries";
-import { creditedBreakSeconds, expectedWorkMinutesFor } from "@/features/hr/employment-type";
+import { netWorkTargetMinutes } from "@/features/hr/employment-type";
 import { useUnreadCount } from "@/features/notifications/store";
 import { useTasksState } from "@/features/tasks/store";
 
@@ -33,19 +33,14 @@ export function QuickSummary() {
   ).length;
 
   const workingSeconds = today?.session?.working_seconds ?? 0;
-  const targetMinutes = expectedWorkMinutesFor(
+  // The day is measured — and auto-finished — on net working time, so the tile
+  // tracks worked time against the working target (7h full-time / 4h part-time),
+  // not against the 8h scheduled day that payroll pays.
+  const targetMinutes = netWorkTargetMinutes(
     employmentType,
     settings?.expected_work_minutes ?? 480,
+    settings?.max_break_minutes ?? 60,
   );
-  // A full-time target includes the break allowance, so the day counted against
-  // it is worked time + the credited break (part-time credits nothing).
-  const progressSeconds =
-    workingSeconds +
-    creditedBreakSeconds(
-      employmentType,
-      today?.session?.break_seconds ?? 0,
-      (settings?.max_break_minutes ?? 60) * 60,
-    );
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -62,7 +57,7 @@ export function QuickSummary() {
         label="Hours worked"
         value={formatHm(workingSeconds)}
         icon={Clock}
-        hint={`${formatHm(progressSeconds)} of ${formatHm(targetMinutes * 60)} day`}
+        hint={`${formatHm(workingSeconds)} of ${formatHm(targetMinutes * 60)} worked`}
       />
     </div>
   );

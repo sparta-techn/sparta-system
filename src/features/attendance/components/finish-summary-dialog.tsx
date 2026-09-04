@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { isFeatureInMvp } from "@/config/mvp-scope";
-import { dayProgressSeconds } from "@/services/attendance/rules";
 import { formatDurationLong } from "../hooks/use-timer";
 import { AttendanceBadge } from "./attendance-status-badge";
 import type { WorkSessionRow } from "../types";
@@ -20,25 +19,26 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   session: WorkSessionRow | null;
-  expectedSeconds: number;
-  /** Break seconds that count toward the target (0 when the type has no allowance). */
-  breakCreditSeconds: number;
+  /** Net working seconds that complete the day (7h full-time / 4h part-time). */
+  targetSeconds: number;
+  /** Seconds payroll credits on top once the day completes (0 for part-time). */
+  paidBreakCreditSeconds: number;
 }
 
 export function FinishSummaryDialog({
   open,
   onOpenChange,
   session,
-  expectedSeconds,
-  breakCreditSeconds,
+  targetSeconds,
+  paidBreakCreditSeconds,
 }: Props) {
   if (!session) return null;
+  // The day is measured on net working time only — break time is excluded from
+  // the target and credited separately by payroll.
   const worked = session.working_seconds;
-  const target = expectedSeconds;
-  // The bar tracks the same quantity the server measured the day against:
-  // worked time plus the counted part of the break allowance.
-  const progress = dayProgressSeconds(worked, session.break_seconds, breakCreditSeconds);
-  const pct = Math.min(100, Math.round((progress / target) * 100));
+  const pct = Math.min(100, Math.round((worked / targetSeconds) * 100));
+  const autoFinished = session.check_out_type === "auto";
+  const paidSeconds = worked + (autoFinished ? paidBreakCreditSeconds : 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,11 +53,19 @@ export function FinishSummaryDialog({
           </Row>
           <Row label="Worked">
             <strong className="tabular-nums">{formatDurationLong(worked)}</strong>{" "}
-            <span className="text-muted-foreground">({pct}% of day)</span>
+            <span className="text-muted-foreground">({pct}% of target)</span>
           </Row>
           <Row label="Break">
             <strong className="tabular-nums">{formatDurationLong(session.break_seconds)}</strong>
           </Row>
+          {autoFinished && paidBreakCreditSeconds > 0 ? (
+            <Row label="Counted for pay">
+              <strong className="tabular-nums">{formatDurationLong(paidSeconds)}</strong>{" "}
+              <span className="text-muted-foreground">
+                (includes the {formatDurationLong(paidBreakCreditSeconds)} paid break)
+              </span>
+            </Row>
+          ) : null}
           {SHOW_OVERTIME ? (
             <Row label="Overtime">
               <strong className="tabular-nums">

@@ -10,12 +10,16 @@
  *  - Working hours start at 09:00.
  *  - Check-in is allowed until 10:00 (60-min grace) without penalty.
  *  - Check-in after 10:00 is Late. No check-in on a working day is Absent.
- *  - Expected day is 8 hours; a session is auto-finished once it reaches that.
- *    Overtime no longer accrues — see `auto_finish_session_if_due`.
- *  - Breaks may total at most 1 hour, and that hour counts toward the 8h day —
- *    a full day on the clock is 7h worked + 1h break. Employment types that get
- *    no break allowance (part-time) pass `breakCreditSeconds = 0` and are
- *    measured on pure working time instead; see `@/features/hr/employment-type`.
+ *  - The scheduled day is 8 hours, made of 7h worked + a 1h break allowance.
+ *    A session auto-finishes on NET WORKING TIME reaching that 7h — break time
+ *    is excluded, so the target is identical whether the break is taken or
+ *    skipped; skipping it just makes the day end an hour earlier on the clock.
+ *    See {@link netWorkTargetSeconds} and `auto_finish_session_if_due`.
+ *  - Breaks may total at most 1 hour. That hour is PAID (payroll credits it back
+ *    on a completed full-time day) but never WORKED, so it moves pay, not the
+ *    target. Part-time has no allowance and a 4h working target; see
+ *    `@/features/hr/employment-type`.
+ *  - Overtime no longer accrues — sessions close at the target.
  */
 import type { AttendanceStatus } from "@/features/attendance/types";
 
@@ -91,35 +95,40 @@ export function attendanceStatusForCheckIn(
   return isLate(checkInAt, policy) ? "late" : "on_time";
 }
 
-/** Net worked seconds for a span minus counted break seconds (never negative). */
+/**
+ * NET WORKING TIME for a span: everything on the clock minus everything spent on
+ * break (never negative). This is the single definition of "worked" in the
+ * product — the same quantity `work_sessions.working_seconds` holds server-side
+ * (`finished_at − started_at − break_seconds`) — and it is what the auto-finish
+ * target is measured in.
+ */
 export function computeWorkedSeconds(startedAt: Date, endedAt: Date, breakSeconds: number): number {
   const gross = Math.max(0, Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000));
   return Math.max(0, gross - Math.max(0, breakSeconds));
 }
 
 /**
- * Seconds counted toward the day: worked time plus break time up to
- * `breakCreditSeconds` (the allowance that sits *inside* the target). Pass 0 to
- * measure pure working time. This is the quantity every day-length rule below
- * compares against {@link AttendancePolicy.expectedWorkMinutes}.
+ * Seconds of net working time that complete the day for a policy whose break
+ * allowance sits inside the scheduled day: 8h scheduled − 1h break = 7h worked.
+ *
+ * Employment types with no allowance (part-time) don't use this — their target
+ * is already pure working time; see `netWorkTargetMinutes` in
+ * `@/features/hr/employment-type`, which is the type-aware entry point.
+ * Mirrors the server `session_day_target(_uid).net_target_minutes`.
  */
-export function dayProgressSeconds(
-  workedSeconds: number,
-  breakSeconds: number,
-  breakCreditSeconds: number,
-): number {
-  const credited = Math.min(Math.max(0, breakSeconds), Math.max(0, breakCreditSeconds));
-  return Math.max(0, workedSeconds) + credited;
+export function netWorkTargetSeconds(policy: AttendancePolicy = DEFAULT_ATTENDANCE_POLICY): number {
+  return Math.max(60, (policy.expectedWorkMinutes - policy.maxBreakMinutes) * 60);
 }
 
 /**
- * Seconds beyond the expected 8-hour day (0 if under); takes day progress.
+ * Seconds beyond the expected 8-hour day (0 if under).
  *
  * Overtime is removed from the product: sessions are auto-finished AT the
  * target, so this returns 0 for any session that ran its normal course, and
  * nothing prices a non-zero result any more. Retained because historical rows
  * still carry `overtime_seconds` and reports over past periods must be able to
- * reproduce how those numbers were derived.
+ * reproduce how those numbers were derived — including the day-progress
+ * argument they were derived from, which no live path computes any more.
  */
 export function overtimeSeconds(
   progressSeconds: number,
@@ -135,51 +144,40 @@ export interface BreakInterval {
 }
 
 /**
- * The exact instant at which cumulative DAY PROGRESS since `startedAt` first
+ * The exact instant at which cumulative NET WORKING TIME since `startedAt` first
  * reaches `targetSeconds`, or `null` if it hasn't by `now`. This is the instant
- * the session is auto-finished at (`check_out_time`).
+ * the session is auto-finished at (`finished_at`).
  *
- * Progress runs at real time while working, and also while on break for as long
- * as `breakCreditSeconds` of allowance is left (a full-time 8h day is 7h worked
- * + 1h break, so that hour must tick). Once the allowance is spent, break time
- * freezes progress. Pass `breakCreditSeconds = 0` (the default, and what
- * part-time uses) to measure pure working time.
+ * The walk only advances during `working` spans: every break, of any length,
+ * freezes it and pushes the crossing instant out by exactly the break's own
+ * duration. So the target is the same amount of work whether the employee takes
+ * their break, splits it, or skips it entirely — a break never brings the
+ * finish closer, and skipping one never leaves the day unfinishable. While a
+ * break is still open the result is `null`: progress is frozen, so there is
+ * nothing to close.
  *
- * Mirrors the server `session_target_threshold_ts` break-walk and is the single
- * client source for auto-finish: it decides when the session is due to close and
- * when to poke the server so an open tab updates. Independent of WHEN it runs
- * (a late evaluation still returns the real crossing instant) and correct across
- * midnight — it works purely in absolute timestamps, never wall-clock dates, so
- * an overnight shift is attributed by its real `startedAt`, not by "today".
- * Returns `null` while the employee is mid-break with the allowance exhausted
- * and the target not yet reached.
+ * Mirrors the server `session_net_work_threshold_ts` and is the single client
+ * source for auto-finish: it decides when the session is due to close and when
+ * to poke the server so an open tab updates. Independent of WHEN it runs (a late
+ * evaluation still returns the real crossing instant, which is why a 10-minute
+ * sweep is precise enough) and correct across midnight — it works purely in
+ * absolute timestamps, never wall-clock dates, so an overnight shift is
+ * attributed by its real `startedAt`, not by "today".
  */
 export function dayTargetThresholdAt(
   startedAt: Date,
   breaks: BreakInterval[],
   targetSeconds: number,
   now: Date = new Date(),
-  breakCreditSeconds = 0,
 ): Date | null {
   let remaining = targetSeconds;
-  let credit = Math.max(0, breakCreditSeconds);
   let cursor = startedAt.getTime();
   const ordered = [...breaks].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
   for (const b of ordered) {
     const worked = (b.startedAt.getTime() - cursor) / 1000; // working seconds before this break
     if (worked >= remaining) return new Date(cursor + remaining * 1000);
     remaining -= worked;
-
-    // The break itself advances progress only while allowance is left.
-    const breakEnd = b.endedAt ?? now;
-    const credited = Math.min(
-      Math.max(0, (breakEnd.getTime() - b.startedAt.getTime()) / 1000),
-      credit,
-    );
-    if (credited >= remaining) return new Date(b.startedAt.getTime() + remaining * 1000);
-    remaining -= credited;
-    credit -= credited;
-    if (b.endedAt === null) return null; // still on break, target not reached
+    if (b.endedAt === null) return null; // still on break, working time frozen
     cursor = b.endedAt.getTime();
   }
   const seg = (now.getTime() - cursor) / 1000;
@@ -205,16 +203,18 @@ export function breakLimitExceeded(
 
 /**
  * Final attendance status once a day is checked out: keeps Late, downgrades to
- * `half_day` when day progress is under half the expected day, else `on_time`.
- * Takes {@link dayProgressSeconds}, not raw worked time. Mirrors
- * `finish_work_session`.
+ * `half_day` when net working time is under half the day's working target, else
+ * `on_time`. Takes {@link computeWorkedSeconds}, and measures against
+ * {@link netWorkTargetSeconds} — half of the 7h that has to be worked, not half
+ * of the 8h scheduled day, since the break hour is never worked by anyone.
+ * Mirrors `finish_work_session`.
  */
 export function classifyCompletedDay(
-  progressSeconds: number,
+  workedSeconds: number,
   lateMins: number,
   policy: AttendancePolicy = DEFAULT_ATTENDANCE_POLICY,
 ): AttendanceStatus {
   if (lateMins > policy.graceMinutes) return "late";
-  if (progressSeconds < (policy.expectedWorkMinutes * 60) / 2) return "half_day";
+  if (workedSeconds < netWorkTargetSeconds(policy) / 2) return "half_day";
   return "on_time";
 }

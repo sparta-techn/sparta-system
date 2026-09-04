@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   EOD_GRACE_MINUTES,
   countsAsMissingEod,
-  creditedBreakSeconds,
-  dayProgressSeconds,
   expectedWorkMinutesFor,
   expectsCheckInAlert,
   hasBreakAllowance,
   isPartTime,
+  netWorkTargetMinutes,
+  paidBreakCreditMinutes,
 } from "./employment-type";
 
 const NOW = new Date("2026-07-13T18:00:00Z");
@@ -28,33 +28,38 @@ describe("expectsCheckInAlert", () => {
   });
 });
 
-describe("break allowance sits inside the full-time day", () => {
-  const HOUR = 3600;
-  const MAX_BREAK = HOUR; // company_settings.max_break_minutes = 60
+describe("the day is worked in net time, but paid as the scheduled day", () => {
+  const DAY = 480; // company_settings.expected_work_minutes
+  const MAX_BREAK = 60; // company_settings.max_break_minutes
 
-  it("gives full-time (and unknown types) a capped break credit", () => {
+  it("keeps the break allowance for full-time (and unknown types)", () => {
     expect(hasBreakAllowance("Full-time")).toBe(true);
     expect(hasBreakAllowance(null)).toBe(true);
-    expect(creditedBreakSeconds("Full-time", HOUR, MAX_BREAK)).toBe(HOUR);
-    expect(creditedBreakSeconds("Full-time", 2 * HOUR, MAX_BREAK)).toBe(HOUR); // capped
-    expect(creditedBreakSeconds("Full-time", 900, MAX_BREAK)).toBe(900); // took less
-  });
-
-  it("gives part-time no allowance at all", () => {
     expect(hasBreakAllowance("Part-time")).toBe(false);
-    expect(creditedBreakSeconds("Part-time", 3 * HOUR, MAX_BREAK)).toBe(0);
   });
 
-  it("completes a full-time day at 7h worked + 1h break", () => {
-    const target = expectedWorkMinutesFor("Full-time", 480) * 60;
-    expect(dayProgressSeconds("Full-time", 7 * HOUR, HOUR, MAX_BREAK)).toBe(target);
+  it("targets 7h of WORK for full-time, and pays the 8h scheduled day", () => {
+    expect(netWorkTargetMinutes("Full-time", DAY, MAX_BREAK)).toBe(420);
+    expect(expectedWorkMinutesFor("Full-time", DAY)).toBe(480);
+    // The gap is the paid break hour, credited by payroll once the day completes.
+    expect(paidBreakCreditMinutes("Full-time", DAY, MAX_BREAK)).toBe(60);
   });
 
-  it("requires a part-timer to work the full 4h however long they break", () => {
-    const target = expectedWorkMinutesFor("Part-time", 480) * 60;
-    expect(target).toBe(4 * HOUR);
-    expect(dayProgressSeconds("Part-time", 3 * HOUR, 2 * HOUR, MAX_BREAK)).toBe(3 * HOUR);
-    expect(dayProgressSeconds("Part-time", 4 * HOUR, 2 * HOUR, MAX_BREAK)).toBe(target);
+  it("applies the same rule to an unknown employment type", () => {
+    expect(netWorkTargetMinutes(null, DAY, MAX_BREAK)).toBe(420);
+    expect(paidBreakCreditMinutes(undefined, DAY, MAX_BREAK)).toBe(60);
+  });
+
+  it("leaves part-time at 4h worked with no uplift", () => {
+    expect(netWorkTargetMinutes("Part-time", DAY, MAX_BREAK)).toBe(240);
+    expect(expectedWorkMinutesFor("Part-time", DAY)).toBe(240);
+    expect(paidBreakCreditMinutes("Part-time", DAY, MAX_BREAK)).toBe(0);
+  });
+
+  it("tracks the company settings rather than hardcoding 7h", () => {
+    // A 9h day with a 30-min allowance → 8h30 of work, 30 min credited.
+    expect(netWorkTargetMinutes("Full-time", 540, 30)).toBe(510);
+    expect(paidBreakCreditMinutes("Full-time", 540, 30)).toBe(30);
   });
 });
 

@@ -7,12 +7,15 @@
  * of the values; the branching here keys on the **part-time** slug because that
  * is the only type with a reduced day and a trimmed daily-report set:
  *
- *  - Attendance target: part-time works a 4h day instead of the company default.
+ *  - Attendance target: the day auto-finishes on NET WORKING TIME — time in the
+ *    `working` state, with every second of `on_break` excluded. Full-time works
+ *    7h of it, part-time 4h. See {@link netWorkTargetMinutes}.
  *  - Break policy: a full-time day is the company default measured *including*
- *    the break allowance (8h on the clock = 7h worked + 1h break), so break time
- *    up to `company_settings.max_break_minutes` counts toward the target.
- *    Part-time is the opposite: 4h of actual work, breaks neither counted nor
- *    capped — see {@link creditedBreakSeconds}.
+ *    the break allowance (an 8h scheduled day = 7h worked + 1h break), but the
+ *    break hour is PAID rather than WORKED: it is credited by payroll once the
+ *    day completes, whether or not the break was taken, and never counts toward
+ *    the auto-finish target. See {@link paidBreakCreditMinutes}. Part-time has
+ *    no allowance at all: 4h of actual work, breaks neither credited nor capped.
  *  - Daily reports: part-time skips the Midday pulse entirely (check-in and
  *    end-of-day stay required, same as full-time).
  *
@@ -38,9 +41,13 @@ export function isPartTime(nameOrSlug: string | null | undefined): boolean {
 }
 
 /**
- * Expected working minutes for a day given the employee's type. Part-time is a
- * fixed 4h; every other type keeps the company-wide default (which itself comes
- * from `company_settings.expected_work_minutes`, not a hardcoded 8h).
+ * The SCHEDULED day for this employment type, in minutes — what a completed day
+ * is worth to payroll. Part-time is a fixed 4h; every other type keeps the
+ * company-wide default (which itself comes from
+ * `company_settings.expected_work_minutes`, not a hardcoded 8h).
+ *
+ * This is NOT the amount that has to be worked: a full-time scheduled day
+ * contains the paid break hour — see {@link netWorkTargetMinutes}.
  */
 export function expectedWorkMinutesFor(
   nameOrSlug: string | null | undefined,
@@ -50,46 +57,54 @@ export function expectedWorkMinutesFor(
 }
 
 /**
+ * Minutes of NET WORKING TIME the employee must log before the day is complete
+ * and the session auto-finishes — break time excluded entirely, so this is the
+ * same target whether the break is taken in full, split up, or skipped.
+ *
+ * Full-time: the scheduled day minus the break allowance (8h − 1h = 7h).
+ * Part-time: 4h, which is already pure work — nothing to subtract.
+ *
+ * Mirrors the server `session_day_target(_uid).net_target_minutes`.
+ */
+export function netWorkTargetMinutes(
+  nameOrSlug: string | null | undefined,
+  companyDefaultMinutes: number,
+  companyMaxBreakMinutes: number,
+): number {
+  if (isPartTime(nameOrSlug)) return PART_TIME_WORK_MINUTES;
+  return Math.max(1, companyDefaultMinutes - Math.max(0, companyMaxBreakMinutes));
+}
+
+/**
+ * Minutes payroll credits on top of tracked working time once a day completes
+ * via auto-finish: the paid break hour, owed whether or not the break was
+ * actually taken. Full-time gets the company allowance; part-time gets 0 — their
+ * scheduled day is entirely working time, so there is nothing to credit back.
+ *
+ * Mirrors the per-day `_break_credit_secs` term in the server `payroll_report`.
+ */
+export function paidBreakCreditMinutes(
+  nameOrSlug: string | null | undefined,
+  companyDefaultMinutes: number,
+  companyMaxBreakMinutes: number,
+): number {
+  return (
+    expectedWorkMinutesFor(nameOrSlug, companyDefaultMinutes) -
+    netWorkTargetMinutes(nameOrSlug, companyDefaultMinutes, companyMaxBreakMinutes)
+  );
+}
+
+/**
  * Whether the company break allowance (`max_break_minutes`) applies to this
- * employment type — i.e. whether breaks are capped *and* count toward the day.
- * Full-time (and unknown types) yes; part-time no: their 4h is pure working
- * time, so a break neither shortens the day nor trips a limit warning.
+ * employment type — i.e. whether breaks are capped and paid. Full-time (and
+ * unknown types) yes; part-time no: their 4h is pure working time with breaks
+ * neither paid nor limited, so nothing trips a limit warning.
+ *
+ * Note this governs the *allowance*, not the target: break time never advances
+ * the auto-finish target for anyone — see {@link netWorkTargetMinutes}.
  */
 export function hasBreakAllowance(nameOrSlug: string | null | undefined): boolean {
   return !isPartTime(nameOrSlug);
-}
-
-/**
- * Break seconds that count toward the day target. Full-time days are measured
- * on the clock: the break allowance is *inside* the target (8h day = 7h worked
- * + 1h break), so break time counts up to `maxBreakSeconds` and anything beyond
- * the allowance does not. Part-time credits nothing — breaks are unlimited and
- * simply extend their day until 4h of real work is done.
- */
-export function creditedBreakSeconds(
-  nameOrSlug: string | null | undefined,
-  breakSeconds: number,
-  maxBreakSeconds: number,
-): number {
-  if (!hasBreakAllowance(nameOrSlug)) return 0;
-  return Math.min(Math.max(0, breakSeconds), Math.max(0, maxBreakSeconds));
-}
-
-/**
- * Seconds counted toward the day target: worked time plus whatever break is
- * credited by {@link creditedBreakSeconds}. This — not raw worked time — is what
- * the progress bar, the half-day check and the overtime threshold compare
- * against {@link expectedWorkMinutesFor}. Mirrors `finish_work_session`.
- */
-export function dayProgressSeconds(
-  nameOrSlug: string | null | undefined,
-  workedSeconds: number,
-  breakSeconds: number,
-  maxBreakSeconds: number,
-): number {
-  return (
-    Math.max(0, workedSeconds) + creditedBreakSeconds(nameOrSlug, breakSeconds, maxBreakSeconds)
-  );
 }
 
 /** Whether this employment type is expected to file a Midday status pulse. */
