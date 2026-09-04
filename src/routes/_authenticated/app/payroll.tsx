@@ -20,7 +20,7 @@ function PayrollPage() {
       <PageHeader
         eyebrow="Payroll"
         title="Month-end payroll"
-        description="Base pay, overtime and exceptions per employee for the month, exportable to Excel. Base and overtime are shown separately; unpaid absences are never netted away."
+        description="Base pay and exceptions per employee for the month, exportable to Excel. Unpaid absences are never netted away."
       />
       <PayrollExportPanel />
     </AppShell>

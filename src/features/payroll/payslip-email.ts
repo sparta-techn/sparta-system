@@ -3,9 +3,10 @@
  *
  * PURE and isomorphic: takes a {@link PayrollLine} straight from the
  * server-side `payroll_report` function and returns a rendered email. It does
- * no arithmetic of its own beyond adding up the two figures the report already
- * separates (base + overtime), so the email and the .xlsx export are physically
- * incapable of disagreeing — they read the same row.
+ * no arithmetic of its own, so the email and the .xlsx export are physically
+ * incapable of disagreeing — they read the same row. Overtime is removed from
+ * the pipeline: every overtime line here sits behind the `overtime` scope gate,
+ * retained so a historical payslip can still be re-rendered faithfully.
  *
  * Styling mirrors the app's design tokens (`src/styles.css`), converted from
  * oklch to hex because email clients don't support oklch. Layout is table-based
@@ -13,8 +14,13 @@
  * the same way.
  */
 
+import { isFeatureInMvp } from "@/config/mvp-scope";
+
 import type { PayrollLine } from "./types";
 import { formatMoney } from "./summary";
+
+/** Overtime is removed from the product; the payslip no longer mentions it. */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 /** App design tokens (src/styles.css), converted oklch → hex for email clients. */
 const C = {
@@ -122,7 +128,7 @@ export function payslipDetailRows(line: PayrollLine): DetailRow[] {
       note: "Expected working days with no attendance and no exception logged",
     });
   }
-  if (n(line.overtime_pending_count) > 0) {
+  if (SHOW_OVERTIME && n(line.overtime_pending_count) > 0) {
     rows.push({
       label: "Overtime awaiting approval",
       value: `${n(line.overtime_pending_count)} request(s)`,
@@ -179,7 +185,7 @@ export function renderPayslipEmail(input: PayslipEmailInput): RenderedEmail {
   const firstName = name.split(" ")[0] || name;
   const money = (v: number | null | undefined) => formatMoney(v, line.currency);
 
-  const hasOvertime = n(line.overtime_hours) > 0 || n(line.overtime_pay) > 0;
+  const hasOvertime = SHOW_OVERTIME && (n(line.overtime_hours) > 0 || n(line.overtime_pay) > 0);
   const isPartTime = line.employment_type === "part-time";
   const details = payslipDetailRows(line);
 
@@ -248,7 +254,7 @@ export function renderPayslipEmail(input: PayslipEmailInput): RenderedEmail {
           </tr>
         </table>
 
-        <!-- Pay breakdown: base and overtime always separate -->
+        <!-- Pay breakdown -->
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
           <tr><td style="padding:0 28px;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -298,8 +304,11 @@ ${details.map(detailRowHtml).join("")}
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
           <tr>
             <td style="padding:22px 28px 28px 28px;font-family:${FONT};font-size:13px;color:${C.muted};line-height:1.6;">
-              Overtime shown here is <strong style="color:${C.fg};">approved overtime only</strong>, paid separately from your base salary.
               ${
+                hasOvertime
+                  ? `Overtime shown here is <strong style="color:${C.fg};">approved overtime only</strong>, paid separately from your base salary. `
+                  : ""
+              }${
                 company.supportEmail
                   ? `If any of these figures look wrong, reply to this email or contact <a href="mailto:${escapeHtml(company.supportEmail)}" style="color:${C.primary};text-decoration:none;">${escapeHtml(company.supportEmail)}</a>.`
                   : `If any of these figures look wrong, just reply to this email.`
@@ -341,9 +350,13 @@ ${details.map(detailRowHtml).join("")}
       textLines.push(`  ${d.label}: ${d.value}${d.note ? ` — ${d.note}` : ""}`);
     }
   }
+  textLines.push("");
+  if (hasOvertime) {
+    textLines.push(
+      "Overtime shown here is approved overtime only, paid separately from your base salary.",
+    );
+  }
   textLines.push(
-    "",
-    "Overtime shown here is approved overtime only, paid separately from your base salary.",
     company.supportEmail
       ? `If any of these figures look wrong, reply to this email or contact ${company.supportEmail}.`
       : "If any of these figures look wrong, just reply to this email.",

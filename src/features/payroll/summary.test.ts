@@ -40,26 +40,42 @@ describe("formatMoney", () => {
 });
 
 describe("payrollSummarySentence", () => {
-  it("summarizes a full-time month with absences, exceptions and overtime", () => {
+  it("summarizes a full-time month with absences and exceptions", () => {
     const s = payrollSummarySentence(
       line({
         present_days: 20,
         absence_days: 1,
         paid_exception_count: 1,
         unpaid_exception_count: 1,
-        overtime_hours: 4.5,
-        overtime_pending_count: 1,
         base_pay: 19090.91,
-        overtime_pay: 767.05,
-        total_pay: 19857.96,
+        total_pay: 19090.91,
       }),
     );
     expect(s).toContain("worked 20 of 22 working days");
     expect(s).toContain("1 unpaid absence day(s) with no exception logged");
     expect(s).toContain("2 exception(s) logged (1 paid, 1 unpaid)");
-    expect(s).toContain("4.5h overtime approved");
-    expect(s).toContain("1 pending");
-    expect(s).toContain("Base 19,090.91 EGP + overtime 767.05 EGP = 19,857.96 EGP");
+    expect(s).toContain("Total 19,090.91 EGP");
+  });
+
+  // Overtime is removed from the pipeline (see `overtime` in mvp-scope.ts). A
+  // historical row can still carry non-zero overtime figures — the summary must
+  // not surface them, and must not fold them into the total either.
+  it("says nothing about overtime even when a historical row carries it", () => {
+    const s = payrollSummarySentence(
+      line({
+        present_days: 20,
+        overtime_hours: 4.5,
+        overtime_pay: 767.05,
+        overtime_pending_count: 1,
+        overtime_rejected_count: 2,
+        base_pay: 19090.91,
+        total_pay: 19090.91,
+      }),
+    );
+    expect(s).not.toMatch(/overtime/i);
+    expect(s).not.toContain("4.5h");
+    expect(s).not.toContain("767.05");
+    expect(s).toContain("Total 19,090.91 EGP");
   });
 
   it("summarizes a part-time month by hours", () => {
@@ -77,7 +93,7 @@ describe("payrollSummarySentence", () => {
       }),
     );
     expect(s).toContain("part-time: 82h worked plus 3h paid exception");
-    expect(s).toContain("= 5,100.00 EGP");
+    expect(s).toContain("Total 5,100.00 EGP");
   });
 
   it("flags a missing pay rate instead of inventing a number", () => {

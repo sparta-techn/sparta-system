@@ -5,9 +5,13 @@
  * wherever team attendance is downloaded. Hour columns are emitted as decimal
  * numbers (not "7h 45m" strings) so Excel can sum, sort and chart them.
  */
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import type { XlsxColumn } from "@/lib/xlsx";
 import type { TeammateToday } from "../api";
 import { ATTENDANCE_STATUS_META } from "../types";
+
+/** Overtime is removed from the product; the column leaves the workbook. */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 /** Local HH:MM for a timestamp, or "" when the session has no check-in/out. */
 function formatClock(iso: string | null): string {
@@ -33,8 +37,21 @@ export const TEAM_ATTENDANCE_XLSX_COLUMNS: XlsxColumn<TeammateToday>[] = [
   { header: "Check-out", value: (r) => formatClock(r.session.finished_at), width: 10 },
   { header: "Break (hrs)", value: (r) => toHours(r.session.break_seconds), width: 11 },
   { header: "Worked (hrs)", value: (r) => toHours(r.session.working_seconds), width: 12 },
-  { header: "Overtime (hrs)", value: (r) => toHours(r.session.overtime_seconds), width: 13 },
+  ...(SHOW_OVERTIME
+    ? [
+        {
+          header: "Overtime (hrs)",
+          value: (r: TeammateToday) => toHours(r.session.overtime_seconds),
+          width: 13,
+        },
+      ]
+    : []),
   { header: "Late (min)", value: (r) => r.session.late_minutes, width: 10 },
+  {
+    header: "Closed by",
+    value: (r) => (r.session.check_out_type === "auto" ? "Auto (target hours)" : "Employee"),
+    width: 18,
+  },
   {
     header: "Status",
     value: (r) => ATTENDANCE_STATUS_META[r.session.attendance_status].label,

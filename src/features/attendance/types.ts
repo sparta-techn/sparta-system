@@ -6,10 +6,20 @@ export type CompanySettings = Database["public"]["Tables"]["company_settings"]["
 export type WorkSessionRow = Database["public"]["Tables"]["work_sessions"]["Row"];
 export type WorkSessionBreakRow = Database["public"]["Tables"]["work_session_breaks"]["Row"];
 
+export type CheckOutType = Database["public"]["Enums"]["check_out_type"];
+
 export interface TodaySession {
+  /** The most recent session for the day (or the open one, on any date). */
   session: WorkSessionRow | null;
   breaks: WorkSessionBreakRow[];
   workDate: string;
+  /**
+   * How many sessions exist on `session.work_date`. A day holds more than one
+   * once someone re-checks in after being auto-finished; those later sessions
+   * accrue extra regular time and do not work toward the daily target again.
+   * 0 when there is no session.
+   */
+  sessionsToday: number;
 }
 
 export interface AttendanceStatusMeta {

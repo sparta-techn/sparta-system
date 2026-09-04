@@ -47,7 +47,7 @@ export async function getTodaySession(userId: string): Promise<TodaySession> {
   // before midnight is still running (and finishable) after it, on yesterday's
   // work_date. Keying the card on today's date would hide it and wrongly offer
   // "Start work" again (the overnight boundary bug). Only when nothing is open
-  // do we fall back to today's row (finished day / overtime status / not started).
+  // do we fall back to today's row (finished day / not started).
   const { data: openRows, error: openErr } = await supabase
     .from("work_sessions")
     .select("*")
@@ -59,27 +59,45 @@ export async function getTodaySession(userId: string): Promise<TodaySession> {
 
   let session: WorkSessionRow | null = openRows?.[0] ?? null;
   if (!session) {
-    const { data: todayRow, error } = await supabase
+    // A day can now hold several rows: an auto-finished session plus any
+    // re-check-in after it. The card reflects the MOST RECENT one, so a day that
+    // was auto-finished and then topped up shows the top-up, not the closed
+    // morning session.
+    const { data: todayRows, error } = await supabase
       .from("work_sessions")
       .select("*")
       .eq("user_id", userId)
       .eq("work_date", workDate)
-      .maybeSingle();
+      .order("started_at", { ascending: false })
+      .limit(1);
     if (error) throw error;
-    session = todayRow ?? null;
+    session = todayRows?.[0] ?? null;
   }
 
   let breaks: WorkSessionBreakRow[] = [];
+  let sessionsToday = 0;
   if (session) {
-    const { data: brk, error: bErr } = await supabase
-      .from("work_session_breaks")
-      .select("*")
-      .eq("session_id", session.id)
-      .order("started_at", { ascending: true });
+    const [{ data: brk, error: bErr }, { count, error: cErr }] = await Promise.all([
+      supabase
+        .from("work_session_breaks")
+        .select("*")
+        .eq("session_id", session.id)
+        .order("started_at", { ascending: true }),
+      // How many sessions this day already holds. > 1 means the day's target was
+      // already met and closed, and this row is a top-up that accrues extra
+      // regular time rather than working toward the target again.
+      supabase
+        .from("work_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("work_date", session.work_date),
+    ]);
     if (bErr) throw bErr;
+    if (cErr) throw cErr;
     breaks = brk ?? [];
+    sessionsToday = count ?? 1;
   }
-  return { session: session ?? null, breaks, workDate };
+  return { session: session ?? null, breaks, workDate, sessionsToday };
 }
 
 export async function startWork(): Promise<WorkSessionRow> {
@@ -109,18 +127,17 @@ export async function finishWork(): Promise<WorkSessionRow> {
   return data as unknown as WorkSessionRow;
 }
 
-/** Which kind of session `finishCurrentSession` closed, plus the closed row. */
+/** The closed session, plus the discriminator the server still sends. */
 export interface FinishResult {
-  kind: "regular" | "overtime";
-  /** The closed row: a `WorkSessionRow` when kind is "regular". */
-  session: WorkSessionRow | Record<string, unknown> | null;
+  /** Always `"regular"` — overtime sessions no longer exist to close. */
+  kind: "regular";
+  session: WorkSessionRow | null;
 }
 
 /**
- * Close whichever session is currently open — the regular work session, or the
- * overtime session it auto-transitioned into. Runs the (idempotent) overtime
- * transition first, so finishing right at the target boundary still splits
- * correctly. Replaces the old two-button "Finish work" / "Finish overtime".
+ * Close the open work session. Runs the (idempotent) auto-finish catch-up first,
+ * so pressing Finish a moment past the target records the target instant and
+ * `check_out_type: "auto"` — exactly what the scheduled sweep would have written.
  */
 export async function finishCurrentSession(): Promise<FinishResult> {
   const { data, error } = await supabase.rpc("finish_current_session");
@@ -129,13 +146,14 @@ export async function finishCurrentSession(): Promise<FinishResult> {
 }
 
 /**
- * Ask the server to transition the open regular session into overtime if it has
- * reached the employee's target. Idempotent and safe to call repeatedly — the
- * client fires it when its live timer crosses the threshold; the every-minute
- * server sweep is the authoritative backstop when the tab is backgrounded.
+ * Ask the server to close the open session if it has reached the employee's
+ * daily target. Idempotent and safe to call repeatedly — the client fires it
+ * when its live timer crosses the threshold purely so the UI updates promptly;
+ * the pg_cron sweep (`job_auto_finish_sessions`, every 10 min) is the
+ * authoritative mechanism and closes sessions with no client running at all.
  */
-export async function transitionOvertimeIfDue(): Promise<void> {
-  const { error } = await supabase.rpc("transition_overtime_if_due");
+export async function autoFinishSessionIfDue(): Promise<void> {
+  const { error } = await supabase.rpc("auto_finish_session_if_due");
   if (error) throw error;
 }
 

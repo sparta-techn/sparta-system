@@ -174,12 +174,25 @@ export function AttendanceHistoryTable() {
                       : "—"}
                   </TableCell>
                   <TableCell className="tabular-nums">
-                    {r.finished_at
-                      ? new Date(r.finished_at).toLocaleTimeString([], {
+                    {r.finished_at ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        {new Date(r.finished_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
-                        })
-                      : "—"}
+                        })}
+                        {/* Closed by the target sweep rather than by the employee. */}
+                        {r.check_out_type === "auto" ? (
+                          <span
+                            className="rounded bg-muted px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                            title="Closed automatically at your target hours"
+                          >
+                            auto
+                          </span>
+                        ) : null}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                   <TableCell className="tabular-nums text-muted-foreground">
                     {formatDurationLong(r.break_seconds)}

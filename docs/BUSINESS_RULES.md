@@ -15,13 +15,16 @@
 | 1   | Working hours start at **09:00**                       | `services/attendance/rules.ts` (`DEFAULT_ATTENDANCE_POLICY.workStart`, `lateThresholdMinutes`)             | `attendanceRepository.checkIn`; `company_settings.work_start_time`; `start_work_session` RPC                               | `services/attendance/rules.test.ts` |
 | 2   | Check-in until **10:00** is **not** Absent             | `rules.ts` (`isLate`, `lateMinutes`, grace = 60)                                                           | `checkIn` sets `late_minutes` + `status`                                                                                   | `rules.test.ts`                     |
 | 3   | After **10:00** → **Late** (no check-in → **Absent**)  | `rules.ts` (`attendanceStatusForCheckIn`)                                                                  | `checkIn` writes `attendance.status`; absent derived when no check-in                                                      | `rules.test.ts`                     |
-| 4   | Working duration **8 hours** (overtime beyond) — _part-time = 4h, see #10_ | `rules.ts` (`computeWorkedSeconds`, `overtimeSeconds`, `classifyCompletedDay`, expected = 480 min)         | `checkOut` writes `worked_seconds` / `overtime_seconds` / final `status`                                                   | `rules.test.ts`                     |
+| 4   | Working duration **8 hours**, then the session is **auto-finished** — _part-time = 4h, see #10_ | `rules.ts` (`computeWorkedSeconds`, `dayTargetThresholdAt`, `classifyCompletedDay`, expected = 480 min)     | `auto_finish_session_if_due` + the `spartaflow-auto-finish-sessions` pg_cron sweep (migration `20260904120000`); `checkOut` writes `worked_seconds` / final `status`  | `services/attendance/auto-finish.test.ts` |
 | 5   | Break duration **max 1 hour**                          | `rules.ts` (`remainingBreakSeconds`, `breakLimitExceeded`, max = 60 min)                                   | break accounting in `checkOut`; `company_settings.max_break_minutes`                                                       | `rules.test.ts`                     |
 | 6   | **One** Morning Check-in / Midday / EOD per day — _part-time skips Midday, see #10_ | `services/reports/rules.ts` (`resolveSubmissionMode`, `canCreateSubmission`)                               | `StatusUpdatesService.submit`, `DailyReportsService.submit`; DB `UNIQUE (user_id, work_date[, kind])`                      | `services/reports/rules.test.ts`    |
 | 7   | Dependency requests stay **Open until resolved**       | `services/reports/rules.ts` (`isDependencyOpen`, `TERMINAL_DEPENDENCY_STATES`, `resolvedAtFor`)            | `DependencyRequestsService.setState` / `listOpen`                                                                          | `services/reports/rules.test.ts`    |
 | 8   | **Managers can review reports**                        | `features/auth/permissions.ts` (`canReviewReports`)                                                        | RLS `can_review_reports()` on report/attendance reads                                                                      | `features/auth/permissions.test.ts` |
 | 9   | **Owners** have **read-only** access to all attendance | `features/auth/permissions.ts` (`canViewAllAttendance`, `canAdministerAttendance`, `isAttendanceReadOnly`) | RLS: owner reads via `can_review_reports`; **migration `20260630140000`** drops `owner` from the attendance write policies | `features/auth/permissions.test.ts` |
 | 10  | **Employment type** sets the day: **part-time** works a **4h** day and **skips Midday** (check-in + EOD unchanged) | `features/hr/employment-type.ts` (`isPartTime`, `expectedWorkMinutesFor`, `requiresMidday`, `PART_TIME_WORK_MINUTES = 240`) | **Attendance:** `today-status-card`, `quick-summary`, `finish_work_session` RPC (migration `20260711140000`). **Reports:** `isNavItemVisible` (nav), `personal-dashboard`, `quick-actions`, `useTeamMiddayOverview` (roll-up), `/app/midday` guard | `components/layout/nav-config.test.ts` |
+| 11  | A full-time day is measured **on the clock**: the 1h break allowance sits **inside** the 8h (7h worked + 1h break). Part-time gets **no** credit | `features/hr/employment-type.ts` (`creditedBreakSeconds`, `dayProgressSeconds`), `rules.ts` (`dayProgressSeconds`) | `session_day_target` + `session_target_threshold_ts` + `finish_work_session` (migrations `20260810120000`, `20260904120000`) | `services/attendance/auto-finish.test.ts` |
+| 12  | **Auto-finish:** on reaching the day target the session is closed at that exact instant with `check_out_type = 'auto'`. A re-check-in the same day opens a **separate** session that accrues ordinary time and does **not** auto-finish again | `features/attendance/api.ts` (`autoFinishSessionIfDue`), `rules.ts` (`dayTargetThresholdAt`) | `auto_finish_session_if_due`, `job_auto_finish_sessions` (pg_cron, every 10 min), `start_work_session` (migration `20260904120000`) | `services/attendance/auto-finish.test.ts` |
+| 13  | **Overtime is removed** from the product — no new `overtime_sessions` rows, no 1.5x pricing, no overtime surfaced in UI or payroll. History is retained and queryable | `config/mvp-scope.ts` (`overtime`, `inMvp: false`) + the `SHOW_OVERTIME` gates | `transition_overtime_if_due` is a no-op; `payroll_report` drops the overtime phase (migration `20260904120000`) | `config/mvp-scope.test.ts` |
 
 ---
 
@@ -56,9 +59,13 @@
   value with no flash. The 4h target is applied **both** client-side (live
   progress bar, Remaining, dashboard tile) **and** server-side —
   `finish_work_session` (migration
-  `20260711140000_finish_session_employment_type.sql`) recomputes
-  `overtime_seconds` and the `half_day` / `on_time` status against 240 min for
-  part-timers, so persisted attendance is correct, not just the display. Midday
+  `20260711140000_finish_session_employment_type.sql`) recomputes the
+  `half_day` / `on_time` status against 240 min for part-timers, so persisted
+  attendance is correct, not just the display. The same 240 min drives
+  **auto-finish**: `session_day_target` gives part-timers a 4h target with a
+  **zero break credit**, so their day is measured on pure working time and a
+  break pushes their close out — unlike full-time, whose 1h allowance sits
+  *inside* the 8h (see rule #11). Midday
   is removed from the nav item, the dashboard widget + floating reminder, the
   "Submit midday" quick action, the manager/HR participation roll-up
   (part-timers never count as "missing"), and the `/app/midday` route itself.

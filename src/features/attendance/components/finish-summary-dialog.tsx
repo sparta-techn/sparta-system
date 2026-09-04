@@ -7,10 +7,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { dayProgressSeconds } from "@/services/attendance/rules";
 import { formatDurationLong } from "../hooks/use-timer";
 import { AttendanceBadge } from "./attendance-status-badge";
 import type { WorkSessionRow } from "../types";
+
+/** Overtime is removed from the product; the row stays behind the scope gate. */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 interface Props {
   open: boolean;
@@ -54,9 +58,13 @@ export function FinishSummaryDialog({
           <Row label="Break">
             <strong className="tabular-nums">{formatDurationLong(session.break_seconds)}</strong>
           </Row>
-          <Row label="Overtime">
-            <strong className="tabular-nums">{formatDurationLong(session.overtime_seconds)}</strong>
-          </Row>
+          {SHOW_OVERTIME ? (
+            <Row label="Overtime">
+              <strong className="tabular-nums">
+                {formatDurationLong(session.overtime_seconds)}
+              </strong>
+            </Row>
+          ) : null}
           <Row label="Late">
             <strong className="tabular-nums">{session.late_minutes} min</strong>
           </Row>

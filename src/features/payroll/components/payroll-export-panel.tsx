@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/features/auth/auth-context";
 
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,13 @@ import type { PayrollLine } from "../types";
 import { CorrectPayslipDialog } from "./correct-payslip-dialog";
 import { MarkPaidDialog } from "./mark-paid-dialog";
 import { PayslipEditHistory } from "./payslip-edit-history";
+
+/**
+ * Overtime is removed from the payroll pipeline. Route-level gating is not
+ * enough here: Payroll itself stays in the MVP, so the OT columns in this table
+ * would keep rendering (as zeros) unless gated at the component.
+ */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 export function PayrollExportPanel() {
   const [month, setMonth] = useState<string>(currentMonth());
@@ -153,8 +161,12 @@ export function PayrollExportPanel() {
                     <TableHead className="text-right">Exc. (p/u)</TableHead>
                     <TableHead className="text-right">Absence</TableHead>
                     <TableHead className="text-right">Base</TableHead>
-                    <TableHead className="text-right">OT h</TableHead>
-                    <TableHead className="text-right">OT pay</TableHead>
+                    {SHOW_OVERTIME ? (
+                      <>
+                        <TableHead className="text-right">OT h</TableHead>
+                        <TableHead className="text-right">OT pay</TableHead>
+                      </>
+                    ) : null}
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead className="text-right">Payslip</TableHead>
                   </TableRow>
@@ -206,12 +218,16 @@ export function PayrollExportPanel() {
                         <TableCell className="text-right tabular-nums">
                           {formatMoney(eff?.basePay ?? l.base_pay, l.currency)}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {eff?.overtimeHours ?? l.overtime_hours}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatMoney(eff?.overtimePay ?? l.overtime_pay, l.currency)}
-                        </TableCell>
+                        {SHOW_OVERTIME ? (
+                          <>
+                            <TableCell className="text-right tabular-nums">
+                              {eff?.overtimeHours ?? l.overtime_hours}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">
+                              {formatMoney(eff?.overtimePay ?? l.overtime_pay, l.currency)}
+                            </TableCell>
+                          </>
+                        ) : null}
                         <TableCell className="text-right font-semibold tabular-nums">
                           {formatMoney(eff?.totalPay ?? l.total_pay, l.currency)}
                         </TableCell>

@@ -87,6 +87,8 @@ function absentRow(employee: HrEmployee, date: string): TeamAttendanceRow {
     late_minutes: 0,
     attendance_status: "absent",
     session_status: "not_started",
+    // Never checked in, so never checked out — by hand or by the target sweep.
+    check_out_type: null,
     browser: null,
     device: null,
     ip: null,

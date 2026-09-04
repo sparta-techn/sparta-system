@@ -1,3 +1,4 @@
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { downloadXlsxWorkbook, type XlsxColumn } from "@/lib/xlsx";
 
 import { payrollSummarySentence } from "./summary";
@@ -5,10 +6,21 @@ import type { PayrollLine } from "./types";
 
 const num = (v: number | null | undefined) => (v == null ? "" : Number(v));
 
+/** Overtime is removed from the pipeline — its columns leave the workbook. */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
+
+/** The four overtime columns, kept together so the gate can drop them as a set. */
+const OVERTIME_COLUMNS: readonly XlsxColumn<PayrollLine>[] = [
+  { header: "Overtime hours", value: (r) => num(r.overtime_hours), width: 12 },
+  { header: "Overtime pay", value: (r) => num(r.overtime_pay), width: 13 },
+  { header: "OT pending", value: (r) => num(r.overtime_pending_count), width: 10 },
+  { header: "OT rejected", value: (r) => num(r.overtime_rejected_count), width: 10 },
+];
+
 /**
  * Sheet 1 — "Payroll": every figure as a native numeric cell so Excel can sum
- * and audit them. Base pay and overtime pay stay in separate columns (never
- * merged), and unpaid days/absences get their own visible columns.
+ * and audit them. Unpaid days/absences get their own visible columns, and
+ * TOTAL PAY is base pay (overtime is no longer calculated or reported).
  */
 export const PAYROLL_COLUMNS: readonly XlsxColumn<PayrollLine>[] = [
   { header: "Employee", value: (r) => r.employee_name ?? "", width: 24 },
@@ -27,10 +39,7 @@ export const PAYROLL_COLUMNS: readonly XlsxColumn<PayrollLine>[] = [
   { header: "Unpaid exceptions", value: (r) => num(r.unpaid_exception_count), width: 12 },
   { header: "Unpaid exception hours", value: (r) => num(r.unpaid_exception_hours), width: 14 },
   { header: "Base pay", value: (r) => num(r.base_pay), width: 13 },
-  { header: "Overtime hours", value: (r) => num(r.overtime_hours), width: 12 },
-  { header: "Overtime pay", value: (r) => num(r.overtime_pay), width: 13 },
-  { header: "OT pending", value: (r) => num(r.overtime_pending_count), width: 10 },
-  { header: "OT rejected", value: (r) => num(r.overtime_rejected_count), width: 10 },
+  ...(SHOW_OVERTIME ? OVERTIME_COLUMNS : []),
   { header: "TOTAL PAY", value: (r) => num(r.total_pay), width: 14 },
   { header: "Pay data configured", value: (r) => (r.has_pay_data ? "Yes" : "NO"), width: 12 },
 ];

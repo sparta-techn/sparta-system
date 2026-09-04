@@ -10,7 +10,8 @@
  *  - Working hours start at 09:00.
  *  - Check-in is allowed until 10:00 (60-min grace) without penalty.
  *  - Check-in after 10:00 is Late. No check-in on a working day is Absent.
- *  - Expected day is 8 hours (overtime accrues beyond it).
+ *  - Expected day is 8 hours; a session is auto-finished once it reaches that.
+ *    Overtime no longer accrues — see `auto_finish_session_if_due`.
  *  - Breaks may total at most 1 hour, and that hour counts toward the 8h day —
  *    a full day on the clock is 7h worked + 1h break. Employment types that get
  *    no break allowance (part-time) pass `breakCreditSeconds = 0` and are
@@ -111,7 +112,15 @@ export function dayProgressSeconds(
   return Math.max(0, workedSeconds) + credited;
 }
 
-/** Seconds beyond the expected 8-hour day (0 if under); takes day progress. */
+/**
+ * Seconds beyond the expected 8-hour day (0 if under); takes day progress.
+ *
+ * Overtime is removed from the product: sessions are auto-finished AT the
+ * target, so this returns 0 for any session that ran its normal course, and
+ * nothing prices a non-zero result any more. Retained because historical rows
+ * still carry `overtime_seconds` and reports over past periods must be able to
+ * reproduce how those numbers were derived.
+ */
 export function overtimeSeconds(
   progressSeconds: number,
   policy: AttendancePolicy = DEFAULT_ATTENDANCE_POLICY,
@@ -127,7 +136,8 @@ export interface BreakInterval {
 
 /**
  * The exact instant at which cumulative DAY PROGRESS since `startedAt` first
- * reaches `targetSeconds`, or `null` if it hasn't by `now`.
+ * reaches `targetSeconds`, or `null` if it hasn't by `now`. This is the instant
+ * the session is auto-finished at (`check_out_time`).
  *
  * Progress runs at real time while working, and also while on break for as long
  * as `breakCreditSeconds` of allowance is left (a full-time 8h day is 7h worked
@@ -135,16 +145,16 @@ export interface BreakInterval {
  * freezes progress. Pass `breakCreditSeconds = 0` (the default, and what
  * part-time uses) to measure pure working time.
  *
- * Mirrors the server `overtime_threshold_ts` break-walk and is the single client
- * source for the auto-overtime transition: it decides when to poke the server
- * and drives the "You're now in overtime" moment. Independent of WHEN it runs
+ * Mirrors the server `session_target_threshold_ts` break-walk and is the single
+ * client source for auto-finish: it decides when the session is due to close and
+ * when to poke the server so an open tab updates. Independent of WHEN it runs
  * (a late evaluation still returns the real crossing instant) and correct across
  * midnight — it works purely in absolute timestamps, never wall-clock dates, so
  * an overnight shift is attributed by its real `startedAt`, not by "today".
  * Returns `null` while the employee is mid-break with the allowance exhausted
  * and the target not yet reached.
  */
-export function overtimeThresholdAt(
+export function dayTargetThresholdAt(
   startedAt: Date,
   breaks: BreakInterval[],
   targetSeconds: number,

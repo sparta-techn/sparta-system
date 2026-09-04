@@ -25,11 +25,11 @@ import {
 import { cn } from "@/lib/utils";
 
 import {
+  autoFinishSessionIfDue,
   endBreak,
   finishCurrentSession,
   startBreak,
   startWork,
-  transitionOvertimeIfDue,
 } from "../api";
 import { useTodaySession } from "../hooks/use-today-session";
 import {
@@ -40,10 +40,8 @@ import {
 } from "../hooks/use-timer";
 import { useQuery } from "@tanstack/react-query";
 import { companySettingsQuery, attendanceKeys } from "../queries";
-import { myTodayOvertimeQuery, overtimeKeys } from "@/features/overtime/queries";
 import { SessionStatusBadge } from "./attendance-status-badge";
 import { FinishSummaryDialog } from "./finish-summary-dialog";
-import { OvertimeActions } from "@/features/overtime/components/overtime-actions";
 import type { WorkSessionRow } from "../types";
 
 interface Props {
@@ -82,12 +80,11 @@ export function TodayStatusCard({ compact = false }: Props) {
   const session = todayQ.data?.session ?? null;
   const breaks = todayQ.data?.breaks ?? [];
 
-  // The overtime the regular session auto-transitioned into (open-aware, so it
-  // survives past midnight for an overnight shift).
-  const otQ = useQuery({ ...myTodayOvertimeQuery(userId ?? ""), enabled: !!userId });
-  const otSession = otQ.data ?? null;
-  const overtimeRunning =
-    !!otSession && !!otSession.start_time && !otSession.end_time && otSession.status !== "rejected";
+  // A day holds more than one session once someone re-checks in after being
+  // auto-finished. The daily target is spent at that point, so this session just
+  // accrues extra regular time — no second target, no auto-finish.
+  const isTopUpSession = (todayQ.data?.sessionsToday ?? 0) > 1;
+  const autoFinished = session?.session_status === "finished" && session.check_out_type === "auto";
 
   const now = useNow("second");
   const openBreak = breaks.find((b) => !b.ended_at);
@@ -95,7 +92,6 @@ export function TodayStatusCard({ compact = false }: Props) {
   // Live working seconds: total since start, minus completed breaks, minus current open break.
   const completedBreakSeconds = breaks.reduce((acc, b) => acc + (b.duration_seconds ?? 0), 0);
   const openBreakElapsed = useLiveElapsedSeconds(openBreak?.started_at ?? null, !!openBreak);
-  const overtimeElapsed = useLiveElapsedSeconds(otSession?.start_time ?? null, overtimeRunning);
   const totalSinceStart = session?.started_at
     ? Math.max(0, Math.floor((now.getTime() - new Date(session.started_at).getTime()) / 1000))
     : 0;
@@ -122,7 +118,6 @@ export function TodayStatusCard({ compact = false }: Props) {
     if (!userId) return;
     void qc.invalidateQueries({ queryKey: attendanceKeys.today(userId) });
     void qc.invalidateQueries({ queryKey: attendanceKeys.history(userId, {} as never) });
-    void qc.invalidateQueries({ queryKey: overtimeKeys.today(userId) });
   };
 
   const startMut = useMutation({
@@ -152,12 +147,8 @@ export function TodayStatusCard({ compact = false }: Props) {
   const finishMut = useMutation({
     mutationFn: finishCurrentSession,
     onSuccess: (res) => {
-      if (res.kind === "overtime") {
-        toast.success("Overtime logged — awaiting manager approval.");
-      } else {
-        toast.success("Work finished — see you tomorrow.");
-        if (res.session) setFinishedDetails(res.session as WorkSessionRow);
-      }
+      toast.success("Work finished — see you tomorrow.");
+      if (res.session) setFinishedDetails(res.session);
       invalidateAll();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -178,14 +169,15 @@ export function TodayStatusCard({ compact = false }: Props) {
 
   const status = session?.session_status ?? "not_started";
 
-  // Auto-transition into overtime: schedule a server poke for when live day
-  // progress is projected to reach the target, so the split fires without a
-  // click. Idempotent server-side; the every-minute server sweep is the
-  // authoritative backstop if this tab is asleep at the threshold (setTimeout is
-  // unreliable when a tab is backgrounded — exactly the overnight case).
+  // Auto-finish: schedule a server poke for when live day progress is projected
+  // to reach the target, purely so an open tab reflects the close promptly. This
+  // is a nicety, NOT the mechanism — `job_auto_finish_sessions` (pg_cron, every
+  // 10 min) closes sessions whether or not anyone has the app open, and
+  // setTimeout is unreliable in a backgrounded tab anyway (the overnight case).
+  // Skipped for a top-up session: the day's target is already spent.
   const openBreakStartedAt = openBreak?.started_at ?? null;
   useEffect(() => {
-    if (!userId || !session?.started_at) return;
+    if (!userId || !session?.started_at || isTopUpSession) return;
     const onBreak = session.session_status === "on_break";
     if (session.session_status !== "working" && !onBreak) return;
 
@@ -211,13 +203,12 @@ export function TodayStatusCard({ compact = false }: Props) {
 
     const remainingMs = remainingToTarget * 1000;
     const poke = () => {
-      transitionOvertimeIfDue()
+      autoFinishSessionIfDue()
         .then(() => {
           void qc.invalidateQueries({ queryKey: attendanceKeys.today(userId) });
-          void qc.invalidateQueries({ queryKey: overtimeKeys.today(userId) });
         })
         .catch(() => {
-          /* the every-minute server sweep will still perform the transition */
+          /* the scheduled server sweep still closes the session */
         });
     };
     const id = window.setTimeout(poke, remainingMs + 750);
@@ -227,6 +218,7 @@ export function TodayStatusCard({ compact = false }: Props) {
     session?.id,
     session?.started_at,
     session?.session_status,
+    isTopUpSession,
     completedBreakSeconds,
     openBreakStartedAt,
     expectedSeconds,
@@ -319,25 +311,37 @@ export function TodayStatusCard({ compact = false }: Props) {
               </p>
             ) : null}
 
-            {overtimeRunning ? (
+            {autoFinished ? (
               <div
-                className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2"
+                className="flex items-start gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2"
                 role="status"
               >
-                <Clock className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
+                <Clock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
                 <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-x-2 text-sm font-medium text-foreground">
-                    You're now in overtime
-                    <span className="font-display tabular-nums text-warning">
-                      {formatDurationHMS(overtimeElapsed)}
+                  <p className="text-sm font-medium text-foreground">
+                    You hit your target — we closed your day at{" "}
+                    <span className="font-display tabular-nums">
+                      {session?.finished_at
+                        ? new Date(session.finished_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "—"}
                     </span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    You hit your target — no need to do anything. This time is logged as overtime
-                    and stays pending until a manager approves it.
+                    Nothing to do. If you need to work more today, start a new session — it's logged
+                    as ordinary hours.
                   </p>
                 </div>
               </div>
+            ) : null}
+
+            {isTopUpSession ? (
+              <p className="text-xs text-muted-foreground">
+                Extra session — you already completed today's {formatDurationLong(expectedSeconds)}.
+                This time is logged as ordinary hours and won't close on its own.
+              </p>
             ) : null}
           </div>
 
@@ -347,7 +351,7 @@ export function TodayStatusCard({ compact = false }: Props) {
               compact ? "" : "md:flex-col md:items-stretch md:min-w-48",
             )}
           >
-            {!session && !overtimeRunning ? (
+            {!session ? (
               <Button onClick={() => startMut.mutate()} disabled={busy} aria-label="Start work">
                 {startMut.isPending ? <Loader2 className="animate-spin" /> : <Play />} Start work
               </Button>
@@ -394,24 +398,18 @@ export function TodayStatusCard({ compact = false }: Props) {
               </>
             ) : null}
 
-            {overtimeRunning ? (
-              <Button
-                variant="secondary"
-                onClick={() => setConfirm("finish")}
-                disabled={busy}
-                aria-label="Finish work"
-              >
-                {finishMut.isPending ? <Loader2 className="animate-spin" /> : <Square />}
-                Finish work
-              </Button>
-            ) : null}
-
-            {status === "finished" && !overtimeRunning ? (
-              <div className="space-y-3">
-                <Button variant="outline" disabled aria-label="Day finished">
-                  Day finished
+            {/* A finished day is no longer a dead end: an employee who is asked to
+                work more (or was auto-finished mid-task) opens a fresh session,
+                which logs ordinary hours at the ordinary rate. */}
+            {status === "finished" ? (
+              <div className="space-y-2">
+                <Button onClick={() => startMut.mutate()} disabled={busy} aria-label="Start work">
+                  {startMut.isPending ? <Loader2 className="animate-spin" /> : <Play />}
+                  Start another session
                 </Button>
-                <OvertimeActions />
+                <p className="text-xs text-muted-foreground">
+                  Today's session is closed. Only start again if you're actually working.
+                </p>
               </div>
             ) : null}
           </div>

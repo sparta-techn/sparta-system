@@ -16,7 +16,8 @@
 | `late_minutes`                                    | int — minutes after `work_start_time`                                                              |
 | `working_seconds`                                 | int — final value computed at finish                                                               |
 | `break_seconds`                                   | int — final value computed at finish                                                               |
-| `overtime_seconds`                                | int — `max(0, working_seconds - expected)`                                                         |
+| `overtime_seconds`                                | int — always `0` on new rows; overtime is removed. Historical values retained                      |
+| `check_out_type`                                  | enum: `manual` / `auto` — how the session was closed; `NULL` on rows predating the column          |
 | `timezone`, `device`, `browser`, `ip`, `location` | captured at start                                                                                  |
 
 ### `public.work_session_breaks`
@@ -76,7 +77,9 @@ At **Finish Work** the RPC closes any open break, sums break durations, then:
 ```
 total_seconds      = now - started_at
 working_seconds    = max(0, total - break_seconds)
-overtime_seconds   = max(0, working_seconds - expected_work_minutes*60)
+day_progress       = working_seconds + min(break_seconds, break_credit)
+overtime_seconds   = 0                       -- overtime removed from the product
+check_out_type     = 'manual'
 
 attendance_status  = late_minutes > grace_period_minutes
                        ? 'late'
@@ -110,3 +113,36 @@ src/features/attendance/
     team-today-grid.tsx
     attendance-status-badge.tsx
 ```
+
+## Auto-finish
+
+A session does not need a click to end. When **day progress** reaches the
+employee's target it is closed automatically at the exact instant it got there:
+
+```
+finished_at    = session_target_threshold_ts(session, target, break_credit)
+session_status = 'finished'
+check_out_type = 'auto'
+
+target / break_credit  ← session_day_target(user_id)
+    full-time  → company_settings.expected_work_minutes, credit = max_break_minutes
+    part-time  → 240 min,                                credit = 0
+```
+
+`day_progress = working_seconds + min(break_seconds, break_credit)`, so a
+full-time day is 8h **on the clock** (7h worked + 1h break) and a break at or
+under the allowance closes the day exactly 8h after check-in. Part-time has no
+credit, so their 4h is real work and a break pushes the close out.
+
+The mechanism is a `pg_cron` sweep, `spartaflow-auto-finish-sessions`, running
+`job_auto_finish_sessions()` every 10 minutes — sessions close whether or not
+anyone has the app open. The threshold is derived from real timestamps, so a
+sweep firing minutes late still writes the true crossing instant; the cadence
+affects only *when the row changes*, never what `finished_at` says.
+
+Only a day's **first** session auto-finishes. Once a session for that
+`work_date` has closed, the target is spent: an employee may check in again,
+which opens a **second** `work_sessions` row for the same day. That row carries
+`late_minutes = 0` (a 19:00 top-up is not "10 hours late"), never restates the
+day as a half day, never auto-finishes, and accrues plain regular time at the
+ordinary rate — there is no premium, because overtime has been removed.

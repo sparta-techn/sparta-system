@@ -45,14 +45,18 @@ describe("renderPayslipEmail", () => {
     expect(r.text).toContain("TOTAL PAID: 20,500.00 EGP");
   });
 
-  it("breaks overtime out separately from base pay", () => {
+  // Overtime is removed from the pipeline (see `overtime` in mvp-scope.ts). The
+  // payslip is the one surface that reaches employees directly, so a historical
+  // row carrying overtime figures must not leak them into a new send.
+  it("never mentions overtime, even for a row that carries overtime figures", () => {
     const r = render(
-      line({ base_pay: 18000, overtime_hours: 6.5, overtime_pay: 1200, total_pay: 19200 }),
+      line({ base_pay: 18000, overtime_hours: 6.5, overtime_pay: 1200, total_pay: 18000 }),
     );
     expect(r.text).toContain("Base pay");
-    expect(r.text).toContain("Overtime (6.5h approved): 1,200.00 EGP");
-    // Base and overtime are never merged into one figure.
     expect(r.text).toContain("18,000.00 EGP");
+    expect(r.text).not.toMatch(/overtime/i);
+    expect(r.html).not.toMatch(/overtime/i);
+    expect(r.text).not.toContain("1,200.00 EGP");
   });
 
   it("omits the overtime row entirely when there is none", () => {
@@ -79,9 +83,9 @@ describe("renderPayslipEmail", () => {
     expect(r.text).toContain("Unpaid exceptions: 1 (8h)");
   });
 
-  it("tells the employee pending overtime was excluded", () => {
+  it("no longer reports pending overtime requests", () => {
     const r = render(line({ overtime_pending_count: 5 }));
-    expect(r.text).toContain("Overtime awaiting approval: 5 request(s)");
+    expect(r.text).not.toMatch(/overtime/i);
   });
 
   it("describes a part-time period in hours, not working days", () => {

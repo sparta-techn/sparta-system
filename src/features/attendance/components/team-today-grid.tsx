@@ -39,7 +39,15 @@ export function TeamTodayGrid() {
   }
   const rows = q.data ?? [];
 
-  const counts = rows.reduce(
+  // A day can hold several sessions per person (an auto-finished one plus any
+  // re-check-in after it), but these cards count PEOPLE. Collapse to each
+  // teammate's latest session first — rows arrive oldest-first, so the last one
+  // seen wins — otherwise someone who checked back in counts as both "Finished"
+  // and "Working".
+  const latestPerUser = new Map<string, (typeof rows)[number]>();
+  for (const r of rows) latestPerUser.set(r.session.user_id, r);
+
+  const counts = [...latestPerUser.values()].reduce(
     (acc, r) => {
       acc[r.session.session_status] = (acc[r.session.session_status] ?? 0) + 1;
       if (r.session.attendance_status === "late") acc.late = (acc.late ?? 0) + 1;

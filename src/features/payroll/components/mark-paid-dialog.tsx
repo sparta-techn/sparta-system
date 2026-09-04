@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { getErrorMessage } from "@/lib/errors";
 
 import { payrollKeys } from "../queries";
@@ -51,6 +52,9 @@ interface MarkPaidDialogProps {
 }
 
 const n = (v: number | null | undefined) => Number(v ?? 0);
+
+/** Overtime is removed from the product; the payslip no longer breaks it out. */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 export function MarkPaidDialog({
   line,
@@ -116,7 +120,10 @@ export function MarkPaidDialog({
   const overtimePay = eff?.overtimePay ?? n(line.overtime_pay);
   const totalPay = eff?.totalPay ?? n(line.total_pay);
 
-  const hasOvertime = overtimeHours > 0 || overtimePay > 0;
+  // Overtime is removed from the pipeline, so the report never reports it. A
+  // historical correction row can still carry a non-zero figure, hence the
+  // explicit scope gate rather than relying on the value being zero.
+  const hasOvertime = SHOW_OVERTIME && (overtimeHours > 0 || overtimePay > 0);
   const unpaidNotes: string[] = [];
   if (n(line.absence_days) > 0) unpaidNotes.push(`${n(line.absence_days)} unpaid absence day(s)`);
   if (n(line.unpaid_exception_count) > 0) {

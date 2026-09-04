@@ -208,8 +208,10 @@ export class AttendanceRepository {
       last_check_out_at: at,
       worked_seconds: totalWorked,
       break_seconds: totalBreak,
-      // Overtime beyond the day; final status keeps Late / flags half-day.
-      overtime_seconds: overtimeSeconds(progress, policy),
+      // Overtime is removed from the product: sessions are auto-finished at the
+      // target and any later top-up is ordinary time, so nothing new accrues
+      // here. Historical rows keep the figures `overtimeSeconds` produced.
+      overtime_seconds: 0,
       status: classifyCompletedDay(progress, attendance.late_minutes, policy),
     });
 

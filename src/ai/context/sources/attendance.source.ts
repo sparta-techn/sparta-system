@@ -3,6 +3,7 @@
  * Reads through the attendance services; RLS scopes rows to the caller.
  */
 
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { attendanceRecordsService, attendanceSessionsService } from "@/services";
 import type { ContextEntity, ContextSource } from "../../types";
 import { emptyFragment, formatDuration, fragment, resolveWorkDate } from "./source-utils";
@@ -26,7 +27,10 @@ export const attendanceSource: ContextSource = {
         record.late_minutes > 0 ? `late: ${record.late_minutes}m` : null,
         `worked: ${formatDuration(record.worked_seconds)}`,
         record.break_seconds > 0 ? `breaks: ${formatDuration(record.break_seconds)}` : null,
-        record.overtime_seconds > 0 ? `overtime: ${formatDuration(record.overtime_seconds)}` : null,
+        // Overtime is removed from the product — never narrate it to the assistant.
+        isFeatureInMvp("overtime") && record.overtime_seconds > 0
+          ? `overtime: ${formatDuration(record.overtime_seconds)}`
+          : null,
       ]
         .filter(Boolean)
         .join("; ");

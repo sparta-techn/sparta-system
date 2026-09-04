@@ -1,4 +1,9 @@
+import { isFeatureInMvp } from "@/config/mvp-scope";
+
 import type { PayrollLine } from "./types";
+
+/** Overtime is removed: the summary line neither counts nor prices it. */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 /** Format a money amount with its currency, 2 dp. */
 export function formatMoney(amount: number | null | undefined, currency: string | null): string {
@@ -47,12 +52,18 @@ export function payrollSummarySentence(line: PayrollLine): string {
     parts.push(`${paidExc + unpaidExc} exception(s) logged (${paidExc} paid, ${unpaidExc} unpaid)`);
   }
 
-  const ot: string[] = [];
-  if ((line.overtime_hours ?? 0) > 0) ot.push(`${h(line.overtime_hours)} overtime approved`);
-  if ((line.overtime_pending_count ?? 0) > 0) ot.push(`${line.overtime_pending_count} pending`);
-  if ((line.overtime_rejected_count ?? 0) > 0) ot.push(`${line.overtime_rejected_count} rejected`);
-  if (ot.length > 0) parts.push(ot.join(", "));
+  if (SHOW_OVERTIME) {
+    const ot: string[] = [];
+    if ((line.overtime_hours ?? 0) > 0) ot.push(`${h(line.overtime_hours)} overtime approved`);
+    if ((line.overtime_pending_count ?? 0) > 0) ot.push(`${line.overtime_pending_count} pending`);
+    if ((line.overtime_rejected_count ?? 0) > 0) {
+      ot.push(`${line.overtime_rejected_count} rejected`);
+    }
+    if (ot.length > 0) parts.push(ot.join(", "));
+  }
 
-  const tail = `Base ${money(line.base_pay)} + overtime ${money(line.overtime_pay)} = ${money(line.total_pay)}`;
+  const tail = SHOW_OVERTIME
+    ? `Base ${money(line.base_pay)} + overtime ${money(line.overtime_pay)} = ${money(line.total_pay)}`
+    : `Total ${money(line.total_pay)}`;
   return `${parts.join("; ")}. ${tail}.`;
 }

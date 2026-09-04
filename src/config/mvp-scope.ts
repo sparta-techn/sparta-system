@@ -19,7 +19,14 @@
  *
  * Out of MVP (inMvp: false): audit logs, AI assistant/settings, sprints,
  * executive dashboard, analytics, project analytics, time tracking, task file
- * attachments, threaded comments, dependencies, and any dead/company-hub links.
+ * attachments, threaded comments, dependencies, overtime, and any dead/company-hub
+ * links.
+ *
+ * A single entry can gate both a route and the widgets that belong to it: the
+ * route guard resolves it via {@link isPathInMvp} and each widget via
+ * {@link isFeatureInMvp} with the same id. `overtime` works this way — route
+ * gating alone would leave overtime figures visible on the attendance card, the
+ * payroll table, the .xlsx export and the payslip email.
  */
 
 /** How a scoped item is surfaced. */
@@ -170,6 +177,22 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     kind: "route",
     path: "/app/tasks/time",
     note: "Time tracking — out of MVP. More specific than /app/tasks so it overrides it.",
+  },
+  {
+    id: "overtime",
+    label: "Overtime",
+    inMvp: false,
+    kind: "route",
+    path: "/app/attendance/overtime",
+    note:
+      "Overtime is removed from the product. More specific than /app/attendance (in MVP), so " +
+      "it overrides it: the approval queue and pay panel render the Future Plan placeholder. " +
+      "This id also gates the component-level surfaces via isFeatureInMvp('overtime') — the " +
+      "overtime badge on the attendance card, the Overtime row in the finish summary, the " +
+      "Overtime column in the team export, and every overtime figure across payroll (table, " +
+      ".xlsx, payslip email, corrections). Sessions no longer transition into overtime " +
+      "(superseded by auto-finish) and payroll no longer prices it, but overtime_sessions and " +
+      "all historical rows are retained and queryable.",
   },
   {
     id: "hr-rewards",

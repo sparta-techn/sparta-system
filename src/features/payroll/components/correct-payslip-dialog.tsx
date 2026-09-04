@@ -6,9 +6,10 @@
  * explicitly clicks "Resend corrected payslip", so a typo fixed for the record
  * does not have to mean a second email.
  *
- * Overtime is corrected in HOURS, not money — the pay is re-derived from the
- * hours on the server using the payroll report's own rate, so the payslip's
- * "N hours approved — X" line always reconciles.
+ * Overtime has been removed from the payroll pipeline, so base pay is the only
+ * correctable figure. The overtime branch is retained behind the `overtime`
+ * scope gate (hours, not money — the pay was re-derived server-side from the
+ * report's own rate) so historical corrections still read back correctly.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -34,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { getErrorMessage } from "@/lib/errors";
 
 import { payrollKeys } from "../queries";
@@ -57,6 +59,9 @@ interface CorrectPayslipDialogProps {
 }
 
 const n = (v: number | null | undefined) => Number(v ?? 0);
+
+/** Whether overtime hours may still be corrected (removed from the product). */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 export function CorrectPayslipDialog({
   line,
@@ -143,7 +148,12 @@ export function CorrectPayslipDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="base_pay">Base pay</SelectItem>
-                <SelectItem value="overtime_hours">Overtime hours</SelectItem>
+                {/* Overtime is removed from the pipeline — no new overtime
+                    correction can be logged. Historical ones stay readable in
+                    the edit history. */}
+                {SHOW_OVERTIME ? (
+                  <SelectItem value="overtime_hours">Overtime hours</SelectItem>
+                ) : null}
               </SelectContent>
             </Select>
             {!isMoney ? (

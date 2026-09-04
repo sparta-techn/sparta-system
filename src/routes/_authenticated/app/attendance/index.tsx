@@ -4,11 +4,19 @@ import { ArrowRight, Clock, History } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { isFeatureInMvp } from "@/config/mvp-scope";
 import { useAuth } from "@/features/auth/auth-context";
 import { TodayStatusCard } from "@/features/attendance/components/today-status-card";
 import { AttendanceHistoryTable } from "@/features/attendance/components/attendance-history-table";
 import { useAttendanceReminders } from "@/features/attendance/hooks/use-attendance-reminders";
 import { useTodaySession } from "@/features/attendance/hooks/use-today-session";
+
+/**
+ * Overtime is removed from the product. The route itself renders the Future Plan
+ * placeholder via `isPathInMvp`, but the entry link has to be gated here too —
+ * otherwise managers keep seeing a button that leads to a placeholder.
+ */
+const SHOW_OVERTIME = isFeatureInMvp("overtime");
 
 export const Route = createFileRoute("/_authenticated/app/attendance/")({
   head: () => ({
@@ -33,11 +41,13 @@ function AttendancePage() {
         actions={
           isManager ? (
             <div className="flex gap-2">
-              <Button asChild variant="ghost">
-                <Link to="/app/attendance/overtime">
-                  <Clock /> Overtime
-                </Link>
-              </Button>
+              {SHOW_OVERTIME ? (
+                <Button asChild variant="ghost">
+                  <Link to="/app/attendance/overtime">
+                    <Clock /> Overtime
+                  </Link>
+                </Button>
+              ) : null}
               <Button asChild variant="outline">
                 <Link to="/app/attendance/team">
                   Team view <ArrowRight />

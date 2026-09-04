@@ -2700,6 +2700,7 @@ export type Database = {
           attendance_status: Database["public"]["Enums"]["attendance_status"];
           break_seconds: number;
           browser: string | null;
+          check_out_type: Database["public"]["Enums"]["check_out_type"] | null;
           created_at: string;
           device: string | null;
           finished_at: string | null;
@@ -2721,6 +2722,7 @@ export type Database = {
           attendance_status?: Database["public"]["Enums"]["attendance_status"];
           break_seconds?: number;
           browser?: string | null;
+          check_out_type?: Database["public"]["Enums"]["check_out_type"] | null;
           created_at?: string;
           device?: string | null;
           finished_at?: string | null;
@@ -2742,6 +2744,7 @@ export type Database = {
           attendance_status?: Database["public"]["Enums"]["attendance_status"];
           break_seconds?: number;
           browser?: string | null;
+          check_out_type?: Database["public"]["Enums"]["check_out_type"] | null;
           created_at?: string;
           device?: string | null;
           finished_at?: string | null;
@@ -2839,6 +2842,16 @@ export type Database = {
         Returns: Record<string, unknown>;
       };
       _require_payroll_view: { Args: never; Returns: undefined };
+      auto_finish_session_if_due: {
+        Args: { _uid?: string };
+        Returns: Database["public"]["Tables"]["work_sessions"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "work_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       approve_overtime_session: {
         Args: { _note?: string; _session_id: string };
         Returns: {
@@ -3099,6 +3112,18 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      session_day_target: {
+        Args: { _uid: string };
+        Returns: { break_credit_secs: number; target_minutes: number };
+      };
+      session_target_threshold_ts: {
+        Args: {
+          _break_credit_secs: number;
+          _session: Database["public"]["Tables"]["work_sessions"]["Row"];
+          _target_secs: number;
+        };
+        Returns: string;
+      };
       start_break: {
         Args: never;
         Returns: {
@@ -3267,6 +3292,7 @@ export type Database = {
         | "kickoff"
         | "holiday"
         | "other";
+      check_out_type: "manual" | "auto";
       daily_report_status: "draft" | "submitted" | "reviewed";
       dependency_state:
         | "draft"
@@ -3568,6 +3594,7 @@ export const Constants = {
         "holiday",
         "other",
       ],
+      check_out_type: ["manual", "auto"],
       daily_report_status: ["draft", "submitted", "reviewed"],
       dependency_state: [
         "draft",
