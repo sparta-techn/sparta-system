@@ -1,6 +1,11 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5";
+  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -384,6 +389,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendance_exceptions_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
           },
         ];
       };
@@ -917,6 +929,13 @@ export type Database = {
             referencedRelation: "employees";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "departments_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
+          },
         ];
       };
       dependency_requests: {
@@ -1029,6 +1048,13 @@ export type Database = {
             referencedRelation: "employees";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "employee_compensation_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: true;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
+          },
         ];
       };
       employee_profiles: {
@@ -1093,6 +1119,13 @@ export type Database = {
             isOneToOne: true;
             referencedRelation: "employees";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "employee_profiles_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: true;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
           },
         ];
       };
@@ -1175,6 +1208,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "employees_manager_id_fkey";
+            columns: ["manager_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
           },
           {
             foreignKeyName: "employees_position_id_fkey";
@@ -1334,6 +1374,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "general_email_deliveries_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
           },
         ];
       };
@@ -1686,6 +1733,13 @@ export type Database = {
             referencedRelation: "employees";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "overtime_sessions_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
+          },
         ];
       };
       payslip_deliveries: {
@@ -1760,6 +1814,13 @@ export type Database = {
             referencedRelation: "employees";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "payslip_deliveries_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
+          },
         ];
       };
       payslip_edit_log: {
@@ -1820,6 +1881,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payslip_edit_log_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
           },
         ];
       };
@@ -2356,6 +2424,140 @@ export type Database = {
           },
         ];
       };
+      rbac_permissions: {
+        Row: {
+          action: string;
+          created_at: string;
+          description: string | null;
+          id: string;
+          module: string;
+          scope: string;
+          updated_at: string;
+        };
+        Insert: {
+          action: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          module: string;
+          scope: string;
+          updated_at?: string;
+        };
+        Update: {
+          action?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          module?: string;
+          scope?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      rbac_role_permissions: {
+        Row: {
+          created_at: string;
+          granted_by: string | null;
+          id: string;
+          permission_id: string;
+          role_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          permission_id: string;
+          role_id: string;
+        };
+        Update: {
+          created_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          permission_id?: string;
+          role_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rbac_role_permissions_permission_id_fkey";
+            columns: ["permission_id"];
+            isOneToOne: false;
+            referencedRelation: "rbac_permissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rbac_role_permissions_role_id_fkey";
+            columns: ["role_id"];
+            isOneToOne: false;
+            referencedRelation: "rbac_roles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      rbac_roles: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          is_protected: boolean;
+          name: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          is_protected?: boolean;
+          name: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          is_protected?: boolean;
+          name?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      rbac_user_roles: {
+        Row: {
+          granted_at: string;
+          granted_by: string | null;
+          id: string;
+          role_id: string;
+          user_id: string;
+        };
+        Insert: {
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          role_id: string;
+          user_id: string;
+        };
+        Update: {
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          role_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rbac_user_roles_role_id_fkey";
+            columns: ["role_id"];
+            isOneToOne: false;
+            referencedRelation: "rbac_roles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       report_reviews: {
         Row: {
           comment: string | null;
@@ -2433,6 +2635,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rewards_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
           },
         ];
       };
@@ -2631,6 +2840,13 @@ export type Database = {
             referencedRelation: "employees";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "teams_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "payroll_days_missing_break_credit";
+            referencedColumns: ["employee_id"];
+          },
         ];
       };
       user_roles: {
@@ -2824,7 +3040,20 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      payroll_days_missing_break_credit: {
+        Row: {
+          break_seconds: number | null;
+          employee_id: string | null;
+          employee_name: string | null;
+          paid_hours: number | null;
+          predates_check_out_type: boolean | null;
+          scheduled_hours: number | null;
+          shortfall_hours: number | null;
+          work_date: string | null;
+          worked_seconds: number | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       _overtime_pay_line: {
@@ -2842,16 +3071,6 @@ export type Database = {
         Returns: Record<string, unknown>;
       };
       _require_payroll_view: { Args: never; Returns: undefined };
-      auto_finish_session_if_due: {
-        Args: { _uid?: string };
-        Returns: Database["public"]["Tables"]["work_sessions"]["Row"];
-        SetofOptions: {
-          from: "*";
-          to: "work_sessions";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
       approve_overtime_session: {
         Args: { _note?: string; _session_id: string };
         Returns: {
@@ -2879,12 +3098,52 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      auto_finish_session_if_due: {
+        Args: { _uid?: string };
+        Returns: {
+          attendance_status: Database["public"]["Enums"]["attendance_status"];
+          break_seconds: number;
+          browser: string | null;
+          check_out_type: Database["public"]["Enums"]["check_out_type"] | null;
+          created_at: string;
+          device: string | null;
+          finished_at: string | null;
+          id: string;
+          ip: string | null;
+          late_minutes: number;
+          location: string | null;
+          notes: string | null;
+          overtime_seconds: number;
+          session_status: Database["public"]["Enums"]["work_session_status"];
+          started_at: string | null;
+          timezone: string | null;
+          updated_at: string;
+          user_id: string;
+          work_date: string;
+          working_seconds: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "work_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       can_manage_project: {
         Args: { _project_id: string; _user_id: string };
         Returns: boolean;
       };
       can_review_reports: { Args: { _user_id: string }; Returns: boolean };
       current_employee_id: { Args: never; Returns: string };
+      current_user_has_permission: {
+        Args: {
+          p_action: string;
+          p_module: string;
+          p_resource_owner_id?: string;
+          p_scope: string;
+        };
+        Returns: boolean;
+      };
       current_user_roles: {
         Args: never;
         Returns: Database["public"]["Enums"]["app_role"][];
@@ -2950,6 +3209,7 @@ export type Database = {
           attendance_status: Database["public"]["Enums"]["attendance_status"];
           break_seconds: number;
           browser: string | null;
+          check_out_type: Database["public"]["Enums"]["check_out_type"] | null;
           created_at: string;
           device: string | null;
           finished_at: string | null;
@@ -2981,10 +3241,18 @@ export type Database = {
         };
         Returns: boolean;
       };
-      has_permission: {
-        Args: { _permission: string; _user_id: string };
-        Returns: boolean;
-      };
+      has_permission:
+        | { Args: { _permission: string; _user_id: string }; Returns: boolean }
+        | {
+            Args: {
+              p_action: string;
+              p_module: string;
+              p_resource_owner_id?: string;
+              p_scope: string;
+              p_user_id: string;
+            };
+            Returns: boolean;
+          };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
@@ -3000,6 +3268,7 @@ export type Database = {
         Returns: boolean;
       };
       job_attendance_reminders: { Args: never; Returns: undefined };
+      job_auto_finish_sessions: { Args: never; Returns: undefined };
       job_auto_overtime_transition: { Args: never; Returns: undefined };
       job_missing_report_reminders: { Args: never; Returns: undefined };
       notification_reviewer_ids: { Args: never; Returns: string[] };
@@ -3058,6 +3327,90 @@ export type Database = {
         };
       };
       public_registration_enabled: { Args: never; Returns: boolean };
+      rbac_assign_role: {
+        Args: { p_role_id: string; p_user_id: string };
+        Returns: undefined;
+      };
+      rbac_create_role: {
+        Args: { p_description?: string; p_name: string };
+        Returns: string;
+      };
+      rbac_delete_role: { Args: { p_role_id: string }; Returns: number };
+      rbac_effective_permissions: {
+        Args: { p_user_id: string };
+        Returns: {
+          action: string;
+          granted_by: string[];
+          module: string;
+          scope: string;
+        }[];
+      };
+      rbac_is_team_member: {
+        Args: { p_resource_owner_id: string; p_user_id: string };
+        Returns: boolean;
+      };
+      rbac_my_permissions: {
+        Args: never;
+        Returns: {
+          action: string;
+          module: string;
+          scope: string;
+        }[];
+      };
+      rbac_replace_role_permissions: {
+        Args: { p_permission_ids: string[]; p_role_id: string };
+        Returns: number;
+      };
+      rbac_require_roles_permission: {
+        Args: { p_action: string };
+        Returns: undefined;
+      };
+      rbac_role_grant_impact: {
+        Args: { p_role_id: string };
+        Returns: {
+          action: string;
+          module: string;
+          permission_id: string;
+          scope: string;
+          users_losing: number;
+        }[];
+      };
+      rbac_role_permission_ids: {
+        Args: { p_role_id: string };
+        Returns: {
+          permission_id: string;
+        }[];
+      };
+      rbac_role_summaries: {
+        Args: never;
+        Returns: {
+          created_at: string;
+          description: string;
+          id: string;
+          is_protected: boolean;
+          name: string;
+          permission_count: number;
+          user_count: number;
+        }[];
+      };
+      rbac_unassign_role: {
+        Args: { p_role_id: string; p_user_id: string };
+        Returns: undefined;
+      };
+      rbac_update_role: {
+        Args: { p_description?: string; p_name: string; p_role_id: string };
+        Returns: undefined;
+      };
+      rbac_user_roles_for: {
+        Args: { p_user_id: string };
+        Returns: {
+          description: string;
+          granted_at: string;
+          is_protected: boolean;
+          name: string;
+          role_id: string;
+        }[];
+      };
       reject_overtime_session: {
         Args: { _reason: string; _session_id: string };
         Returns: {
@@ -3114,7 +3467,7 @@ export type Database = {
       };
       session_day_target: {
         Args: { _uid: string };
-        Returns: { net_target_minutes: number; paid_day_minutes: number };
+        Returns: Record<string, unknown>;
       };
       session_net_work_threshold_ts: {
         Args: {
@@ -3187,6 +3540,7 @@ export type Database = {
           attendance_status: Database["public"]["Enums"]["attendance_status"];
           break_seconds: number;
           browser: string | null;
+          check_out_type: Database["public"]["Enums"]["check_out_type"] | null;
           created_at: string;
           device: string | null;
           finished_at: string | null;

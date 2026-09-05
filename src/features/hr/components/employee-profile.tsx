@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { UserRolesPanel } from "@/features/roles/components/user-roles-panel";
 import { type HrEmployee } from "../mock-data";
 import { hrQueries } from "../queries";
 import {
@@ -267,6 +268,15 @@ export function EmployeeProfile({ employee }: { employee: HrEmployee }) {
               </p>
             </CardContent>
           </Card>
+
+          {/* Dynamic RBAC (Phase 2). Sits alongside the legacy enum role above,
+              which still drives today's RLS. `userId` is absent on mock seed
+              rows, so the panel only renders for live employees. */}
+          {employee.userId ? (
+            <div className="mt-4">
+              <UserRolesPanel userId={employee.userId} displayName={employee.name} />
+            </div>
+          ) : null}
         </TabsContent>
 
         <TabsContent value="devices" className="mt-4">

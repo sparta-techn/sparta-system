@@ -22,6 +22,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app/tasks'
 import { Route as AuthenticatedAppSprintsRouteImport } from './routes/_authenticated/app/sprints'
+import { Route as AuthenticatedAppRolesRouteImport } from './routes/_authenticated/app/roles'
 import { Route as AuthenticatedAppReportReviewRouteImport } from './routes/_authenticated/app/report-review'
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app/projects'
 import { Route as AuthenticatedAppPayrollRouteImport } from './routes/_authenticated/app/payroll'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app/admin'
 import { Route as AuthenticatedAppTasksIndexRouteImport } from './routes/_authenticated/app/tasks.index'
 import { Route as AuthenticatedAppSprintsIndexRouteImport } from './routes/_authenticated/app/sprints.index'
+import { Route as AuthenticatedAppRolesIndexRouteImport } from './routes/_authenticated/app/roles.index'
 import { Route as AuthenticatedAppProjectsIndexRouteImport } from './routes/_authenticated/app/projects.index'
 import { Route as AuthenticatedAppNotificationsIndexRouteImport } from './routes/_authenticated/app/notifications.index'
 import { Route as AuthenticatedAppHrIndexRouteImport } from './routes/_authenticated/app/hr.index'
@@ -49,6 +51,8 @@ import { Route as AuthenticatedAppTasksKanbanRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppTasksAllRouteImport } from './routes/_authenticated/app/tasks.all'
 import { Route as AuthenticatedAppTasksIdRouteImport } from './routes/_authenticated/app/tasks.$id'
 import { Route as AuthenticatedAppSprintsIdRouteImport } from './routes/_authenticated/app/sprints.$id'
+import { Route as AuthenticatedAppRolesNewRouteImport } from './routes/_authenticated/app/roles.new'
+import { Route as AuthenticatedAppRolesIdRouteImport } from './routes/_authenticated/app/roles.$id'
 import { Route as AuthenticatedAppProjectsWorkspaceRouteImport } from './routes/_authenticated/app/projects.workspace'
 import { Route as AuthenticatedAppProjectsTemplatesRouteImport } from './routes/_authenticated/app/projects.templates'
 import { Route as AuthenticatedAppProjectsClientsRouteImport } from './routes/_authenticated/app/projects.clients'
@@ -142,6 +146,11 @@ const AuthenticatedAppSprintsRoute = AuthenticatedAppSprintsRouteImport.update({
   path: '/app/sprints',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppRolesRoute = AuthenticatedAppRolesRouteImport.update({
+  id: '/app/roles',
+  path: '/app/roles',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppReportReviewRoute =
   AuthenticatedAppReportReviewRouteImport.update({
     id: '/app/report-review',
@@ -225,6 +234,12 @@ const AuthenticatedAppSprintsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAppSprintsRoute,
   } as any)
+const AuthenticatedAppRolesIndexRoute =
+  AuthenticatedAppRolesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAppRolesRoute,
+  } as any)
 const AuthenticatedAppProjectsIndexRoute =
   AuthenticatedAppProjectsIndexRouteImport.update({
     id: '/',
@@ -295,6 +310,17 @@ const AuthenticatedAppSprintsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAppSprintsRoute,
   } as any)
+const AuthenticatedAppRolesNewRoute =
+  AuthenticatedAppRolesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAppRolesRoute,
+  } as any)
+const AuthenticatedAppRolesIdRoute = AuthenticatedAppRolesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedAppRolesRoute,
+} as any)
 const AuthenticatedAppProjectsWorkspaceRoute =
   AuthenticatedAppProjectsWorkspaceRouteImport.update({
     id: '/workspace',
@@ -485,6 +511,7 @@ export interface FileRoutesByFullPath {
   '/app/payroll': typeof AuthenticatedAppPayrollRoute
   '/app/projects': typeof AuthenticatedAppProjectsRouteWithChildren
   '/app/report-review': typeof AuthenticatedAppReportReviewRoute
+  '/app/roles': typeof AuthenticatedAppRolesRouteWithChildren
   '/app/sprints': typeof AuthenticatedAppSprintsRouteWithChildren
   '/app/tasks': typeof AuthenticatedAppTasksRouteWithChildren
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -513,6 +540,8 @@ export interface FileRoutesByFullPath {
   '/app/projects/clients': typeof AuthenticatedAppProjectsClientsRouteWithChildren
   '/app/projects/templates': typeof AuthenticatedAppProjectsTemplatesRoute
   '/app/projects/workspace': typeof AuthenticatedAppProjectsWorkspaceRoute
+  '/app/roles/$id': typeof AuthenticatedAppRolesIdRoute
+  '/app/roles/new': typeof AuthenticatedAppRolesNewRoute
   '/app/sprints/$id': typeof AuthenticatedAppSprintsIdRoute
   '/app/tasks/$id': typeof AuthenticatedAppTasksIdRoute
   '/app/tasks/all': typeof AuthenticatedAppTasksAllRoute
@@ -525,6 +554,7 @@ export interface FileRoutesByFullPath {
   '/app/hr/': typeof AuthenticatedAppHrIndexRoute
   '/app/notifications/': typeof AuthenticatedAppNotificationsIndexRoute
   '/app/projects/': typeof AuthenticatedAppProjectsIndexRoute
+  '/app/roles/': typeof AuthenticatedAppRolesIndexRoute
   '/app/sprints/': typeof AuthenticatedAppSprintsIndexRoute
   '/app/tasks/': typeof AuthenticatedAppTasksIndexRoute
   '/app/hr/employees/$id': typeof AuthenticatedAppHrEmployeesIdRoute
@@ -576,6 +606,8 @@ export interface FileRoutesByTo {
   '/app/projects/clients': typeof AuthenticatedAppProjectsClientsRouteWithChildren
   '/app/projects/templates': typeof AuthenticatedAppProjectsTemplatesRoute
   '/app/projects/workspace': typeof AuthenticatedAppProjectsWorkspaceRoute
+  '/app/roles/$id': typeof AuthenticatedAppRolesIdRoute
+  '/app/roles/new': typeof AuthenticatedAppRolesNewRoute
   '/app/sprints/$id': typeof AuthenticatedAppSprintsIdRoute
   '/app/tasks/$id': typeof AuthenticatedAppTasksIdRoute
   '/app/tasks/all': typeof AuthenticatedAppTasksAllRoute
@@ -588,6 +620,7 @@ export interface FileRoutesByTo {
   '/app/hr': typeof AuthenticatedAppHrIndexRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsIndexRoute
   '/app/projects': typeof AuthenticatedAppProjectsIndexRoute
+  '/app/roles': typeof AuthenticatedAppRolesIndexRoute
   '/app/sprints': typeof AuthenticatedAppSprintsIndexRoute
   '/app/tasks': typeof AuthenticatedAppTasksIndexRoute
   '/app/hr/employees/$id': typeof AuthenticatedAppHrEmployeesIdRoute
@@ -619,6 +652,7 @@ export interface FileRoutesById {
   '/_authenticated/app/payroll': typeof AuthenticatedAppPayrollRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRouteWithChildren
   '/_authenticated/app/report-review': typeof AuthenticatedAppReportReviewRoute
+  '/_authenticated/app/roles': typeof AuthenticatedAppRolesRouteWithChildren
   '/_authenticated/app/sprints': typeof AuthenticatedAppSprintsRouteWithChildren
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRouteWithChildren
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -647,6 +681,8 @@ export interface FileRoutesById {
   '/_authenticated/app/projects/clients': typeof AuthenticatedAppProjectsClientsRouteWithChildren
   '/_authenticated/app/projects/templates': typeof AuthenticatedAppProjectsTemplatesRoute
   '/_authenticated/app/projects/workspace': typeof AuthenticatedAppProjectsWorkspaceRoute
+  '/_authenticated/app/roles/$id': typeof AuthenticatedAppRolesIdRoute
+  '/_authenticated/app/roles/new': typeof AuthenticatedAppRolesNewRoute
   '/_authenticated/app/sprints/$id': typeof AuthenticatedAppSprintsIdRoute
   '/_authenticated/app/tasks/$id': typeof AuthenticatedAppTasksIdRoute
   '/_authenticated/app/tasks/all': typeof AuthenticatedAppTasksAllRoute
@@ -659,6 +695,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr/': typeof AuthenticatedAppHrIndexRoute
   '/_authenticated/app/notifications/': typeof AuthenticatedAppNotificationsIndexRoute
   '/_authenticated/app/projects/': typeof AuthenticatedAppProjectsIndexRoute
+  '/_authenticated/app/roles/': typeof AuthenticatedAppRolesIndexRoute
   '/_authenticated/app/sprints/': typeof AuthenticatedAppSprintsIndexRoute
   '/_authenticated/app/tasks/': typeof AuthenticatedAppTasksIndexRoute
   '/_authenticated/app/hr/employees/$id': typeof AuthenticatedAppHrEmployeesIdRoute
@@ -690,6 +727,7 @@ export interface FileRouteTypes {
     | '/app/payroll'
     | '/app/projects'
     | '/app/report-review'
+    | '/app/roles'
     | '/app/sprints'
     | '/app/tasks'
     | '/app/'
@@ -718,6 +756,8 @@ export interface FileRouteTypes {
     | '/app/projects/clients'
     | '/app/projects/templates'
     | '/app/projects/workspace'
+    | '/app/roles/$id'
+    | '/app/roles/new'
     | '/app/sprints/$id'
     | '/app/tasks/$id'
     | '/app/tasks/all'
@@ -730,6 +770,7 @@ export interface FileRouteTypes {
     | '/app/hr/'
     | '/app/notifications/'
     | '/app/projects/'
+    | '/app/roles/'
     | '/app/sprints/'
     | '/app/tasks/'
     | '/app/hr/employees/$id'
@@ -781,6 +822,8 @@ export interface FileRouteTypes {
     | '/app/projects/clients'
     | '/app/projects/templates'
     | '/app/projects/workspace'
+    | '/app/roles/$id'
+    | '/app/roles/new'
     | '/app/sprints/$id'
     | '/app/tasks/$id'
     | '/app/tasks/all'
@@ -793,6 +836,7 @@ export interface FileRouteTypes {
     | '/app/hr'
     | '/app/notifications'
     | '/app/projects'
+    | '/app/roles'
     | '/app/sprints'
     | '/app/tasks'
     | '/app/hr/employees/$id'
@@ -823,6 +867,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/payroll'
     | '/_authenticated/app/projects'
     | '/_authenticated/app/report-review'
+    | '/_authenticated/app/roles'
     | '/_authenticated/app/sprints'
     | '/_authenticated/app/tasks'
     | '/_authenticated/app/'
@@ -851,6 +896,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/projects/clients'
     | '/_authenticated/app/projects/templates'
     | '/_authenticated/app/projects/workspace'
+    | '/_authenticated/app/roles/$id'
+    | '/_authenticated/app/roles/new'
     | '/_authenticated/app/sprints/$id'
     | '/_authenticated/app/tasks/$id'
     | '/_authenticated/app/tasks/all'
@@ -863,6 +910,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr/'
     | '/_authenticated/app/notifications/'
     | '/_authenticated/app/projects/'
+    | '/_authenticated/app/roles/'
     | '/_authenticated/app/sprints/'
     | '/_authenticated/app/tasks/'
     | '/_authenticated/app/hr/employees/$id'
@@ -975,6 +1023,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSprintsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/roles': {
+      id: '/_authenticated/app/roles'
+      path: '/app/roles'
+      fullPath: '/app/roles'
+      preLoaderRoute: typeof AuthenticatedAppRolesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/report-review': {
       id: '/_authenticated/app/report-review'
       path: '/app/report-review'
@@ -1080,6 +1135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSprintsIndexRouteImport
       parentRoute: typeof AuthenticatedAppSprintsRoute
     }
+    '/_authenticated/app/roles/': {
+      id: '/_authenticated/app/roles/'
+      path: '/'
+      fullPath: '/app/roles/'
+      preLoaderRoute: typeof AuthenticatedAppRolesIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRolesRoute
+    }
     '/_authenticated/app/projects/': {
       id: '/_authenticated/app/projects/'
       path: '/'
@@ -1163,6 +1225,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/sprints/$id'
       preLoaderRoute: typeof AuthenticatedAppSprintsIdRouteImport
       parentRoute: typeof AuthenticatedAppSprintsRoute
+    }
+    '/_authenticated/app/roles/new': {
+      id: '/_authenticated/app/roles/new'
+      path: '/new'
+      fullPath: '/app/roles/new'
+      preLoaderRoute: typeof AuthenticatedAppRolesNewRouteImport
+      parentRoute: typeof AuthenticatedAppRolesRoute
+    }
+    '/_authenticated/app/roles/$id': {
+      id: '/_authenticated/app/roles/$id'
+      path: '/$id'
+      fullPath: '/app/roles/$id'
+      preLoaderRoute: typeof AuthenticatedAppRolesIdRouteImport
+      parentRoute: typeof AuthenticatedAppRolesRoute
     }
     '/_authenticated/app/projects/workspace': {
       id: '/_authenticated/app/projects/workspace'
@@ -1483,6 +1559,23 @@ const AuthenticatedAppProjectsRouteWithChildren =
     AuthenticatedAppProjectsRouteChildren,
   )
 
+interface AuthenticatedAppRolesRouteChildren {
+  AuthenticatedAppRolesIdRoute: typeof AuthenticatedAppRolesIdRoute
+  AuthenticatedAppRolesNewRoute: typeof AuthenticatedAppRolesNewRoute
+  AuthenticatedAppRolesIndexRoute: typeof AuthenticatedAppRolesIndexRoute
+}
+
+const AuthenticatedAppRolesRouteChildren: AuthenticatedAppRolesRouteChildren = {
+  AuthenticatedAppRolesIdRoute: AuthenticatedAppRolesIdRoute,
+  AuthenticatedAppRolesNewRoute: AuthenticatedAppRolesNewRoute,
+  AuthenticatedAppRolesIndexRoute: AuthenticatedAppRolesIndexRoute,
+}
+
+const AuthenticatedAppRolesRouteWithChildren =
+  AuthenticatedAppRolesRoute._addFileChildren(
+    AuthenticatedAppRolesRouteChildren,
+  )
+
 interface AuthenticatedAppSprintsRouteChildren {
   AuthenticatedAppSprintsIdRoute: typeof AuthenticatedAppSprintsIdRoute
   AuthenticatedAppSprintsIndexRoute: typeof AuthenticatedAppSprintsIndexRoute
@@ -1535,6 +1628,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppPayrollRoute: typeof AuthenticatedAppPayrollRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRouteWithChildren
   AuthenticatedAppReportReviewRoute: typeof AuthenticatedAppReportReviewRoute
+  AuthenticatedAppRolesRoute: typeof AuthenticatedAppRolesRouteWithChildren
   AuthenticatedAppSprintsRoute: typeof AuthenticatedAppSprintsRouteWithChildren
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRouteWithChildren
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -1563,6 +1657,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppPayrollRoute: AuthenticatedAppPayrollRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRouteWithChildren,
   AuthenticatedAppReportReviewRoute: AuthenticatedAppReportReviewRoute,
+  AuthenticatedAppRolesRoute: AuthenticatedAppRolesRouteWithChildren,
   AuthenticatedAppSprintsRoute: AuthenticatedAppSprintsRouteWithChildren,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRouteWithChildren,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,

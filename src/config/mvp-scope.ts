@@ -157,6 +157,14 @@ export const MVP_SCOPE: readonly MvpScopeEntry[] = [
     path: "/app/admin",
     note: "Hosts the in-scope Organization settings; system-settings panel can be gated separately later.",
   },
+  {
+    id: "roles",
+    label: "Roles & permissions",
+    inMvp: true,
+    kind: "nav",
+    path: "/app/roles",
+    note: "Dynamic RBAC role management (Phase 2). Access is gated by has_permission('roles', …), not the legacy app_role enum — see docs/RBAC_DYNAMIC.md.",
+  },
 
   // ---------- System (primary nav) ----------
   { id: "settings", label: "Settings", inMvp: true, kind: "nav", path: "/settings" },

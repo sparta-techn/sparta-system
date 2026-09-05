@@ -10,6 +10,7 @@ import {
   GaugeCircle,
   HeartHandshake,
   Home,
+  KeyRound,
   LayoutDashboard,
   Megaphone,
   Receipt,
@@ -145,6 +146,18 @@ export const TEAM_NAV: NavItem[] = [
     roles: LEADERSHIP,
   },
   { id: "admin", title: "Admin Console", url: "/app/admin", icon: ShieldHalf, roles: LEADERSHIP },
+  // Sidebar visibility still keys off the LEGACY enum (that is all this config
+  // understands). The route itself is gated by the dynamic
+  // has_permission('roles', 'view', 'all') check — so a non-leadership user who
+  // is granted role management can reach /app/roles by URL but will not yet see
+  // the link. Phase 3 makes nav visibility permission-aware.
+  {
+    id: "roles",
+    title: "Roles & permissions",
+    url: "/app/roles",
+    icon: KeyRound,
+    roles: LEADERSHIP,
+  },
 ];
 
 export const SYSTEM_NAV: NavItem[] = [
