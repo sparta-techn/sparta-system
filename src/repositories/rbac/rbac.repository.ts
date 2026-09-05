@@ -7,6 +7,8 @@ import {
   type RbacRole,
   type RbacRoleSummary,
   type RbacUserRole,
+  type RbacRoleMember,
+  type RbacAssignableUser,
 } from "@/services/rbac";
 
 /** A role together with the permission ids it grants — one editor payload. */
@@ -72,6 +74,16 @@ export class RbacRepository {
   /** Per-permission blast radius for a role (used by the delete dialog). */
   getGrantImpact(roleId: string): Promise<RbacGrantImpact[]> {
     return this.service.getGrantImpact(roleId);
+  }
+
+  /** Users holding a role — the role-side view of assignment. */
+  listRoleMembers(roleId: string): Promise<RbacRoleMember[]> {
+    return this.service.listRoleMembers(roleId);
+  }
+
+  /** Users not yet holding a role, for the assignment picker. */
+  listAssignableUsers(roleId: string, search?: string): Promise<RbacAssignableUser[]> {
+    return this.service.listAssignableUsers(roleId, search);
   }
 
   /** The roles assigned to one user. */

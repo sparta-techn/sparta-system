@@ -8,6 +8,8 @@ import type {
   RbacRole,
   RbacRoleSummary,
   RbacUserRole,
+  RbacRoleMember,
+  RbacAssignableUser,
 } from "./types";
 
 /**
@@ -103,6 +105,34 @@ export class RbacService extends BaseService<RbacRole> {
       return (data ?? []) as unknown as RbacUserRole[];
     } catch (error) {
       throw toServiceError(error, "Failed to load the user's roles");
+    }
+  }
+
+  /** The users who currently hold a role. One join, not a lookup per user. */
+  async listRoleMembers(roleId: string): Promise<RbacRoleMember[]> {
+    try {
+      const { data, error } = await db.rpc("rbac_role_members", { p_role_id: roleId });
+      if (error) throw error;
+      return (data ?? []) as unknown as RbacRoleMember[];
+    } catch (error) {
+      throw toServiceError(error, "Failed to load the role's members");
+    }
+  }
+
+  /**
+   * Users who do NOT yet hold the role, for the assignment picker. Server-side
+   * name/email filtered and capped at 50 rows.
+   */
+  async listAssignableUsers(roleId: string, search?: string): Promise<RbacAssignableUser[]> {
+    try {
+      const { data, error } = await db.rpc("rbac_assignable_users", {
+        p_role_id: roleId,
+        p_search: search?.trim() || null,
+      });
+      if (error) throw error;
+      return (data ?? []) as unknown as RbacAssignableUser[];
+    } catch (error) {
+      throw toServiceError(error, "Failed to load assignable users");
     }
   }
 

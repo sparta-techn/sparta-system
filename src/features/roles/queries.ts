@@ -16,6 +16,9 @@ export const roleKeys = {
   editor: (roleId: string) => [...roleKeys.all, "role", roleId] as const,
   impact: (roleId: string) => [...roleKeys.all, "impact", roleId] as const,
   myPermissions: () => [...roleKeys.all, "me"] as const,
+  members: (roleId: string) => [...roleKeys.all, "role", roleId, "members"] as const,
+  assignable: (roleId: string, search: string) =>
+    [...roleKeys.all, "role", roleId, "assignable", search] as const,
   userRoles: (userId: string) => [...roleKeys.all, "user", userId, "roles"] as const,
   effective: (userId: string) => [...roleKeys.all, "user", userId, "effective"] as const,
 };
@@ -81,4 +84,22 @@ export const effectivePermissionsQuery = (userId: string, enabled = true) =>
     queryFn: () => rbacRepository.listEffectivePermissions(userId),
     enabled,
     staleTime: 30_000,
+  });
+
+/** Users currently holding a role. */
+export const roleMembersQuery = (roleId: string, enabled = true) =>
+  queryOptions({
+    queryKey: roleKeys.members(roleId),
+    queryFn: () => rbacRepository.listRoleMembers(roleId),
+    enabled,
+    staleTime: 15_000,
+  });
+
+/** Assignment candidates for a role, name/email filtered server-side. */
+export const assignableUsersQuery = (roleId: string, search: string, enabled = true) =>
+  queryOptions({
+    queryKey: roleKeys.assignable(roleId, search),
+    queryFn: () => rbacRepository.listAssignableUsers(roleId, search),
+    enabled,
+    staleTime: 15_000,
   });

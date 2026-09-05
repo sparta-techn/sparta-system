@@ -70,3 +70,18 @@ export interface RbacGrantImpact {
   scope: PermissionScope;
   users_losing: number;
 }
+
+/** A user holding a role, from `rbac_role_members()`. */
+export interface RbacRoleMember {
+  user_id: string;
+  display_name: string | null;
+  email: string | null;
+  granted_at: string;
+}
+
+/** A candidate for assignment, from `rbac_assignable_users()`. */
+export interface RbacAssignableUser {
+  user_id: string;
+  display_name: string | null;
+  email: string | null;
+}

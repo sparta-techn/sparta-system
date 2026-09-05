@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Loader2, Lock, Save, Trash2 } from "lucide-react";
@@ -23,6 +23,7 @@ import { useDynamicPermissions } from "../use-dynamic-permission";
 import { DeleteRoleDialog } from "./delete-role-dialog";
 import { LockoutWarningList } from "./lockout-warning";
 import { PermissionPicker } from "./permission-picker";
+import { RoleMembersCard } from "./role-members-card";
 
 /** Create mode: no role id yet. */
 export function RoleCreator() {
@@ -158,6 +159,7 @@ export function RoleEditor({ roleId }: { roleId: string }) {
         warnings={warnings}
         onDelete={canDelete && summary ? () => setPendingDelete(summary) : undefined}
         userCount={summary?.user_count}
+        members={<RoleMembersCard roleId={roleId} roleName={data.role.name} />}
       />
       <DeleteRoleDialog
         role={pendingDelete}
@@ -189,6 +191,8 @@ interface EditorShellProps {
   warnings?: ReturnType<typeof warningsForRemoval>;
   onDelete?: () => void;
   userCount?: number;
+  /** Membership card; absent in create mode, where the role does not exist yet. */
+  members?: ReactNode;
 }
 
 /** Shared chrome for both create and edit modes. */
@@ -211,6 +215,7 @@ function EditorShell({
   warnings = [],
   onDelete,
   userCount,
+  members,
 }: EditorShellProps) {
   return (
     <div className="space-y-4">
@@ -306,6 +311,8 @@ function EditorShell({
           </div>
         </CardContent>
       </Card>
+
+      {members}
 
       {warnings.length > 0 ? <LockoutWarningList warnings={warnings} /> : null}
 

@@ -18,4 +18,6 @@ export type {
   RbacEffectivePermission,
   RbacUserRole,
   RbacGrantImpact,
+  RbacRoleMember,
+  RbacAssignableUser,
 } from "./types";

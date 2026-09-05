@@ -90,7 +90,13 @@ export function RolesList() {
                 <TableRow key={role.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{role.name}</span>
+                      <Link
+                        to="/app/roles/$id"
+                        params={{ id: role.id }}
+                        className="font-medium underline-offset-2 hover:underline"
+                      >
+                        {role.name}
+                      </Link>
                       {role.is_protected ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
